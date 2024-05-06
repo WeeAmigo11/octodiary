@@ -48,7 +48,7 @@ fun SubjectRatingBottomSheet(subjectId: Long, subjectName: String) {
                         style = MaterialTheme.typography.titleLarge
                     )
                     Text(
-                        text = stringResource(R.string.based_on_all_marks),
+                        text = stringResource(R.string.based_on_current_marks),
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier
                             .padding(bottom = 16.dp)
