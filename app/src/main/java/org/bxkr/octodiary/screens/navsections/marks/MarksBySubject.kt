@@ -16,7 +16,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -26,6 +25,7 @@ import kotlinx.coroutines.coroutineScope
 import org.bxkr.octodiary.DataService
 import org.bxkr.octodiary.contentDependentActionLive
 import org.bxkr.octodiary.parseFromDay
+import java.util.Date
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,9 +33,17 @@ fun MarksBySubject(scrollToSubjectId: Long? = null) {
     val filterState = remember { mutableStateOf(SubjectMarkFilterType.ByAverage) }
     contentDependentActionLive.postValue { SubjectMarkFilter(state = filterState) }
     val periods = remember {
-        DataService.marksSubject.mapNotNull { it.period }.distinct()
+        DataService.marksSubject.maxBy {
+            it.periods?.size ?: 0
+        }.periods?.map { it.title to (it.startIso to it.endIso) }
     }
-    var currentPeriod by remember { mutableIntStateOf(0) }
+    println(periods)
+    var currentPeriod by remember {
+        mutableStateOf(
+            periods?.firstOrNull { (it.second.first.parseFromDay().time < Date().time) and (it.second.second.parseFromDay().time > Date().time) }?.first
+                ?: periods?.get(0)?.first
+        )
+    }
     Column(Modifier.fillMaxHeight(), verticalArrangement = Arrangement.Bottom) {
         Crossfade(
             targetState = currentPeriod, modifier = Modifier.weight(1f), label = "subject_anim"
@@ -43,17 +51,19 @@ fun MarksBySubject(scrollToSubjectId: Long? = null) {
             AnimatedContent(targetState = filterState.value, label = "filter_anim") { filter ->
                 Column {
                     val subjects =
-                        DataService.marksSubject.filter { it.period == periods[periodState] }
+                        DataService.marksSubject.filter {
+                            it.periods != null && it.periods.map { it.title }.contains(periodState)
+                        }
                             .run {
                                 when (filter) {
                                     SubjectMarkFilterType.Alphabetical -> sortedBy { it.subjectName }
-                                    SubjectMarkFilterType.ByAverage -> sortedByDescending { it.average?.toDoubleOrNull() }
+                                    SubjectMarkFilterType.ByAverage -> sortedByDescending { it.average.toDoubleOrNull() }
                                     SubjectMarkFilterType.ByRanking -> sortedBy { subject ->
-                                        DataService.subjectRanking.firstOrNull { it.subjectId == subject.id }?.rank?.rankPlace
+                                        DataService.subjectRanking.firstOrNull { it.subjectId == subject.subjectId }?.rank?.rankPlace
                                     }
 
                                     SubjectMarkFilterType.ByUpdated -> sortedByDescending {
-                                        it.marks?.maxBy { it1 ->
+                                        it.periods?.first { it.title == periodState }?.marks?.maxBy { it1 ->
                                             it1.date.parseFromDay().toInstant().toEpochMilli()
                                         }?.date?.parseFromDay()?.toInstant()?.toEpochMilli() ?: 0
                                     }
@@ -68,28 +78,36 @@ fun MarksBySubject(scrollToSubjectId: Long? = null) {
                         lazyColumnState
                     ) {
                         items(subjects) {
-                            SubjectCard(subject = it)
+                            if (it.periods != null && it.periods.any { it.title == periodState }) {
+                                val sentPeriod = it.periods.first { it.title == periodState }
+                                SubjectCard(
+                                    period = sentPeriod,
+                                    it.subjectId,
+                                    it.subjectName,
+                                    sentPeriod == it.currentPeriod
+                                )
+                            }
                         }
                     }
                     if (scrollToSubjectId != null) {
                         LaunchedEffect(Unit) {
                             coroutineScope {
-                                lazyColumnState.animateScrollToItem(subjects.indexOfFirst { it.id == scrollToSubjectId })
+                                lazyColumnState.animateScrollToItem(subjects.indexOfFirst { it.subjectId == scrollToSubjectId })
                                 scrollToSubjectIdLive.postValue(null)
                             }
                         }
                     }
                     SecondaryScrollableTabRow(
-                        selectedTabIndex = currentPeriod,
+                        selectedTabIndex = periods?.map { it.first }?.indexOf(currentPeriod) ?: 0,
                         divider = {},
                         edgePadding = 0.dp
                     ) {
-                        periods.forEachIndexed { index: Int, period: String ->
+                        periods?.forEachIndexed { index: Int, period: Pair<String, Pair<String, String>> ->
                             Tab(
-                                selected = currentPeriod == index,
-                                text = { Text(period) },
+                                selected = periods.map { it.first }.indexOf(currentPeriod) == index,
+                                text = { Text(period.first) },
                                 onClick = {
-                                    currentPeriod = index
+                                    currentPeriod = periods[index].first
                                 })
                         }
                     }
