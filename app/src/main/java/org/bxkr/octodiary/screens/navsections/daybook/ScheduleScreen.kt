@@ -62,64 +62,58 @@ fun WeekPager(events: List<Event>) {
     val weekdays = remember { (1..7).toList().also { Collections.rotate(it, -1) } }
     val dayPosition =
         rememberPagerState(initialPage = weekdays.indexOf(getWeekday(Date())) + 1,
-            pageCount = { 9 })
+            pageCount = { 7 })
     val currentDay = daySelectedLive.observeAsState(Date())
     LaunchedEffect(dayPosition) {
         snapshotFlow { dayPosition.currentPage }.collect { page ->
-            if (page in 1..7) {
-                if (weekdays.indexOf(getWeekday(currentDay.value)) + 1 != page) {
-                    daySelectedLive.postValue(currentDay.value.let {
-                        Calendar.getInstance().apply {
-                            time = it
-                            set(Calendar.DAY_OF_WEEK, weekdays[page - 1])
-                        }.time
-                    })
-                }
-            } else {
-                // TODO: Load a new week
+            if (weekdays.indexOf(getWeekday(currentDay.value)) != page) {
+                daySelectedLive.postValue(currentDay.value.let {
+                    Calendar.getInstance().apply {
+                        time = it
+                        set(Calendar.DAY_OF_WEEK, weekdays[page])
+                    }.time
+                })
             }
         }
     }
     LaunchedEffect(currentDay) {
         snapshotFlow { currentDay.value }.collect { date ->
-            if (weekdays.indexOf(getWeekday(date)) + 1 != dayPosition.currentPage) {
-                dayPosition.animateScrollToPage(weekdays.indexOf(getWeekday(currentDay.value)) + 1)
+            if (weekdays.indexOf(getWeekday(date)) != dayPosition.currentPage) {
+                dayPosition.animateScrollToPage(weekdays.indexOf(getWeekday(currentDay.value)))
             }
         }
     }
     HorizontalPager(state = dayPosition, beyondBoundsPageCount = 8) { weekdayIndex ->
-        if (weekdayIndex in 1..7) {
-            val date = currentDay.value.let {
-                Calendar.getInstance().apply {
-                    time = it
-                    set(Calendar.DAY_OF_WEEK, weekdays[weekdayIndex - 1])
-                }.time
-            }
-            val dayEvents = events.filter {
-                it.startAt.parseLongDate().formatToDay() == date.formatToDay()
-            }
-            Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp)) {
-                Text(
-                    date.let {
-                        SimpleDateFormat(
-                            "d MMMM, EEEE", LocalConfiguration.current.locales[0]
-                        ).format(it)
-                    },
-                    Modifier.padding(bottom = 8.dp),
-                    style = MaterialTheme.typography.titleLarge
-                )
-                if (dayEvents.isNotEmpty()) {
-                    LazyColumn(Modifier.fillMaxSize()) {
-                        DayItem(dayEvents, showNumbers)
-                    }
-                } else {
-                    Column(
-                        Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(text = stringResource(id = R.string.free_day))
-                    }
+        val date = currentDay.value.let {
+            Calendar.getInstance().apply {
+                time = it
+                set(Calendar.DAY_OF_WEEK, weekdays[weekdayIndex])
+            }.time
+        }
+        val dayEvents = events.filter {
+            it.startAt.parseLongDate().formatToDay() == date.formatToDay()
+        }
+        Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp)) {
+            Text(
+                date.let {
+                    SimpleDateFormat(
+                        "d MMMM, EEEE", LocalConfiguration.current.locales[0]
+                    ).format(it)
+                },
+                Modifier.padding(bottom = 8.dp),
+                style = MaterialTheme.typography.titleLarge
+            )
+            if (dayEvents.isNotEmpty()) {
+                LazyColumn(Modifier.fillMaxSize()) {
+                    DayItem(dayEvents, showNumbers)
+                }
+            } else {
+                Column(
+                    Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(text = stringResource(id = R.string.free_day))
                 }
             }
         }
