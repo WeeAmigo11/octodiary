@@ -10,7 +10,6 @@ import org.bxkr.octodiary.models.homeworks.Homework
 import org.bxkr.octodiary.models.lessonschedule.LessonSchedule
 import org.bxkr.octodiary.models.mark.MarkInfo
 import org.bxkr.octodiary.models.marklistdate.MarkListDate
-import org.bxkr.octodiary.models.marklistsubject.MarkListSubjectItem
 import org.bxkr.octodiary.models.mealbalance.MealBalance
 import org.bxkr.octodiary.models.profile.ProfileResponse
 import org.bxkr.octodiary.models.profilesid.ProfilesId
@@ -63,7 +62,7 @@ object DataService {
     lateinit var marksDate: MarkListDate
     var hasMarksDate = false
 
-    lateinit var marksSubject: List<MarkListSubjectItem>
+    lateinit var marksSubject: List<org.bxkr.octodiary.models.marklistsubject.MarkListSubjectItem>
     var hasMarksSubject = false
 
     lateinit var homeworks: List<Homework>
@@ -201,15 +200,20 @@ object DataService {
         }
 
         // Class members request for matching names:
-        dSchoolApi.classMembers(
-            token,
-            classUnitId = profile.children[currentProfile].classUnitId
-        ).baseEnqueue(::baseErrorFunction, ::baseInternalExceptionFunction) {
-            classMembers = it
-            hasClassMembers = true
-            classMembersFinished = true
-            if (rankingFinished) onUpdated()
-        }
+//        dSchoolApi.classMembers( todo: uncomment when serverside fixed (or idk)
+//            token,
+//            classUnitId = profile.children[currentProfile].classUnitId
+//        ).baseEnqueue(::baseErrorFunction, ::baseInternalExceptionFunction) {
+//            classMembers = it
+//            hasClassMembers = true
+//            classMembersFinished = true
+//            if (rankingFinished) onUpdated()
+//        }
+        classMembers = listOf()
+        hasClassMembers = true
+        classMembersFinished = true
+        if (rankingFinished) onUpdated()
+
     }
 
     fun updateSubjectRanking(onUpdated: () -> Unit) {

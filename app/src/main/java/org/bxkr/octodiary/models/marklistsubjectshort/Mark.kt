@@ -1,11 +1,11 @@
-package org.bxkr.octodiary.models.marklistsubject
+package org.bxkr.octodiary.models.marklistsubjectshort
 
 
 import com.google.gson.annotations.SerializedName
 
 data class Mark(
     @SerializedName("comment")
-    val comment: String?,
+    val comment: String,
     @SerializedName("comment_exists")
     val commentExists: Boolean,
     @SerializedName("control_form_name")
@@ -13,7 +13,7 @@ data class Mark(
     @SerializedName("created_at")
     val createdAt: Any?,
     @SerializedName("criteria")
-    val criteria: Any?,
+    val criteria: List<Criteria>,
     @SerializedName("date")
     val date: String,
     @SerializedName("id")
@@ -31,7 +31,7 @@ data class Mark(
     @SerializedName("value")
     val value: String,
     @SerializedName("values")
-    val values: Any?,
+    val values: List<Value>,
     @SerializedName("weight")
     val weight: Int,
 )

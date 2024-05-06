@@ -17,9 +17,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastJoinToString
 import org.bxkr.octodiary.DataService
+import org.bxkr.octodiary.R
 import org.bxkr.octodiary.components.ErrorMessage
 import org.bxkr.octodiary.components.RankingMemberCard
 import org.bxkr.octodiary.models.rankingforsubject.RankingForSubject
@@ -42,8 +45,14 @@ fun SubjectRatingBottomSheet(subjectId: Long, subjectName: String) {
                 item {
                     Text(
                         subjectName,
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.padding(bottom = 16.dp)
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    Text(
+                        text = stringResource(R.string.based_on_all_marks),
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier
+                            .padding(bottom = 16.dp)
+                            .alpha(.8f)
                     )
                 }
                 items(ranking!!) {
