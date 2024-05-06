@@ -8,8 +8,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -17,16 +20,18 @@ import java.util.Calendar
 import java.util.Date
 
 @Composable
-fun CalendarBar(onDaySelect: (Date) -> Unit = {}) {
-    val date = remember { Date() }
-    val calendar = remember {
-        Calendar.getInstance().apply {
-            time = date
-        }
-    }
+fun CalendarBar() {
     val daySelected = daySelectedLive.observeAsState(Date())
+    var calendar by remember {
+        mutableStateOf(
+            Calendar.getInstance().apply {
+                time = daySelected.value
+            }
+        )
+    }
     LaunchedEffect(daySelected.value) {
-        onDaySelect(daySelected.value)
+        val day = daySelected.value
+        calendar = Calendar.getInstance().apply { time = day }
     }
     Column(
         horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.background(

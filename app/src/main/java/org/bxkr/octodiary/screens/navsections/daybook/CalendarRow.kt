@@ -62,11 +62,11 @@ fun CalendarRow(
         )
         Row {
             weekdays.forEach { weekday ->
-                val cellDate = remember {
+                val cellDate =
                     (date.clone() as Calendar).apply {
                         set(Calendar.DAY_OF_WEEK, weekday)
                     }
-                }
+
                 val isSelected = daySelected.value.formatToDay() == cellDate.time.formatToDay()
                 var cellPosition: Float by remember { mutableFloatStateOf(0f) }
                 if (isSelected) {
