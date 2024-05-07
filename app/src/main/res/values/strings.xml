@@ -285,5 +285,4 @@
     <string name="subject_rating">Subject ratings</string>
     <string name="ratings">Ratings</string>
     <string name="based_on_all_marks">Based on all marks</string>
-    <string name="rating_not_available" translatable="false">Рейтинг не доступен.</string>
 </resources>

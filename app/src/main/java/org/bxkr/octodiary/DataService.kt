@@ -181,7 +181,7 @@ object DataService {
         ).baseEnqueue(errorListenerForMessage(errorListener)) { listener(it) }
     }
 
-    fun updateRanking(context: Context, onUpdated: () -> Unit) {
+    fun updateRanking(onUpdated: () -> Unit) {
         assert(this::token.isInitialized)
         assert(this::profile.isInitialized)
 
@@ -196,7 +196,7 @@ object DataService {
         ).baseEnqueue({ errorBody: ResponseBody, httpCode: Int, className: String? ->
             val errorText = errorBody.string()
 
-            if (errorText.contains(context.getString(R.string.rating_not_available))) {
+            if (errorText.contains("Рейтинг не доступен.")) {
                 ranking = emptyList()
                 hasRanking = true
                 rankingFinished = true
@@ -227,7 +227,7 @@ object DataService {
         if (rankingFinished) onUpdated()
     }
 
-    fun updateSubjectRanking(context: Context, onUpdated: () -> Unit) {
+    fun updateSubjectRanking(onUpdated: () -> Unit) {
         assert(this::token.isInitialized)
         assert(this::profile.isInitialized)
 
@@ -238,7 +238,7 @@ object DataService {
         ).baseEnqueue({ errorBody: ResponseBody, httpCode: Int, className: String? ->
             val errorText = errorBody.string()
 
-            if (errorText.contains(context.getString(R.string.rating_not_available))) {
+            if (errorText.contains("Рейтинг не доступен.")) {
                 subjectRanking = emptyList()
                 hasSubjectRanking = true
                 onUpdated()
@@ -485,11 +485,11 @@ object DataService {
                     updateMarksDate { onSingleItemLoad(::marksDate.name) }
                     updateMarksSubject { onSingleItemLoad(::marksSubject.name) }
                     updateHomeworks { onSingleItemLoad(::homeworks.name) }
-                    updateRanking(context!!) {
+                    updateRanking {
                         onSingleItemLoad(::classMembers.name)
                         onSingleItemLoad(::ranking.name)
                     }
-                    updateSubjectRanking(context) { onSingleItemLoad(::subjectRanking.name) }
+                    updateSubjectRanking { onSingleItemLoad(::subjectRanking.name) }
                     if (subsystem == Diary.MES) updateVisits { onSingleItemLoad(::visits.name) }
                     if (subsystem == Diary.MES) updateMealBalance { onSingleItemLoad(::mealBalance.name) }
                     updateSchoolInfo { onSingleItemLoad(::schoolInfo.name) }
