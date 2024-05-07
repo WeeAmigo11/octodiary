@@ -266,6 +266,7 @@ fun Activity.logOut(reason: String? = null) {
         "pin" to null
     )
     cachePrefs.clear()
+    notificationPrefs.clear()
     screenLive.value = Screen.Login
     startActivity(Intent(this, MainActivity::class.java))
     exitProcess(0)
