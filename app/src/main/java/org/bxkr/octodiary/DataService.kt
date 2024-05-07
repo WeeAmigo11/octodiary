@@ -3,6 +3,7 @@ package org.bxkr.octodiary
 import android.content.Context
 import androidx.compose.runtime.mutableStateOf
 import com.google.gson.Gson
+import okhttp3.ResponseBody
 import org.bxkr.octodiary.models.classmembers.ClassMember
 import org.bxkr.octodiary.models.classranking.RankingMember
 import org.bxkr.octodiary.models.events.Event
@@ -192,7 +193,18 @@ object DataService {
             token,
             personId = profile.children[currentProfile].contingentGuid,
             date = Date().formatToDay()
-        ).baseEnqueue(::baseErrorFunction, ::baseInternalExceptionFunction) {
+        ).baseEnqueue({ errorBody: ResponseBody, httpCode: Int, className: String? ->
+            val errorText = errorBody.string()
+
+            if (errorText.contains("Рейтинг не доступен.")) {
+                ranking = emptyList()
+                hasRanking = true
+                rankingFinished = true
+                if (classMembersFinished) onUpdated()
+            } else {
+                baseErrorFunction(errorBody, httpCode, className)
+            }
+        }, ::baseInternalExceptionFunction) {
             ranking = it
             hasRanking = true
             rankingFinished = true
@@ -213,7 +225,6 @@ object DataService {
         hasClassMembers = true
         classMembersFinished = true
         if (rankingFinished) onUpdated()
-
     }
 
     fun updateSubjectRanking(onUpdated: () -> Unit) {
@@ -224,7 +235,17 @@ object DataService {
             token,
             profile.children[currentProfile].contingentGuid,
             Date().formatToDay()
-        ).baseEnqueue(::baseErrorFunction) {
+        ).baseEnqueue({ errorBody: ResponseBody, httpCode: Int, className: String? ->
+            val errorText = errorBody.string()
+
+            if (errorText.contains("Рейтинг не доступен.")) {
+                subjectRanking = emptyList()
+                hasSubjectRanking = true
+                onUpdated()
+            } else {
+                baseErrorFunction(errorBody, httpCode, className)
+            }
+        }) {
             subjectRanking = it
             hasSubjectRanking = true
             onUpdated()
