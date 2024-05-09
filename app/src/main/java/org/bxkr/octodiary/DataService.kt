@@ -45,6 +45,8 @@ object DataService {
     lateinit var eventCalendar: List<Event>
     var hasEventCalendar = false
 
+    lateinit var eventsRange: List<Long>
+
     lateinit var ranking: List<RankingMember>
     var hasRanking = false
 
@@ -83,6 +85,7 @@ object DataService {
                 ::hasUserId,
                 ::hasSessionUser,
                 ::hasEventCalendar,
+                ::hasEventCalendar,
                 ::hasRanking,
                 ::hasClassMembers,
                 ::hasProfile,
@@ -101,6 +104,7 @@ object DataService {
                 ::userId,
                 ::sessionUser,
                 ::eventCalendar,
+                ::eventsRange,
                 ::ranking,
                 ::classMembers,
                 ::profile,
@@ -149,25 +153,52 @@ object DataService {
         }
     }
 
-    fun updateEventCalendar(weeksBefore: Int = 1, weeksAfter: Int = 1, onUpdated: () -> Unit) {
+    fun updateEventCalendar(weeksBefore: Int = 0, weeksAfter: Int = 0, onUpdated: () -> Unit) {
         assert(this::token.isInitialized)
         assert(this::profile.isInitialized)
+        val startDate = Calendar.getInstance().also {
+            it.set(Calendar.WEEK_OF_YEAR, it.get(Calendar.WEEK_OF_YEAR) - weeksBefore)
+            it.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+        }
+        val endDate = Calendar.getInstance().also {
+            it.set(Calendar.WEEK_OF_YEAR, it.get(Calendar.WEEK_OF_YEAR) + weeksAfter)
+            it.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY)
+        }
         secondaryApi.events(
             "Bearer $token",
             personIds = profile.children[currentProfile].contingentGuid,
-            beginDate = Calendar.getInstance().also {
-                it.set(Calendar.WEEK_OF_YEAR, it.get(Calendar.WEEK_OF_YEAR) - weeksBefore)
-                it.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
-            }.time.formatToDay(),
-            endDate = Calendar.getInstance().also {
-                it.set(Calendar.WEEK_OF_YEAR, it.get(Calendar.WEEK_OF_YEAR) + weeksAfter)
-                it.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY)
-            }.time.formatToDay(),
+            beginDate = startDate.time.formatToDay(),
+            endDate = endDate.time.formatToDay(),
             expandFields = "homework,marks"
         ).baseEnqueue(::baseErrorFunction, ::baseInternalExceptionFunction) { body ->
             eventCalendar = body.response
+            eventsRange = listOf(startDate.time.time, endDate.time.time)
             hasEventCalendar = true
             onUpdated()
+        }
+    }
+
+    fun getEventWeek(date: Date, listener: (events: List<Event>, range: List<Long>) -> Unit) {
+        assert(this::token.isInitialized)
+        assert(this::profile.isInitialized)
+        val startDate = Calendar.getInstance().also {
+            it.time = date
+            it.set(Calendar.WEEK_OF_YEAR, it.get(Calendar.WEEK_OF_YEAR))
+            it.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+        }
+        val endDate = Calendar.getInstance().also {
+            it.time = date
+            it.set(Calendar.WEEK_OF_YEAR, it.get(Calendar.WEEK_OF_YEAR))
+            it.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY)
+        }
+        secondaryApi.events(
+            "Bearer $token",
+            personIds = profile.children[currentProfile].contingentGuid,
+            beginDate = startDate.time.formatToDay(),
+            endDate = endDate.time.formatToDay(),
+            expandFields = "homework,marks"
+        ).baseEnqueue(::baseErrorFunction, ::baseInternalExceptionFunction) { body ->
+            listener(body.response, listOf(startDate.time.time, endDate.time.time))
         }
     }
 
@@ -351,7 +382,7 @@ object DataService {
     fun getRankingForSubject(
         subjectId: Long,
         errorListener: (String) -> Unit,
-        listener: (List<RankingForSubject>) -> Unit
+        listener: (List<RankingForSubject>) -> Unit,
     ) {
         assert(this::token.isInitialized)
         assert(this::profile.isInitialized)
@@ -396,7 +427,7 @@ object DataService {
     fun getLessonInfo(
         lessonId: Long,
         errorListener: (String) -> Unit,
-        listener: (LessonSchedule) -> Unit
+        listener: (LessonSchedule) -> Unit,
     ) {
         assert(this::token.isInitialized)
         assert(this::profile.isInitialized)
@@ -460,7 +491,10 @@ object DataService {
                 onSingleItemLoad(::sessionUser.name)
                 updateProfile {
                     onSingleItemLoad(::profile.name)
-                    updateEventCalendar { onSingleItemLoad(::eventCalendar.name) }
+                    updateEventCalendar {
+                        onSingleItemLoad(::eventCalendar.name)
+                        onSingleItemLoad(::eventsRange.name)
+                    }
                     updateMarksDate { onSingleItemLoad(::marksDate.name) }
                     updateMarksSubject { onSingleItemLoad(::marksSubject.name) }
                     updateHomeworks { onSingleItemLoad(::homeworks.name) }

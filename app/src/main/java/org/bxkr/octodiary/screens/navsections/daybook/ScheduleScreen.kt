@@ -1,20 +1,26 @@
 package org.bxkr.octodiary.screens.navsections.daybook
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,6 +34,7 @@ import org.bxkr.octodiary.R
 import org.bxkr.octodiary.formatToDay
 import org.bxkr.octodiary.get
 import org.bxkr.octodiary.getWeekday
+import org.bxkr.octodiary.isDateBetween
 import org.bxkr.octodiary.mainPrefs
 import org.bxkr.octodiary.models.events.Event
 import org.bxkr.octodiary.parseLongDate
@@ -57,7 +64,10 @@ fun ScheduleScreen() {
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun WeekPager(events: List<Event>) {
+fun WeekPager(eventsLoaded: List<Event>) {
+    var events by remember { mutableStateOf(eventsLoaded) }
+    var isLoadingNewEvents by remember { mutableStateOf(false) }
+    var currentDateRange by remember { mutableStateOf(DataService.eventsRange) }
     val showNumbers = LocalContext.current.mainPrefs.get("show_lesson_numbers") ?: true
     val weekdays = remember { (1..7).toList().also { Collections.rotate(it, -1) } }
     val dayPosition =
@@ -81,6 +91,18 @@ fun WeekPager(events: List<Event>) {
             if (weekdays.indexOf(getWeekday(date)) != dayPosition.currentPage) {
                 dayPosition.animateScrollToPage(weekdays.indexOf(getWeekday(currentDay.value)))
             }
+            if (date.isDateBetween(DataService.eventsRange) && currentDateRange != DataService.eventsRange) {
+                events = eventsLoaded
+                currentDateRange = DataService.eventsRange
+            }
+            if (!date.isDateBetween(currentDateRange)) {
+                isLoadingNewEvents = true
+                DataService.getEventWeek(date) { eventsResponse, range ->
+                    currentDateRange = range
+                    events = eventsResponse
+                    isLoadingNewEvents = false
+                }
+            }
         }
     }
     HorizontalPager(state = dayPosition, beyondBoundsPageCount = 8) { weekdayIndex ->
@@ -103,17 +125,24 @@ fun WeekPager(events: List<Event>) {
                 Modifier.padding(bottom = 8.dp),
                 style = MaterialTheme.typography.titleLarge
             )
-            if (dayEvents.isNotEmpty()) {
-                LazyColumn(Modifier.fillMaxSize()) {
-                    DayItem(dayEvents, showNumbers)
+            AnimatedVisibility(visible = isLoadingNewEvents) {
+                Box(Modifier.fillMaxSize()) {
+                    CircularProgressIndicator(Modifier.align(Alignment.Center))
                 }
-            } else {
-                Column(
-                    Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(text = stringResource(id = R.string.free_day))
+            }
+            AnimatedVisibility(visible = !isLoadingNewEvents) {
+                if (dayEvents.isNotEmpty()) {
+                    LazyColumn(Modifier.fillMaxSize()) {
+                        DayItem(dayEvents, showNumbers)
+                    }
+                } else {
+                    Column(
+                        Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(text = stringResource(id = R.string.free_day))
+                    }
                 }
             }
         }
