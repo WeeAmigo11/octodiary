@@ -6,8 +6,7 @@ import org.bxkr.octodiary.models.homeworks.HomeworksResponse
 import org.bxkr.octodiary.models.lessonschedule.LessonSchedule
 import org.bxkr.octodiary.models.mark.MarkInfo
 import org.bxkr.octodiary.models.marklistdate.MarkListDate
-import org.bxkr.octodiary.models.marklistsubject.MarkListSubject
-import org.bxkr.octodiary.models.marklistsubject.MarkListSubjectItem
+import org.bxkr.octodiary.models.marklistsubjectshort.MarkListSubjectItem
 import org.bxkr.octodiary.models.profile.ProfileResponse
 import org.bxkr.octodiary.models.schoolinfo.SchoolInfo
 import org.bxkr.octodiary.models.visits.VisitsResponse
@@ -156,12 +155,12 @@ interface MainSchoolAPI {
      * @param mesSubsystem MES subsystem (["familymp"][MESAPIConfig.FAMILYMP] by default).
      * @return List of [MarkListSubjectItem]s.
      */
-    @GET("family/mobile/v1/subject_marks/short")
+    @GET("family/mobile/v1/subject_marks")
     fun subjectMarks(
         @Header("auth-token") accessToken: String,
         @Query("student_id") studentId: Long,
-        @Header("X-Mes-Subsystem") mesSubsystem: String = MESAPIConfig.FAMILYMP
-    ): Call<MarkListSubject>
+        @Header("X-Mes-Subsystem") mesSubsystem: String = MESAPIConfig.FAMILYMP,
+    ): Call<org.bxkr.octodiary.models.marklistsubject.MarkListSubject>
 
     /**
      * Sets homework as done.

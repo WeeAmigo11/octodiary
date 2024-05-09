@@ -91,7 +91,7 @@ fun MarkSheetContent(mark: Mark, subjectId: Long) {
     }
     val subject = remember {
         if (DataService.hasMarksSubject) {
-            DataService.marksSubject.firstOrNull { it.id == subjectId }
+            DataService.marksSubject.firstOrNull { it.subjectId == subjectId }
         } else null
     }
 
@@ -138,12 +138,13 @@ fun MarkSheetContent(mark: Mark, subjectId: Long) {
                 MarkComp(mark, enabled = false, subjectId = 0L)
                 if (subject != null) {
                     if (context.mainPrefs.get("subject_rating") ?: true) {
-                        DataService.subjectRanking.firstOrNull { it.subjectId == subject.id }?.let {
+                        DataService.subjectRanking.firstOrNull { it.subjectId == subject.subjectId }
+                            ?.let {
                             FilledIconButton(
                                 {
                                     modalBottomSheetContentLive.postValue {
                                         SubjectRatingBottomSheet(
-                                            subject.id,
+                                            subject.subjectId,
                                             subject.subjectName
                                         )
                                     }
@@ -187,7 +188,7 @@ fun MarkSheetContent(mark: Mark, subjectId: Long) {
                             MaterialTheme.colorScheme.tertiary
                         )
                         Text(
-                            subject.average ?: subject.fixedValue ?: "",
+                            subject.currentPeriod?.fixedValue ?: subject.currentPeriod?.value ?: "",
                             Modifier.padding(end = 4.dp),
                             color = MaterialTheme.colorScheme.tertiary,
                             style = textStyle
