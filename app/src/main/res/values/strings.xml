@@ -284,5 +284,6 @@
     <string name="main_rating">Class rating</string>
     <string name="subject_rating">Subject ratings</string>
     <string name="ratings">Ratings</string>
+    <string name="select">Select</string>
     <string name="based_on_current_marks">Based on current period marks</string>
 </resources>
