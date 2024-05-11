@@ -103,9 +103,9 @@ import org.bxkr.octodiary.notificationPrefs
 import org.bxkr.octodiary.reloadEverythingLive
 import org.bxkr.octodiary.save
 import org.bxkr.octodiary.screenLive
-import org.bxkr.octodiary.sumLists
 import org.bxkr.octodiary.screens.navsections.daybook.customScheduleRefreshListenerLive
 import org.bxkr.octodiary.screens.navsections.daybook.updatedScheduleLive
+import org.bxkr.octodiary.sumLists
 import org.bxkr.octodiary.ui.theme.OctoDiaryTheme
 import java.util.Calendar
 import java.util.Collections
@@ -157,9 +157,7 @@ fun NavScreen(modifier: Modifier, pinFinished: MutableState<Boolean>) {
                             notificationPrefs.save(
                                 "student_id" to DataService.profile.children[DataService.currentProfile].studentId,
                                 "mark_ids" to Gson().toJson(sumLists(
-                                    DataService.marksSubject.map { subject ->
-                                        subject.marks?.map { mark -> mark.id }
-                                    }
+                                    DataService.marksSubject.map { it.currentPeriod?.marks?.map { it.id } }
                                 )),
                                 "total_count" to 0
                             )

@@ -34,7 +34,7 @@ class UpdateReceiver : BroadcastReceiver() {
                     MainSchoolAPI.getBaseUrl(
                         Diary.values()[subsystem]
                     )
-                ).subjectMarks(
+                ).subjectMarksShort(
                     accessToken = token,
                     studentId = studentId,
                 ).baseEnqueue(

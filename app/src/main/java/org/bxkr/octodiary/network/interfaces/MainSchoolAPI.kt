@@ -163,6 +163,21 @@ interface MainSchoolAPI {
     ): Call<org.bxkr.octodiary.models.marklistsubject.MarkListSubject>
 
     /**
+     * Gets marks by subject in short form only for current period.
+     *
+     * @param accessToken Access token.
+     * @param studentId Student ID.
+     * @param mesSubsystem MES subsystem (["familymp"][MESAPIConfig.FAMILYMP] by default).
+     * @return List of [MarkListSubjectItem]s.
+     */
+    @GET("family/mobile/v1/subject_marks/short")
+    fun subjectMarksShort(
+        @Header("auth-token") accessToken: String,
+        @Query("student_id") studentId: Long,
+        @Header("X-Mes-Subsystem") mesSubsystem: String = MESAPIConfig.FAMILYMP,
+    ): Call<org.bxkr.octodiary.models.marklistsubjectshort.MarkListSubject>
+
+    /**
      * Sets homework as done.
      *
      * @param accessToken Access token.
