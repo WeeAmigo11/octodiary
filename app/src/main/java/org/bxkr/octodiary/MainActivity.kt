@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.FilterAlt
 import androidx.compose.material.icons.rounded.Groups
 import androidx.compose.material.icons.rounded.Settings
@@ -82,6 +83,7 @@ import org.bxkr.octodiary.screens.CallbackScreen
 import org.bxkr.octodiary.screens.CallbackType
 import org.bxkr.octodiary.screens.LoginScreen
 import org.bxkr.octodiary.screens.NavScreen
+import org.bxkr.octodiary.screens.navsections.daybook.DayChooser
 import org.bxkr.octodiary.ui.theme.CustomColorScheme
 import org.bxkr.octodiary.ui.theme.OctoDiaryTheme
 import java.util.UUID
@@ -118,9 +120,6 @@ class MainActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         createNotificationChannel()
-        if (mainPrefs.get<String>("deviceId") == null) {
-            mainPrefs.save("deviceId" to UUID.randomUUID().toString())
-        }
         if (ActivityCompat.checkSelfPermission(
                 this,
                 Manifest.permission.POST_NOTIFICATIONS
@@ -248,6 +247,19 @@ class MainActivity : FragmentActivity() {
                                         Icon(
                                             Icons.Rounded.Settings,
                                             stringResource(id = R.string.settings)
+                                        )
+                                    }
+                                }
+                            }
+                            AnimatedVisibility(currentRoute == NavSection.Daybook.route) {
+                                Row {
+                                    IconButton(onClick = {
+                                        modalDialogContentLive.value = { DayChooser() }
+                                        modalDialogStateLive.postValue(true)
+                                    }) {
+                                        Icon(
+                                            Icons.Rounded.CalendarMonth,
+                                            stringResource(id = R.string.by_date)
                                         )
                                     }
                                 }

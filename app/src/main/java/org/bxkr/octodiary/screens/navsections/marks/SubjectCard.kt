@@ -40,11 +40,11 @@ import org.bxkr.octodiary.mainPrefs
 import org.bxkr.octodiary.modalBottomSheetContentLive
 import org.bxkr.octodiary.modalBottomSheetStateLive
 import org.bxkr.octodiary.models.events.Mark
-import org.bxkr.octodiary.models.marklistsubject.MarkListSubjectItem
+import org.bxkr.octodiary.models.marklistsubject.Period
 
 @Composable
-fun SubjectCard(subject: MarkListSubjectItem) {
-    val isGlow = subject.id == scrollToSubjectIdLive.value
+fun SubjectCard(period: Period, subjectId: Long, subjectName: String, showRating: Boolean) {
+    val isGlow = subjectId == scrollToSubjectIdLive.value
     AnimatedContent(targetState = isGlow) { isGlowA ->
         Card(
             Modifier
@@ -69,46 +69,44 @@ fun SubjectCard(subject: MarkListSubjectItem) {
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        subject.subjectName,
+                        subjectName,
                         Modifier.weight(1f),
                         style = MaterialTheme.typography.titleMedium,
                         overflow = TextOverflow.Ellipsis
                     )
                     Row {
-                        if (subject.average != null) {
-                            FilterChip(
-                                onClick = {},
-                                label = {
-                                    Text(
-                                        subject.average, color = when (subject.dynamic) {
-                                            "UP" -> MaterialTheme.colorScheme.onPrimaryContainer
-                                            else -> MaterialTheme.colorScheme.onTertiaryContainer
-                                        }
-                                    )
-                                },
-                                selected = true,
-                                colors = FilterChipDefaults.filterChipColors(selectedContainerColor = if (subject.dynamic == "UP") MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.tertiaryContainer),
-                                leadingIcon = {
-                                    if (subject.dynamic == "UP") {
-                                        Icon(
-                                            imageVector = Icons.Rounded.ArrowDropUp,
-                                            contentDescription = subject.dynamic,
-                                            tint = MaterialTheme.colorScheme.primary
-                                        )
-                                    } else {
-                                        Icon(
-                                            imageVector = Icons.Rounded.ArrowDropDown,
-                                            contentDescription = subject.dynamic,
-                                            tint = MaterialTheme.colorScheme.tertiary
-                                        )
+                        FilterChip(
+                            onClick = {},
+                            label = {
+                                Text(
+                                    period.value, color = when (period.dynamic) {
+                                        "UP" -> MaterialTheme.colorScheme.onPrimaryContainer
+                                        else -> MaterialTheme.colorScheme.onTertiaryContainer
                                     }
-                                },
-                                modifier = Modifier.padding(start = 16.dp)
-                            )
-                        }
-                        if (subject.fixedValue != null) {
+                                )
+                            },
+                            selected = true,
+                            colors = FilterChipDefaults.filterChipColors(selectedContainerColor = if (period.dynamic == "UP") MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.tertiaryContainer),
+                            leadingIcon = {
+                                if (period.dynamic == "UP") {
+                                    Icon(
+                                        imageVector = Icons.Rounded.ArrowDropUp,
+                                        contentDescription = period.dynamic,
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.Rounded.ArrowDropDown,
+                                        contentDescription = period.dynamic,
+                                        tint = MaterialTheme.colorScheme.tertiary
+                                    )
+                                }
+                            },
+                            modifier = Modifier.padding(start = 16.dp)
+                        )
+                        if (period.fixedValue != null) {
                             FilterChip(
-                                selected = true, onClick = {}, label = { Text(subject.fixedValue) },
+                                selected = true, onClick = {}, label = { Text(period.fixedValue) },
                                 leadingIcon = {
                                     Icon(
                                         imageVector = Icons.Rounded.Done,
@@ -121,40 +119,40 @@ fun SubjectCard(subject: MarkListSubjectItem) {
                         }
                     }
                 }
-                if (subject.marks != null) {
-                    Row(
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.Bottom,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 8.dp)
-                    ) {
-                        LazyRow {
-                            items(subject.marks) {
-                                MarkComp(Mark.fromMarkListSubject(it), subjectId = subject.id)
-                            }
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Bottom,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
+                ) {
+                    LazyRow(Modifier.weight(1f, fill = true)) {
+                        items(period.marks) {
+                            MarkComp(Mark.fromMarkListSubject(it), subjectId = subjectId)
                         }
-                        if (LocalContext.current.mainPrefs.get("subject_rating") ?: true) {
-                            DataService.subjectRanking.firstOrNull { it.subjectId == subject.id }
-                                ?.let {
-                                    FilledIconButton(onClick = {
-                                        modalBottomSheetStateLive.postValue(true)
-                                        modalBottomSheetContentLive.postValue {
-                                            SubjectRatingBottomSheet(
-                                                subject.id,
-                                                subject.subjectName
-                                            )
-                                        }
-                                    }, shape = CloverShape) {
-
-                                        Text(
-                                            it.rank.rankPlace.toString(),
-                                            style = MaterialTheme.typography.titleMedium,
-                                            fontWeight = FontWeight.Bold
+                    }
+                    if ((LocalContext.current.mainPrefs.get("subject_rating")
+                            ?: true) and showRating
+                    ) {
+                        DataService.subjectRanking.firstOrNull { it.subjectId == subjectId }
+                            ?.let {
+                                FilledIconButton(onClick = {
+                                    modalBottomSheetStateLive.postValue(true)
+                                    modalBottomSheetContentLive.postValue {
+                                        SubjectRatingBottomSheet(
+                                            subjectId,
+                                            subjectName
                                         )
                                     }
+                                }, shape = CloverShape, modifier = Modifier) {
+
+                                    Text(
+                                        it.rank.rankPlace.toString(),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold
+                                    )
                                 }
-                        }
+                            }
                     }
                 }
             }

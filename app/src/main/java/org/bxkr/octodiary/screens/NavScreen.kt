@@ -104,6 +104,8 @@ import org.bxkr.octodiary.reloadEverythingLive
 import org.bxkr.octodiary.save
 import org.bxkr.octodiary.screenLive
 import org.bxkr.octodiary.sumLists
+import org.bxkr.octodiary.screens.navsections.daybook.customScheduleRefreshListenerLive
+import org.bxkr.octodiary.screens.navsections.daybook.updatedScheduleLive
 import org.bxkr.octodiary.ui.theme.OctoDiaryTheme
 import java.util.Calendar
 import java.util.Collections
@@ -193,16 +195,38 @@ fun NavScreen(modifier: Modifier, pinFinished: MutableState<Boolean>) {
                 }
                 AnimatedVisibility(localLoadedState) {
                     val refreshState = rememberPullToRefreshState()
+                    var defaultRefresh by remember { mutableStateOf(true) }
                     if (refreshState.isRefreshing) {
-                        DataService.loadedEverything.value = false
-                        DataService.loadingStarted = false
-                        DataService.updateAll(context)
+                        when (navController.value?.currentDestination?.route) {
+                            NavSection.Daybook.route -> {
+                                val customScheduleRefreshListener =
+                                    customScheduleRefreshListenerLive.value
+                                if (customScheduleRefreshListener != null) {
+                                    customScheduleRefreshListener()
+                                } else {
+                                    defaultRefresh = false
+                                    DataService.updateEventCalendar {
+                                        updatedScheduleLive.postValue(
+                                            updatedScheduleLive.value?.not() ?: false
+                                        )
+                                        refreshState.endRefresh()
+                                    }
+                                }
+                            }
+
+                            else -> {
+                                defaultRefresh = true
+                                DataService.loadedEverything.value = false
+                                DataService.loadingStarted = false
+                                DataService.updateAll(context)
+                            }
+                        }
                     }
-                    if (DataService.loadedEverything.value) {
+                    if (DataService.loadedEverything.value && defaultRefresh) {
                         refreshState.endRefresh()
                     }
                     LaunchedEffect(Unit) {
-                        DataService.sendStatistic(context.mainPrefs.get<String>("deviceId")!!) {}
+                        DataService.sendStatistic {}
                     }
                     NavHost(
                         navController = navController.value!!,

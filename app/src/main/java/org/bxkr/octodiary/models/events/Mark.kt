@@ -62,7 +62,7 @@ data class Mark(
                     originalGradeSystemType,
                     pointDate,
                     value,
-                    values.map { Value.fromMarkListSubject(it) },
+                    values = null,
                     weight
                 )
             }

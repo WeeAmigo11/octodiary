@@ -229,4 +229,6 @@
     <string name="main_rating">Рейтинг по классу</string>
     <string name="subject_rating">Рейтинги по предметам</string>
     <string name="ratings">Рейтинги</string>
+    <string name="select">Выбрать</string>
+    <string name="based_on_current_marks">На основе оценок за текущий период</string>
 </resources>
