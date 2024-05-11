@@ -120,9 +120,6 @@ class MainActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         createNotificationChannel()
-        if (mainPrefs.get<String>("deviceId") == null) {
-            mainPrefs.save("deviceId" to UUID.randomUUID().toString())
-        }
         if (ActivityCompat.checkSelfPermission(
                 this,
                 Manifest.permission.POST_NOTIFICATIONS

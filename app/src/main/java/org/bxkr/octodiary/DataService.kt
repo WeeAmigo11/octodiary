@@ -475,10 +475,13 @@ object DataService {
             }) {}
     }
 
-    fun sendStatistic(deviceId: String, onUpdated: () -> Unit) {
+    fun sendStatistic(onUpdated: () -> Unit) {
         assert(this::userId.isInitialized)
 
-        externalApi().sendStat(subsystem.ordinal, deviceId).baseEnqueue { onUpdated() }
+        externalApi().sendStat(
+            subsystem.ordinal,
+            encodeToBase64(hash(userId[0].id.toString()))
+        ).baseEnqueue { onUpdated() }
     }
 
     fun <Model> pushUserSettings(path: String, content: Model, onUpdated: () -> Unit) {
