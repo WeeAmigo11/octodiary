@@ -344,3 +344,9 @@ fun DataService.errorListenerForMessage(errorListener: (String) -> Unit): (error
 fun String.isJwtExpired() =
     split(".")[1].let { decodeFromBase64Json<Map<String, String>>(it) }.get("exp")
         ?.toIntOrNull()?.let { Date().time > it }
+
+fun <T> sumLists(list: List<List<T>?>): List<T> {
+    val result = mutableListOf<T>()
+    list.forEach { if (it != null) result.addAll(it) }
+    return result
+}
