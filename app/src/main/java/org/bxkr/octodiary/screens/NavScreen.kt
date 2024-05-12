@@ -457,9 +457,10 @@ fun PinScreen(
     val hapticFeedback = LocalHapticFeedback.current
     val context = LocalActivity.current
     val biometricManager = BiometricManager.from(context)
-    val isBiometricAvailable = biometricManager.canAuthenticate(
+    val isBiometricAvailable = (biometricManager.canAuthenticate(
         BIOMETRIC_STRONG or DEVICE_CREDENTIAL or BIOMETRIC_WEAK
-    ) == BiometricManager.BIOMETRIC_SUCCESS
+    ) == BiometricManager.BIOMETRIC_SUCCESS) && (context.mainPrefs.get<Boolean>("biometric")
+        ?: true)
 
     if (enteredNumbers.value.size >= 4) {
         into.value = enteredNumbers.value.take(4)
