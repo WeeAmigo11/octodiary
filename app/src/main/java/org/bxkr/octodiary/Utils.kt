@@ -6,9 +6,13 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.PackageManager.NameNotFoundException
 import android.graphics.Matrix
+import android.graphics.Typeface
+import android.text.Layout
 import android.util.Log
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
@@ -18,9 +22,26 @@ import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.patrykandpatrick.vico.compose.cartesian.axis.rememberAxisGuidelineComponent
+import com.patrykandpatrick.vico.compose.common.component.fixed
+import com.patrykandpatrick.vico.compose.common.component.rememberLayeredComponent
+import com.patrykandpatrick.vico.compose.common.component.rememberShapeComponent
+import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
+import com.patrykandpatrick.vico.compose.common.of
+import com.patrykandpatrick.vico.compose.common.shape.markerCornered
+import com.patrykandpatrick.vico.core.cartesian.CartesianMeasureContext
+import com.patrykandpatrick.vico.core.cartesian.HorizontalDimensions
+import com.patrykandpatrick.vico.core.cartesian.Insets
+import com.patrykandpatrick.vico.core.cartesian.marker.CartesianMarker
+import com.patrykandpatrick.vico.core.cartesian.marker.DefaultCartesianMarker
+import com.patrykandpatrick.vico.core.common.Dimensions
+import com.patrykandpatrick.vico.core.common.component.TextComponent
+import com.patrykandpatrick.vico.core.common.copyColor
+import com.patrykandpatrick.vico.core.common.shape.Corner
 import okhttp3.ResponseBody
 import org.bxkr.octodiary.models.rankingforsubject.ErrorBody
 import retrofit2.Call
@@ -360,3 +381,78 @@ fun getWeekday(date: Date): Int = Calendar.getInstance().run {
 fun Date.isDateBetween(start: Date, end: Date): Boolean = time > start.time && time < end.time
 fun Date.isDateBetween(range: List<Long>): Boolean = time > range[0] && time < range[1]
 
+@Composable
+fun rememberMarker(
+    labelPosition: DefaultCartesianMarker.LabelPosition = DefaultCartesianMarker.LabelPosition.AroundPoint,
+    showIndicator: Boolean = true,
+): CartesianMarker {
+    val labelBackgroundShape =
+        com.patrykandpatrick.vico.core.common.shape.Shape.markerCornered(Corner.FullyRounded)
+    val labelBackground =
+        rememberShapeComponent(labelBackgroundShape, MaterialTheme.colorScheme.surfaceVariant)
+            .setShadow(
+                radius = 4f,
+                dy = 2f,
+                applyElevationOverlay = true,
+            )
+    val label =
+        rememberTextComponent(
+            color = MaterialTheme.colorScheme.onSurface,
+            background = labelBackground,
+            padding = Dimensions.of(8.dp, 4.dp),
+            typeface = Typeface.MONOSPACE,
+            textAlignment = Layout.Alignment.ALIGN_CENTER,
+            minWidth = TextComponent.MinWidth.fixed(40.dp),
+        )
+    val indicatorFrontComponent = rememberShapeComponent(
+        com.patrykandpatrick.vico.core.common.shape.Shape.Pill,
+        MaterialTheme.colorScheme.surfaceVariant
+    )
+    val indicatorCenterComponent =
+        rememberShapeComponent(com.patrykandpatrick.vico.core.common.shape.Shape.Pill)
+    val indicatorRearComponent =
+        rememberShapeComponent(com.patrykandpatrick.vico.core.common.shape.Shape.Pill)
+    val indicator =
+        rememberLayeredComponent(
+            rear = indicatorRearComponent,
+            front =
+            rememberLayeredComponent(
+                rear = indicatorCenterComponent,
+                front = indicatorFrontComponent,
+                padding = Dimensions.of(5.dp),
+            ),
+            padding = Dimensions.of(10.dp),
+        )
+    val guideline = rememberAxisGuidelineComponent()
+    return remember(label, labelPosition, indicator, showIndicator, guideline) {
+        object : DefaultCartesianMarker(
+            label = label,
+            labelPosition = labelPosition,
+            indicator = if (showIndicator) indicator else null,
+            indicatorSizeDp = 36f,
+            setIndicatorColor =
+            if (showIndicator) {
+                { color ->
+                    indicatorRearComponent.color = color.copyColor(alpha = .15f)
+                    indicatorCenterComponent.color = color
+                    indicatorCenterComponent.setShadow(radius = 12f, color = color)
+                }
+            } else {
+                null
+            },
+            guideline = guideline,
+        ) {
+            override fun getInsets(
+                context: CartesianMeasureContext,
+                outInsets: Insets,
+                horizontalDimensions: HorizontalDimensions,
+            ) {
+                with(context) {
+                    outInsets.top = (1.4f * 4f - 2f).pixels
+                    if (labelPosition == LabelPosition.AroundPoint) return
+                    outInsets.top += label.getHeight(context) + labelBackgroundShape.tickSizeDp.pixels
+                }
+            }
+        }
+    }
+}

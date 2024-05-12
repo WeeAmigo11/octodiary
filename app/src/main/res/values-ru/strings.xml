@@ -231,4 +231,6 @@
     <string name="ratings">Рейтинги</string>
     <string name="select">Выбрать</string>
     <string name="based_on_current_marks">На основе оценок за текущий период</string>
+    <string name="students_count">Количество учеников</string>
+    <string name="class_results">Результат по классу</string>
 </resources>

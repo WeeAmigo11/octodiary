@@ -19,6 +19,7 @@ glide = "1.0.0-beta01"
 glance-appwidget = "1.0.0"
 glance-material3 = "1.0.0"
 biometric-ktx = "1.2.0-alpha05"
+vico = "2.0.0-alpha.19"
 
 [libraries]
 core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }
@@ -46,6 +47,8 @@ converter-scalars = { group = "com.squareup.retrofit2", name = "converter-scalar
 androidx-glance-appwidget = { group = "androidx.glance", name = "glance-appwidget", version.ref = "glance-appwidget" }
 androidx-glance-material3 = { group = "androidx.glance", name = "glance-material3", version.ref = "glance-material3" }
 androidx-biometric-ktx = { group = "androidx.biometric", name = "biometric-ktx", version.ref = "biometric-ktx" }
+vico-compose = { group = "com.patrykandpatrick.vico", name = "compose", version.ref = "vico" }
+vico-compose-m3 = { group = "com.patrykandpatrick.vico", name = "compose-m3", version.ref = "vico" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
