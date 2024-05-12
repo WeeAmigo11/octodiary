@@ -41,7 +41,7 @@ enum class Diary(
     @ColorRes val primaryLogGradientColors: List<Int>,
     @StringRes val primaryLogInLabel: Int,
     val primaryLogInFunction: (Context) -> Unit,
-    val alternativeLogIn: @Composable (Modifier, (() -> Unit) -> Unit) -> Unit
+    val alternativeLogIn: @Composable (Modifier, (() -> Unit) -> Unit) -> Unit,
 ) {
     MES(
         R.string.mes,
@@ -141,6 +141,19 @@ enum class Diary(
                     .padding(top = 32.dp)
             ) {
                 Text(stringResource(id = R.string.log_in))
+            }
+            androidx.compose.material3.OutlinedButton(
+                onClick = {
+                    context.logInWithPassword(
+                        "demousername",
+                        "demopassword",
+                        coroutineScope
+                    )
+                },
+                modifier = modifier
+                    .padding(top = 8.dp)
+            ) {
+                Text(stringResource(id = R.string.demo_mode))
             }
         }
     )

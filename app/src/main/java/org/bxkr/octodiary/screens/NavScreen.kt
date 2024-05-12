@@ -91,6 +91,7 @@ import org.bxkr.octodiary.UpdateReceiver
 import org.bxkr.octodiary.authPrefs
 import org.bxkr.octodiary.cachePrefs
 import org.bxkr.octodiary.get
+import org.bxkr.octodiary.isDemo
 import org.bxkr.octodiary.logOut
 import org.bxkr.octodiary.mainPrefs
 import org.bxkr.octodiary.navControllerLive
@@ -169,12 +170,14 @@ fun NavScreen(modifier: Modifier, pinFinished: MutableState<Boolean>) {
                             PendingIntent.FLAG_IMMUTABLE
                         )
                         val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
-                        alarmManager.setRepeating(
-                            AlarmManager.RTC_WAKEUP,
-                            Calendar.getInstance().timeInMillis,
-                            60 * 1000,
-                            pendingIntent
-                        )
+                        if (!context.isDemo) {
+                            alarmManager.setRepeating(
+                                AlarmManager.RTC_WAKEUP,
+                                Calendar.getInstance().timeInMillis,
+                                60 * 1000,
+                                pendingIntent
+                            )
+                        }
                     }
                 }
                 LaunchedEffect(rememberCoroutineScope()) {
@@ -195,30 +198,32 @@ fun NavScreen(modifier: Modifier, pinFinished: MutableState<Boolean>) {
                     val refreshState = rememberPullToRefreshState()
                     var defaultRefresh by remember { mutableStateOf(true) }
                     if (refreshState.isRefreshing) {
-                        when (navController.value?.currentDestination?.route) {
-                            NavSection.Daybook.route -> {
-                                val customScheduleRefreshListener =
-                                    customScheduleRefreshListenerLive.value
-                                if (customScheduleRefreshListener != null) {
-                                    customScheduleRefreshListener()
-                                } else {
-                                    defaultRefresh = false
-                                    DataService.updateEventCalendar {
-                                        updatedScheduleLive.postValue(
-                                            updatedScheduleLive.value?.not() ?: false
-                                        )
-                                        refreshState.endRefresh()
+                        if (!isDemo) {
+                            when (navController.value?.currentDestination?.route) {
+                                NavSection.Daybook.route -> {
+                                    val customScheduleRefreshListener =
+                                        customScheduleRefreshListenerLive.value
+                                    if (customScheduleRefreshListener != null) {
+                                        customScheduleRefreshListener()
+                                    } else {
+                                        defaultRefresh = false
+                                        DataService.updateEventCalendar {
+                                            updatedScheduleLive.postValue(
+                                                updatedScheduleLive.value?.not() ?: false
+                                            )
+                                            refreshState.endRefresh()
+                                        }
                                     }
                                 }
-                            }
 
-                            else -> {
-                                defaultRefresh = true
-                                DataService.loadedEverything.value = false
-                                DataService.loadingStarted = false
-                                DataService.updateAll(context)
+                                else -> {
+                                    defaultRefresh = true
+                                    DataService.loadedEverything.value = false
+                                    DataService.loadingStarted = false
+                                    DataService.updateAll(context)
+                                }
                             }
-                        }
+                        } else refreshState.endRefresh()
                     }
                     if (DataService.loadedEverything.value && defaultRefresh) {
                         refreshState.endRefresh()
@@ -277,6 +282,10 @@ fun NavScreen(modifier: Modifier, pinFinished: MutableState<Boolean>) {
                                 Diary.values()[authPrefs.get<Int>("subsystem") ?: 0]
                             DataService.loadFromCache { cachePrefs.get<String>(it) ?: "" }
                             DataService.loadedEverything.value = true
+                        } else if (isDemo) {
+                            DataService.subsystem = Diary.MES
+                            DataService.run { loadDemoCache() }
+                            DataService.loadedEverything.value = true
                         } else {
                             DataService.updateAll(context)
                         }
@@ -306,7 +315,7 @@ fun NavScreen(modifier: Modifier, pinFinished: MutableState<Boolean>) {
 
 @Composable
 fun EnterPinDialog(
-    pinFinished: MutableState<Boolean>
+    pinFinished: MutableState<Boolean>,
 ) {
     val currentPin = remember { mutableStateOf(emptyList<Int>()) }
     var wrongPin by remember { mutableStateOf(false) }
@@ -374,7 +383,7 @@ fun SetPinDialog(
     pinFinished: MutableState<Boolean>,
     initialPin: MutableState<List<Int>>,
     secondPin: MutableState<List<Int>>,
-    closeButtonTitle: String = stringResource(id = R.string.skip)
+    closeButtonTitle: String = stringResource(id = R.string.skip),
 ) {
     val context = LocalContext.current
     Dialog(properties = DialogProperties(

@@ -9,6 +9,7 @@ import android.graphics.Matrix
 import android.graphics.Typeface
 import android.text.Layout
 import android.util.Log
+import androidx.annotation.RawRes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
@@ -284,7 +285,8 @@ fun Activity.logOut(reason: String? = null) {
     mainPrefs.save(
         "first_launch" to true,
         "has_pin" to false,
-        "pin" to null
+        "pin" to null,
+        "demo" to null
     )
     cachePrefs.clear()
     notificationPrefs.clear()
@@ -456,3 +458,15 @@ fun rememberMarker(
         }
     }
 }
+
+var Context.isDemo
+    get() = mainPrefs.get<Boolean>("demo") ?: false
+    set(value) = mainPrefs.save("demo" to value)
+
+inline fun <reified T> Context.getDemoProperty(@RawRes propertyRes: Int): T {
+    val text =
+        resources.openRawResource(propertyRes).bufferedReader(Charsets.UTF_8).use { it.readText() }
+    return Gson().fromJson(text, object : TypeToken<T>() {}.type)
+}
+
+val demoScheduleDate = Date(1710190800000)

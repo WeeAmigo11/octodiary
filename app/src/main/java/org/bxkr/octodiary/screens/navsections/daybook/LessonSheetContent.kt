@@ -41,6 +41,8 @@ import org.bxkr.octodiary.components.ErrorMessage
 import org.bxkr.octodiary.components.MarkComp
 import org.bxkr.octodiary.components.WebViewDialog
 import org.bxkr.octodiary.formatToHumanDay
+import org.bxkr.octodiary.getDemoProperty
+import org.bxkr.octodiary.isDemo
 import org.bxkr.octodiary.models.lessonschedule.LessonSchedule
 import org.bxkr.octodiary.parseFromDay
 
@@ -50,8 +52,11 @@ fun LessonSheetContent(lessonId: Long) {
     var errorText by remember { mutableStateOf<String?>(null) }
     var openWebView by remember { mutableStateOf(false) }
     var webViewUrl by remember { mutableStateOf("") }
+    val context = LocalContext.current
     LaunchedEffect(Unit) {
-        DataService.getLessonInfo(lessonId, { errorText = it }) {
+        if (context.isDemo) {
+            lessonInfo = context.getDemoProperty(R.raw.demo_lesson_info)
+        } else DataService.getLessonInfo(lessonId, { errorText = it }) {
             lessonInfo = it
         }
     }
@@ -103,7 +108,7 @@ fun LessonSheetContent(lessonId: Long) {
                             material.items.forEach {
                                 val ctx = LocalContext.current
                                 OutlinedButton(onClick = {
-                                    if (material.type == "attachments") {
+                                    if (material.type == "attachments" || context.isDemo) {
                                         val browserIntent = Intent(
                                             Intent.ACTION_VIEW,
                                             Uri.parse(

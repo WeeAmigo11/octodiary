@@ -58,6 +58,8 @@ import org.bxkr.octodiary.DataService
 import org.bxkr.octodiary.NavSection
 import org.bxkr.octodiary.R
 import org.bxkr.octodiary.get
+import org.bxkr.octodiary.getDemoProperty
+import org.bxkr.octodiary.isDemo
 import org.bxkr.octodiary.mainPrefs
 import org.bxkr.octodiary.modalBottomSheetContentLive
 import org.bxkr.octodiary.modalBottomSheetStateLive
@@ -107,9 +109,12 @@ fun MarkComp(
 fun MarkSheetContent(mark: Mark, subjectId: Long) {
     var markInfo by remember { mutableStateOf<MarkInfo?>(null) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    val context = LocalContext.current
     LaunchedEffect(Unit) {
-        DataService.getMarkInfo(mark.id, { errorMessage = it }) {
-            markInfo = it
+        if (context.isDemo) {
+            markInfo = context.getDemoProperty(R.raw.demo_mark_info)
+        } else {
+            DataService.getMarkInfo(mark.id, { errorMessage = it }) { markInfo = it }
         }
     }
     val subject = remember {
