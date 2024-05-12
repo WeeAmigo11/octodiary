@@ -75,6 +75,7 @@ object DataService {
         ::userId to R.raw.demo_user_id,
         ::sessionUser to R.raw.demo_session_user,
         ::eventCalendar to R.raw.demo_event_calendar,
+        ::eventsRange to R.raw.demo_events_range,
         ::ranking to R.raw.demo_ranking,
         ::classMembers to R.raw.demo_class_members,
         ::profile to R.raw.demo_profile,

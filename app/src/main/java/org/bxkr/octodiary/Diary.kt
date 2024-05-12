@@ -146,7 +146,8 @@ enum class Diary(
                 onClick = {
                     context.logInWithPassword(
                         "demousername",
-                        "demopassword"
+                        "demopassword",
+                        coroutineScope
                     )
                 },
                 modifier = modifier

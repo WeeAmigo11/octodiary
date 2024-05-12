@@ -31,10 +31,12 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.MutableLiveData
 import org.bxkr.octodiary.DataService
 import org.bxkr.octodiary.R
+import org.bxkr.octodiary.demoScheduleDate
 import org.bxkr.octodiary.formatToDay
 import org.bxkr.octodiary.get
 import org.bxkr.octodiary.getWeekday
 import org.bxkr.octodiary.isDateBetween
+import org.bxkr.octodiary.isDemo
 import org.bxkr.octodiary.mainPrefs
 import org.bxkr.octodiary.models.events.Event
 import org.bxkr.octodiary.parseLongDate
@@ -45,7 +47,7 @@ import java.util.Date
 
 val customScheduleRefreshListenerLive = MutableLiveData<() -> Unit>(null)
 val updatedScheduleLive = MutableLiveData(true)
-val daySelectedLive = MutableLiveData<Date>(Date())
+val daySelectedLive = MutableLiveData<Date>()
 
 @Composable
 fun ScheduleScreen() {
@@ -65,15 +67,17 @@ fun ScheduleScreen() {
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun WeekPager(eventsLoaded: List<Event>) {
+    val isDemo = LocalContext.current.isDemo
     var events by remember { mutableStateOf(eventsLoaded) }
     var isLoadingNewEvents by remember { mutableStateOf(false) }
     var currentDateRange by remember { mutableStateOf(DataService.eventsRange) }
     val showNumbers = LocalContext.current.mainPrefs.get("show_lesson_numbers") ?: true
     val weekdays = remember { (1..7).toList().also { Collections.rotate(it, -1) } }
     val dayPosition =
-        rememberPagerState(initialPage = weekdays.indexOf(getWeekday(Date())) + 1,
+        rememberPagerState(
+            initialPage = weekdays.indexOf(getWeekday(if (!isDemo) Date() else demoScheduleDate)) + 1,
             pageCount = { 7 })
-    val currentDay = daySelectedLive.observeAsState(Date())
+    val currentDay = daySelectedLive.observeAsState(if (!isDemo) Date() else demoScheduleDate)
     LaunchedEffect(dayPosition) {
         snapshotFlow { dayPosition.currentPage }.collect { page ->
             if (weekdays.indexOf(getWeekday(currentDay.value)) != page) {
@@ -95,7 +99,7 @@ fun WeekPager(eventsLoaded: List<Event>) {
                 events = eventsLoaded
                 currentDateRange = DataService.eventsRange
             }
-            if (!date.isDateBetween(currentDateRange)) {
+            if (!date.isDateBetween(currentDateRange) && !isDemo) {
                 isLoadingNewEvents = true
                 DataService.getEventWeek(date) { eventsResponse, range ->
                     currentDateRange = range

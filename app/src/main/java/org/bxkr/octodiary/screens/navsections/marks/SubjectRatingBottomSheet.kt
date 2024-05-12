@@ -18,6 +18,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastJoinToString
@@ -25,14 +26,22 @@ import org.bxkr.octodiary.DataService
 import org.bxkr.octodiary.R
 import org.bxkr.octodiary.components.ErrorMessage
 import org.bxkr.octodiary.components.RankingMemberCard
+import org.bxkr.octodiary.getDemoProperty
+import org.bxkr.octodiary.isDemo
 import org.bxkr.octodiary.models.rankingforsubject.RankingForSubject
 
 @Composable
 fun SubjectRatingBottomSheet(subjectId: Long, subjectName: String) {
     var ranking by remember { mutableStateOf<List<RankingForSubject>?>(null) }
     var errorText by remember { mutableStateOf<String?>(null) }
+    val context = LocalContext.current
     LaunchedEffect(Unit) {
-        DataService.getRankingForSubject(subjectId, { errorText = it }) { ranking = it }
+        if (context.isDemo) {
+            ranking =
+                context.getDemoProperty<List<RankingForSubject>>(R.raw.demo_ranking_for_subject)
+        } else {
+            DataService.getRankingForSubject(subjectId, { errorText = it }) { ranking = it }
+        }
     }
 
     Box(

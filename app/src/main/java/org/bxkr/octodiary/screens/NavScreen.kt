@@ -170,12 +170,14 @@ fun NavScreen(modifier: Modifier, pinFinished: MutableState<Boolean>) {
                             PendingIntent.FLAG_IMMUTABLE
                         )
                         val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
-                        alarmManager.setRepeating(
-                            AlarmManager.RTC_WAKEUP,
-                            Calendar.getInstance().timeInMillis,
-                            60 * 1000,
-                            pendingIntent
-                        )
+                        if (!context.isDemo) {
+                            alarmManager.setRepeating(
+                                AlarmManager.RTC_WAKEUP,
+                                Calendar.getInstance().timeInMillis,
+                                60 * 1000,
+                                pendingIntent
+                            )
+                        }
                     }
                 }
                 LaunchedEffect(rememberCoroutineScope()) {

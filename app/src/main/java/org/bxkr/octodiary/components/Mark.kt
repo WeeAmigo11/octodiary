@@ -29,7 +29,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
@@ -58,9 +57,9 @@ import org.bxkr.octodiary.CloverShape
 import org.bxkr.octodiary.DataService
 import org.bxkr.octodiary.NavSection
 import org.bxkr.octodiary.R
+import org.bxkr.octodiary.get
 import org.bxkr.octodiary.getDemoProperty
 import org.bxkr.octodiary.isDemo
-import org.bxkr.octodiary.get
 import org.bxkr.octodiary.mainPrefs
 import org.bxkr.octodiary.modalBottomSheetContentLive
 import org.bxkr.octodiary.modalBottomSheetStateLive
@@ -120,7 +119,7 @@ fun MarkSheetContent(mark: Mark, subjectId: Long) {
     }
     val subject = remember {
         if (DataService.hasMarksSubject) {
-            DataService.marksSubject.firstOrNull { it.id == subjectId }
+            DataService.marksSubject.firstOrNull { it.subjectId == subjectId }
         } else null
     }
 

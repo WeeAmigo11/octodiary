@@ -6,10 +6,10 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.PackageManager.NameNotFoundException
 import android.graphics.Matrix
-import androidx.annotation.RawRes
 import android.graphics.Typeface
 import android.text.Layout
 import android.util.Log
+import androidx.annotation.RawRes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
@@ -468,3 +468,5 @@ inline fun <reified T> Context.getDemoProperty(@RawRes propertyRes: Int): T {
         resources.openRawResource(propertyRes).bufferedReader(Charsets.UTF_8).use { it.readText() }
     return Gson().fromJson(text, object : TypeToken<T>() {}.type)
 }
+
+val demoScheduleDate = Date(1710190800000)
