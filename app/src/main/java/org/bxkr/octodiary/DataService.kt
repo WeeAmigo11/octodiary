@@ -215,15 +215,19 @@ object DataService {
         }
 
         // Class members request for matching names:
-        dSchoolApi.classMembers(
-            token,
-            classUnitId = profile.children[currentProfile].classUnitId
-        ).baseEnqueue(::baseErrorFunction, ::baseInternalExceptionFunction) {
-            classMembers = it
-            hasClassMembers = true
-            classMembersFinished = true
-            if (rankingFinished) onUpdated()
-        }
+//        dSchoolApi.classMembers(
+//            token,
+//            classUnitId = profile.children[currentProfile].classUnitId
+//        ).baseEnqueue(::baseErrorFunction, ::baseInternalExceptionFunction) {
+//            classMembers = it
+//            hasClassMembers = true
+//            classMembersFinished = true
+//            if (rankingFinished) onUpdated()
+//        }
+        classMembers = listOf()
+        hasClassMembers = true
+        classMembersFinished = true
+        if (rankingFinished) onUpdated()
     }
 
     fun updateSubjectRanking(onUpdated: () -> Unit) {
