@@ -118,7 +118,9 @@ fun EventItem(event: Event, index: Int = -1, showLessonNumbers: Boolean = true) 
                         maxLines = if (!isExpanded) 1 else Int.MAX_VALUE,
                         overflow = TextOverflow.Ellipsis
                     )
-                    EventIndicators(event, Modifier.padding(horizontal = 8.dp))
+                    if (event.source == "PLAN") {
+                        EventIndicators(event, Modifier.padding(horizontal = 8.dp))
+                    }
                 }
                 Text(
                     if (event.isAllDay != true) stringResource(
