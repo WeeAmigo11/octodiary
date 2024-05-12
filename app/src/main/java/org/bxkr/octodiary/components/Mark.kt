@@ -3,6 +3,7 @@ package org.bxkr.octodiary.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -29,10 +30,29 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
+import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottomAxis
+import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStartAxis
+import com.patrykandpatrick.vico.compose.cartesian.layer.rememberColumnCartesianLayer
+import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
+import com.patrykandpatrick.vico.compose.common.ProvideVicoTheme
+import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
+import com.patrykandpatrick.vico.compose.m3.common.rememberM3VicoTheme
+import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
+import com.patrykandpatrick.vico.core.cartesian.data.CartesianValueFormatter
+import com.patrykandpatrick.vico.core.cartesian.data.ColumnCartesianLayerModel
+import com.patrykandpatrick.vico.core.cartesian.data.columnSeries
+import com.patrykandpatrick.vico.core.cartesian.layer.ColumnCartesianLayer
+import com.patrykandpatrick.vico.core.common.Defaults
+import com.patrykandpatrick.vico.core.common.component.LineComponent
+import com.patrykandpatrick.vico.core.common.data.ExtraStore
+import com.patrykandpatrick.vico.core.common.shape.Shape
 import org.bxkr.octodiary.CloverShape
 import org.bxkr.octodiary.DataService
 import org.bxkr.octodiary.NavSection
@@ -43,10 +63,13 @@ import org.bxkr.octodiary.modalBottomSheetContentLive
 import org.bxkr.octodiary.modalBottomSheetStateLive
 import org.bxkr.octodiary.models.events.Mark
 import org.bxkr.octodiary.models.mark.MarkInfo
+import org.bxkr.octodiary.models.marklistsubject.MarkListSubjectItem
 import org.bxkr.octodiary.navControllerLive
 import org.bxkr.octodiary.parseSimpleLongAndFormatToLong
+import org.bxkr.octodiary.rememberMarker
 import org.bxkr.octodiary.screens.navsections.marks.SubjectRatingBottomSheet
 import org.bxkr.octodiary.screens.navsections.marks.scrollToSubjectIdLive
+import kotlin.math.roundToInt
 
 @Composable
 fun MarkComp(
@@ -101,106 +124,199 @@ fun MarkSheetContent(mark: Mark, subjectId: Long) {
             .fillMaxWidth()
     ) {
         if (markInfo != null) {
-            Column(Modifier.padding(16.dp)) {
-                if (subject != null) {
-                    Text(
-                        subject.subjectName,
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                } else {
-                    Text(
-                        stringResource(R.string.mark),
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                }
-                with(markInfo!!) {
-                    Text(teacher.run { "$lastName $firstName $middleName" })
-                    Text(controlFormName)
-                    if (commentExists) Text(comment!!)
-                    Text(
-                        stringResource(
-                            R.string.mark_created,
-                            parseSimpleLongAndFormatToLong(
-                                updatedAt,
-                                stringResource(id = R.string.at_time)
-                            )
-                        ),
-                        Modifier.padding(vertical = 16.dp)
-                    )
-                }
-            }
-            val context = LocalContext.current
-            Column(
-                Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                MarkComp(mark, enabled = false, subjectId = 0L)
-                if (subject != null) {
-                    if (context.mainPrefs.get("subject_rating") ?: true) {
-                        DataService.subjectRanking.firstOrNull { it.subjectId == subject.subjectId }
-                            ?.let {
-                            FilledIconButton(
-                                {
-                                    modalBottomSheetContentLive.postValue {
-                                        SubjectRatingBottomSheet(
-                                            subject.subjectId,
-                                            subject.subjectName
-                                        )
-                                    }
-                                },
-                                Modifier.padding(top = 6.dp),
-                                shape = CloverShape
-                            ) {
-                                Text(
-                                    it.rank.rankPlace.toString(),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
-                    }
-                    val navController = navControllerLive.observeAsState().value
-                    Row(
-                        Modifier
-                            .padding(top = 8.dp)
-                            .clip(CircleShape)
-                            .let {
-                                if (navController != null) {
-                                    it.clickable {
-                                        modalBottomSheetStateLive.postValue(false)
-                                        scrollToSubjectIdLive.value = subjectId
-                                        navController.navigate(route = NavSection.Marks.route)
-                                    }
-                                } else it
-                            }
-                            .background(MaterialTheme.colorScheme.tertiaryContainer, CircleShape)
-                            .padding(4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        val textStyle = MaterialTheme.typography.labelLarge
-                        Icon(
-                            Icons.AutoMirrored.Rounded.TrendingUp,
-                            stringResource(R.string.average_mark),
-                            Modifier
-                                .padding(horizontal = 4.dp)
-                                .size(textStyle.fontSize.value.dp),
-                            MaterialTheme.colorScheme.tertiary
-                        )
-                        Text(
-                            subject.currentPeriod?.fixedValue ?: subject.currentPeriod?.value ?: "",
-                            Modifier.padding(end = 4.dp),
-                            color = MaterialTheme.colorScheme.tertiary,
-                            style = textStyle
-                        )
-                    }
-                }
-            }
+            MarkInfo(markInfo!!, subject, mark)
         } else if (errorMessage == null) {
             CircularProgressIndicator(Modifier.align(Alignment.Center))
         } else {
             ErrorMessage(Modifier.align(Alignment.Center), errorMessage!!)
         }
+    }
+}
+
+@Composable
+fun BoxScope.MarkInfo(markInfo: MarkInfo, subject: MarkListSubjectItem?, mark: Mark) {
+    Column(Modifier.padding(16.dp)) {
+        MarkDescription(subject, markInfo)
+        ProvideVicoTheme(theme = rememberM3VicoTheme()) {
+            ClassResults(markInfo)
+        }
+    }
+    Column(
+        Modifier
+            .align(Alignment.TopEnd)
+            .padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        MarkComp(mark, enabled = false, subjectId = 0L)
+        if (subject != null) {
+            RatingButton(subject)
+            AverageChip(subject)
+        }
+    }
+}
+
+@Composable
+fun MarkDescription(subject: MarkListSubjectItem?, markInfo: MarkInfo) {
+    if (subject != null) {
+        Text(
+            subject.subjectName,
+            style = MaterialTheme.typography.titleMedium
+        )
+    } else {
+        Text(
+            stringResource(R.string.mark),
+            style = MaterialTheme.typography.titleMedium
+        )
+    }
+    with(markInfo) {
+        Text(teacher.run { "$lastName $firstName $middleName" })
+        Text(controlFormName)
+        if (commentExists) Text(comment!!)
+        Text(
+            stringResource(
+                org.bxkr.octodiary.R.string.mark_created,
+                parseSimpleLongAndFormatToLong(
+                    updatedAt,
+                    stringResource(id = org.bxkr.octodiary.R.string.at_time)
+                )
+            ),
+            androidx.compose.ui.Modifier.padding(vertical = 16.dp)
+        )
+    }
+}
+
+@Composable
+fun ClassResults(markInfo: MarkInfo) {
+    val results = markInfo.classResults.marksDistributions.sortedByDescending { it.markValue.five }
+    val labelListKey = ExtraStore.Key<List<String>>()
+    val secondaryColor = MaterialTheme.colorScheme.secondary.toArgb()
+    val primaryColor = MaterialTheme.colorScheme.primary.toArgb()
+    val layer = rememberColumnCartesianLayer(
+        columnProvider = object : ColumnCartesianLayer.ColumnProvider {
+            override fun getColumn(
+                entry: ColumnCartesianLayerModel.Entry,
+                seriesIndex: Int,
+                extraStore: ExtraStore,
+            ): LineComponent {
+                val isCurrent =
+                    results[entry.x.roundToInt()].markValue.five.toString() == markInfo.value
+                return LineComponent(
+                    if (isCurrent) primaryColor else secondaryColor,
+                    Defaults.COLUMN_WIDTH,
+                    Shape.rounded(Defaults.COLUMN_ROUNDNESS_PERCENT)
+                )
+            }
+
+            override fun getWidestSeriesColumn(
+                seriesIndex: Int,
+                extraStore: ExtraStore,
+            ): LineComponent {
+                return LineComponent(
+                    secondaryColor,
+                    Defaults.COLUMN_WIDTH,
+                    Shape.rounded(Defaults.COLUMN_ROUNDNESS_PERCENT)
+                )
+            }
+        }
+    )
+    val modelProducer = CartesianChartModelProducer.build()
+    val chart = rememberCartesianChart(
+        layer,
+        startAxis = rememberStartAxis(
+            title = stringResource(R.string.students_count),
+            titleComponent = rememberTextComponent(color = MaterialTheme.colorScheme.onSurface)
+        ),
+        bottomAxis = rememberBottomAxis(
+            valueFormatter = CartesianValueFormatter { x, chartValues, _ ->
+                chartValues.model.extraStore[labelListKey][x.toInt()]
+            },
+            title = stringResource(R.string.mark),
+            titleComponent = rememberTextComponent(color = MaterialTheme.colorScheme.onSurface)
+        ),
+    )
+    Text(
+        stringResource(R.string.class_results),
+        Modifier
+            .padding(top = 16.dp)
+            .fillMaxWidth(),
+        textAlign = TextAlign.Center,
+        style = MaterialTheme.typography.titleMedium
+    )
+    CartesianChartHost(
+        chart,
+        modelProducer,
+        marker = rememberMarker()
+    )
+    modelProducer.tryRunTransaction {
+        columnSeries {
+            series(results.map { it.numberOfStudents })
+        }
+        updateExtras { it[labelListKey] = results.map { it.markValue.five.toString() }.toList() }
+    }
+}
+
+@Composable
+fun RatingButton(subject: MarkListSubjectItem) {
+    val context = LocalContext.current
+    if (context.mainPrefs.get("subject_rating") ?: true) {
+        DataService.subjectRanking.firstOrNull { it.subjectId == subject.subjectId }
+            ?.let {
+                FilledIconButton(
+                    {
+                        modalBottomSheetContentLive.postValue {
+                            SubjectRatingBottomSheet(
+                                subject.subjectId,
+                                subject.subjectName
+                            )
+                        }
+                    },
+                    Modifier.padding(top = 6.dp),
+                    shape = CloverShape
+                ) {
+                    Text(
+                        it.rank.rankPlace.toString(),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+    }
+}
+
+@Composable
+fun AverageChip(subject: MarkListSubjectItem) {
+    val navController = navControllerLive.observeAsState().value
+    Row(
+        Modifier
+            .padding(top = 8.dp)
+            .clip(CircleShape)
+            .let {
+                if (navController != null) {
+                    it.clickable {
+                        modalBottomSheetStateLive.postValue(false)
+                        scrollToSubjectIdLive.value = subject.subjectId
+                        navController.navigate(route = NavSection.Marks.route)
+                    }
+                } else it
+            }
+            .background(MaterialTheme.colorScheme.tertiaryContainer, CircleShape)
+            .padding(4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        val textStyle = MaterialTheme.typography.labelLarge
+        Icon(
+            Icons.AutoMirrored.Rounded.TrendingUp,
+            stringResource(R.string.average_mark),
+            Modifier
+                .padding(horizontal = 4.dp)
+                .size(textStyle.fontSize.value.dp),
+            MaterialTheme.colorScheme.tertiary
+        )
+        Text(
+            subject.currentPeriod?.fixedValue ?: subject.currentPeriod?.value ?: "",
+            Modifier.padding(end = 4.dp),
+            color = MaterialTheme.colorScheme.tertiary,
+            style = textStyle
+        )
     }
 }
 
