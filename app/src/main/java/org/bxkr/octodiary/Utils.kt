@@ -7,8 +7,13 @@ import android.content.pm.PackageManager
 import android.content.pm.PackageManager.NameNotFoundException
 import android.graphics.Matrix
 import androidx.annotation.RawRes
+import android.graphics.Typeface
+import android.text.Layout
+import android.util.Log
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
@@ -18,13 +23,32 @@ import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.patrykandpatrick.vico.compose.cartesian.axis.rememberAxisGuidelineComponent
+import com.patrykandpatrick.vico.compose.common.component.fixed
+import com.patrykandpatrick.vico.compose.common.component.rememberLayeredComponent
+import com.patrykandpatrick.vico.compose.common.component.rememberShapeComponent
+import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
+import com.patrykandpatrick.vico.compose.common.of
+import com.patrykandpatrick.vico.compose.common.shape.markerCornered
+import com.patrykandpatrick.vico.core.cartesian.CartesianMeasureContext
+import com.patrykandpatrick.vico.core.cartesian.HorizontalDimensions
+import com.patrykandpatrick.vico.core.cartesian.Insets
+import com.patrykandpatrick.vico.core.cartesian.marker.CartesianMarker
+import com.patrykandpatrick.vico.core.cartesian.marker.DefaultCartesianMarker
+import com.patrykandpatrick.vico.core.common.Dimensions
+import com.patrykandpatrick.vico.core.common.component.TextComponent
+import com.patrykandpatrick.vico.core.common.copyColor
+import com.patrykandpatrick.vico.core.common.shape.Corner
 import okhttp3.ResponseBody
+import org.bxkr.octodiary.models.rankingforsubject.ErrorBody
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.nio.charset.Charset
 import java.security.MessageDigest
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
@@ -37,7 +61,7 @@ import kotlin.system.exitProcess
 
 abstract class Prefs(
     val prefPath: String,
-    val ctx: Context
+    val ctx: Context,
 )
 
 class AuthPrefs(ctx: Context) : Prefs("auth", ctx)
@@ -83,6 +107,14 @@ fun encodeToBase64(byteArray: ByteArray): String {
     return Base64.UrlSafe.encode(byteArray).replace("=", "")
 }
 
+@OptIn(ExperimentalEncodingApi::class)
+inline fun <reified T> decodeFromBase64Json(string: String, charset: Charset = Charsets.UTF_8): T {
+    return Gson().fromJson(
+        Base64.UrlSafe.decode(string).toString(charset),
+        object : TypeToken<T>() {}.type
+    )
+}
+
 fun Prefs.save(vararg addPrefs: Pair<String, Any?>) {
     ctx.getSharedPreferences(prefPath, Context.MODE_PRIVATE).edit(commit = true) {
         addPrefs.map {
@@ -113,6 +145,12 @@ inline fun <reified T> Prefs.get(prefId: String): T? {
     }
 }
 
+fun Prefs.clear() {
+    ctx.getSharedPreferences(prefPath, Context.MODE_PRIVATE).edit(commit = true) {
+        clear()
+    }
+}
+
 inline fun <reified T> Call<T>.baseEnqueue(
     noinline errorFunction: ((errorBody: ResponseBody, httpCode: Int, className: String?) -> Unit) = { _, _, _ -> },
     noinline noConnectionFunction: ((t: Throwable, className: String?) -> Unit) = { _, _ -> },
@@ -120,7 +158,7 @@ inline fun <reified T> Call<T>.baseEnqueue(
 ) = enqueue(object : Callback<T> {
     override fun onResponse(
         call: Call<T>,
-        response: Response<T>
+        response: Response<T>,
     ) {
         val body = response.body()
         if (response.isSuccessful && body != null) {
@@ -143,7 +181,7 @@ inline fun <reified T> Call<T>.extendedEnqueue(
 ) = enqueue(object : Callback<T> {
     override fun onResponse(
         call: Call<T>,
-        response: Response<T>
+        response: Response<T>,
     ) {
         val body = response.body()
         if (response.isSuccessful && body != null) {
@@ -195,11 +233,15 @@ fun Date.formatToLongHumanDay(): String =
 fun Date.formatToHumanDate(): String =
     SimpleDateFormat("dd.MM.yyyy", LocalConfiguration.current.locales[0]).format(this)
 
-/** Formats [Date] to EEEE format [String] **/
+/** Formats [Date] to EEEE format [String] (takes context from composition) **/
 @ReadOnlyComposable
 @Composable
 fun Date.formatToWeekday(): String =
     SimpleDateFormat("EEEE", LocalConfiguration.current.locales[0]).format(this)
+
+/** Formats [Date] to EEEE format [String] (takes context as an argument) **/
+fun Date.formatToWeekday(ctx: Context): String =
+    SimpleDateFormat("EEEE", ctx.resources.configuration.locales[0]).format(this)
 
 /** Parses [String] of [OffsetDateTime] (very long with TZ) to [Date] **/
 fun String.parseLongDate(): Date =
@@ -227,10 +269,18 @@ val Date.weekOfYear: Int
             get(Calendar.WEEK_OF_YEAR)
         }
 
-fun Activity.logOut() {
+fun Activity.logOut(reason: String? = null) {
+    if (reason != null) {
+        Log.i("LogOuter", "Logged out for reason:\n$reason")
+    } else {
+        Log.i("LogOuter", "Logged out for an unknown reason")
+    }
     authPrefs.save(
         "auth" to false,
-        "access_token" to null
+        "access_token" to null,
+        "client_id" to null,
+        "client_secret" to null,
+        "refresh_token" to null
     )
     mainPrefs.save(
         "first_launch" to true,
@@ -238,6 +288,8 @@ fun Activity.logOut() {
         "pin" to null,
         "demo" to null
     )
+    cachePrefs.clear()
+    notificationPrefs.clear()
     screenLive.value = Screen.Login
     startActivity(Intent(this, MainActivity::class.java))
     exitProcess(0)
@@ -256,7 +308,7 @@ val CloverShape: Shape = object : Shape {
     override fun createOutline(
         size: Size,
         layoutDirection: LayoutDirection,
-        density: Density
+        density: Density,
     ): Outline {
         val baseWidth = 200f
         val baseHeight = 200f
@@ -288,6 +340,122 @@ val CloverShape: Shape = object : Shape {
                 }
                 .asComposePath()
         )
+    }
+}
+
+fun Calendar.getRussianWeekdayOnFormat(): String =
+    when (get(Calendar.DAY_OF_WEEK)) {
+        Calendar.TUESDAY -> "во вторник"
+        Calendar.WEDNESDAY -> "в среду"
+        Calendar.FRIDAY -> "в пятницу"
+        Calendar.SATURDAY -> "в субботу"
+        else -> "в ${getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale("ru"))}"
+    }
+
+fun DataService.errorListenerForMessage(errorListener: (String) -> Unit): (errorBody: ResponseBody, httpCode: Int, className: String?) -> Unit {
+    return { errorBody: ResponseBody, httpCode: Int, className: String? ->
+        val contents = errorBody.string()
+        try {
+            val body = Gson().fromJson(contents, ErrorBody::class.java)
+            errorListener(body.message)
+        } catch (exception: Throwable) {
+            errorListener(contents)
+        }
+    }
+}
+
+fun String.isJwtExpired() =
+    split(".")[1].let { decodeFromBase64Json<Map<String, String>>(it) }.get("exp")
+        ?.toIntOrNull()?.let { Date().time > it }
+
+
+fun <T> sumLists(list: List<List<T>?>): List<T> {
+    val result = mutableListOf<T>()
+    list.forEach { if (it != null) result.addAll(it) }
+    return result
+}
+
+fun getWeekday(date: Date): Int = Calendar.getInstance().run {
+    time = date
+    get(Calendar.DAY_OF_WEEK)
+}
+
+fun Date.isDateBetween(start: Date, end: Date): Boolean = time > start.time && time < end.time
+fun Date.isDateBetween(range: List<Long>): Boolean = time > range[0] && time < range[1]
+
+@Composable
+fun rememberMarker(
+    labelPosition: DefaultCartesianMarker.LabelPosition = DefaultCartesianMarker.LabelPosition.AroundPoint,
+    showIndicator: Boolean = true,
+): CartesianMarker {
+    val labelBackgroundShape =
+        com.patrykandpatrick.vico.core.common.shape.Shape.markerCornered(Corner.FullyRounded)
+    val labelBackground =
+        rememberShapeComponent(labelBackgroundShape, MaterialTheme.colorScheme.surfaceVariant)
+            .setShadow(
+                radius = 4f,
+                dy = 2f,
+                applyElevationOverlay = true,
+            )
+    val label =
+        rememberTextComponent(
+            color = MaterialTheme.colorScheme.onSurface,
+            background = labelBackground,
+            padding = Dimensions.of(8.dp, 4.dp),
+            typeface = Typeface.MONOSPACE,
+            textAlignment = Layout.Alignment.ALIGN_CENTER,
+            minWidth = TextComponent.MinWidth.fixed(40.dp),
+        )
+    val indicatorFrontComponent = rememberShapeComponent(
+        com.patrykandpatrick.vico.core.common.shape.Shape.Pill,
+        MaterialTheme.colorScheme.surfaceVariant
+    )
+    val indicatorCenterComponent =
+        rememberShapeComponent(com.patrykandpatrick.vico.core.common.shape.Shape.Pill)
+    val indicatorRearComponent =
+        rememberShapeComponent(com.patrykandpatrick.vico.core.common.shape.Shape.Pill)
+    val indicator =
+        rememberLayeredComponent(
+            rear = indicatorRearComponent,
+            front =
+            rememberLayeredComponent(
+                rear = indicatorCenterComponent,
+                front = indicatorFrontComponent,
+                padding = Dimensions.of(5.dp),
+            ),
+            padding = Dimensions.of(10.dp),
+        )
+    val guideline = rememberAxisGuidelineComponent()
+    return remember(label, labelPosition, indicator, showIndicator, guideline) {
+        object : DefaultCartesianMarker(
+            label = label,
+            labelPosition = labelPosition,
+            indicator = if (showIndicator) indicator else null,
+            indicatorSizeDp = 36f,
+            setIndicatorColor =
+            if (showIndicator) {
+                { color ->
+                    indicatorRearComponent.color = color.copyColor(alpha = .15f)
+                    indicatorCenterComponent.color = color
+                    indicatorCenterComponent.setShadow(radius = 12f, color = color)
+                }
+            } else {
+                null
+            },
+            guideline = guideline,
+        ) {
+            override fun getInsets(
+                context: CartesianMeasureContext,
+                outInsets: Insets,
+                horizontalDimensions: HorizontalDimensions,
+            ) {
+                with(context) {
+                    outInsets.top = (1.4f * 4f - 2f).pixels
+                    if (labelPosition == LabelPosition.AroundPoint) return
+                    outInsets.top += label.getHeight(context) + labelBackgroundShape.tickSizeDp.pixels
+                }
+            }
+        }
     }
 }
 

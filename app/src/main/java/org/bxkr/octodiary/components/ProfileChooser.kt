@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
@@ -25,7 +26,6 @@ import org.bxkr.octodiary.formatToHumanDate
 import org.bxkr.octodiary.modalDialogStateLive
 import org.bxkr.octodiary.network.interfaces.SecondaryAPI
 import org.bxkr.octodiary.parseFromDay
-import org.bxkr.octodiary.reloadEverythingLive
 
 
 @OptIn(ExperimentalGlideComposeApi::class)
@@ -37,6 +37,7 @@ fun ProfileChooser() {
             Modifier.padding(bottom = 16.dp),
             style = MaterialTheme.typography.titleLarge
         )
+        val context = LocalContext.current
         DataService.profile.children.forEachIndexed { index, it ->
             OutlinedCard(
                 Modifier
@@ -46,7 +47,9 @@ fun ProfileChooser() {
                     .clickable {
                         modalDialogStateLive.postValue(false)
                         DataService.currentProfile = index
-                        reloadEverythingLive.value?.invoke()
+                        DataService.loadedEverything.value = false
+                        DataService.loadingStarted = false
+                        DataService.updateAll(context)
                     },
                 border = if (DataService.currentProfile == index) {
                     BorderStroke(2.dp, MaterialTheme.colorScheme.primary)

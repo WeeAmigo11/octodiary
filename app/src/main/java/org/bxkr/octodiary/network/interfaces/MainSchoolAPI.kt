@@ -1,22 +1,25 @@
 package org.bxkr.octodiary.network.interfaces
 
+import com.google.gson.JsonObject
 import org.bxkr.octodiary.Diary
 import org.bxkr.octodiary.models.homeworks.HomeworksResponse
 import org.bxkr.octodiary.models.lessonschedule.LessonSchedule
 import org.bxkr.octodiary.models.mark.MarkInfo
 import org.bxkr.octodiary.models.marklistdate.MarkListDate
-import org.bxkr.octodiary.models.marklistsubject.MarkListSubject
-import org.bxkr.octodiary.models.marklistsubject.MarkListSubjectItem
+import org.bxkr.octodiary.models.marklistsubjectshort.MarkListSubjectItem
 import org.bxkr.octodiary.models.profile.ProfileResponse
 import org.bxkr.octodiary.models.schoolinfo.SchoolInfo
 import org.bxkr.octodiary.models.visits.VisitsResponse
+import org.bxkr.octodiary.network.MESOnly
 import org.bxkr.octodiary.network.NetworkService.BaseUrl
 import org.bxkr.octodiary.network.NetworkService.MESAPIConfig
 import retrofit2.Call
+import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -75,6 +78,7 @@ interface MainSchoolAPI {
      * @param mesSubsystem MES subsystem (["familymp"][MESAPIConfig.FAMILYMP] by default).
      * @return [VisitsResponse]
      */
+    @MESOnly
     @GET("family/mobile/v1/visits")
     fun visits(
         @Header("auth-token") accessToken: String,
@@ -151,12 +155,27 @@ interface MainSchoolAPI {
      * @param mesSubsystem MES subsystem (["familymp"][MESAPIConfig.FAMILYMP] by default).
      * @return List of [MarkListSubjectItem]s.
      */
-    @GET("family/mobile/v1/subject_marks/short")
+    @GET("family/mobile/v1/subject_marks")
     fun subjectMarks(
         @Header("auth-token") accessToken: String,
         @Query("student_id") studentId: Long,
-        @Header("X-Mes-Subsystem") mesSubsystem: String = MESAPIConfig.FAMILYMP
-    ): Call<MarkListSubject>
+        @Header("X-Mes-Subsystem") mesSubsystem: String = MESAPIConfig.FAMILYMP,
+    ): Call<org.bxkr.octodiary.models.marklistsubject.MarkListSubject>
+
+    /**
+     * Gets marks by subject in short form only for current period.
+     *
+     * @param accessToken Access token.
+     * @param studentId Student ID.
+     * @param mesSubsystem MES subsystem (["familymp"][MESAPIConfig.FAMILYMP] by default).
+     * @return List of [MarkListSubjectItem]s.
+     */
+    @GET("family/mobile/v1/subject_marks/short")
+    fun subjectMarksShort(
+        @Header("auth-token") accessToken: String,
+        @Query("student_id") studentId: Long,
+        @Header("X-Mes-Subsystem") mesSubsystem: String = MESAPIConfig.FAMILYMP,
+    ): Call<org.bxkr.octodiary.models.marklistsubjectshort.MarkListSubject>
 
     /**
      * Sets homework as done.
@@ -204,4 +223,21 @@ interface MainSchoolAPI {
         @Query("student_id") studentId: Long,
         @Header("X-Mes-Subsystem") mesSubsystem: String = MESAPIConfig.FAMILYMP
     ): Call<LessonSchedule>
+
+    @GET("usersettings/v1")
+    fun <Model> pullUserSettings(
+        @Header("auth-token") accessToken: String,
+        @Query("name") path: String,
+        @Header("X-Mes-Subsystem") mesSubsystem: String = MESAPIConfig.FAMILYMP,
+        @Query("subsystem_id") subsystemId: Int = 1,
+    ): Call<Model>
+
+    @PUT("usersettings/v1")
+    fun pushUserSettings(
+        @Header("auth-token") accessToken: String,
+        @Query("name") path: String,
+        @Body body: JsonObject,
+        @Header("X-Mes-Subsystem") mesSubsystem: String = MESAPIConfig.FAMILYMP,
+        @Query("subsystem_id") subsystemId: Int = 1,
+    ): Call<Unit>
 }

@@ -6,6 +6,8 @@ import com.google.gson.annotations.SerializedName
 data class MarkInfo(
     @SerializedName("activity")
     val activity: Activity,
+    @SerializedName("class_results")
+    val classResults: ClassResults,
     @SerializedName("comment")
     val comment: String?,
     @SerializedName("comment_exists")
@@ -30,6 +32,8 @@ data class MarkInfo(
     val originalGradeSystemType: String,
     @SerializedName("point_date")
     val pointDate: Any?,
+    @SerializedName("result_files")
+    val resultFiles: Any?,
     @SerializedName("teacher")
     val teacher: Teacher,
     @SerializedName("updated_at")
@@ -37,7 +41,7 @@ data class MarkInfo(
     @SerializedName("value")
     val value: String,
     @SerializedName("values")
-    val values: Any?,
+    val values: List<Value>,
     @SerializedName("weight")
-    val weight: Int
+    val weight: Int,
 )

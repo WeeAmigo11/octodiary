@@ -7,5 +7,5 @@ data class Activity(
     @SerializedName("lesson_topic")
     val lessonTopic: String,
     @SerializedName("schedule_item_id")
-    val scheduleItemId: Long
+    val scheduleItemId: Int,
 )

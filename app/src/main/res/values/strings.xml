@@ -118,7 +118,8 @@
     <string name="feed_type_comment">Lesson comment</string>
     <string name="image">Image</string>
     <string name="data_update_channel_name">School data update channel</string>
-    <string name="notification_new_mark_text">New mark: %s, %s, %s, %s</string>
+    <string name="notification_new_mark_text">New mark: %s, %s, %s</string>
+    <string name="notification_new_mark_text_no_value">New mark: %s, %s</string>
     <string name="notification_new_mark_title">New mark!</string>
     <string name="period_marks">Period Marks</string>
     <string name="period_marks_data_key" translatable="false">period_marks</string>
@@ -202,7 +203,8 @@
     <string name="homeworks">Homework</string>
     <string name="to">to</string>
     <string name="schedule_today">Schedule today</string>
-    <string name="last_week_marks_are_shown">last week marks are shown</string>
+    <string name="schedule_for">Schedule for %s</string>
+    <string name="last_week_marks_are_shown">last month marks are shown</string>
     <string name="birth_date_t">Birth date: %1$s</string>
     <string name="snils_t">"SNILS: "</string>
     <string name="show">show</string>
@@ -244,4 +246,46 @@
     <string name="log_into_bot">Log into OctoDiaryBot</string>
     <string name="soon">Coming soon…</string>
     <string name="already_auth">You\'re already logged in</string>
+    <string name="mes_material">MES Library</string>
+    <string name="copy_link">Copy link</string>
+    <string name="event">Event</string>
+    <string name="no_event">No events found</string>
+    <string name="s_till_the_end">%s till the end</string>
+    <string name="next_event">Next lesson is at %s</string>
+    <string name="at_lesson_now">At the lesson</string>
+    <string name="break_label">Break</string>
+    <string name="rest">Rest</string>
+    <string name="holidays">Holidays</string>
+    <string name="report_issue">Report an issue</string>
+    <string name="s_till_the_start">%s till the start</string>
+    <string name="when_to_go">School on %s at %s</string>
+    <string name="widget_lesson_desc_template" translatable="false">%s: %s - %s</string>
+    <string name="widget_name">Studying status</string>
+    <string name="widget_description">The most important info about lessons on your homescreen</string>
+    <string name="error_occurred">An error has occurred!</string>
+    <string name="fingerprint">Biometric authentication</string>
+    <string name="no_account_found_please_log_in">No account found\nPlease log in</string>
+    <string name="today_lowercase">today</string>
+    <string name="show_mark_value_in_notification">Show mark value in notification</string>
+    <string name="replacement">Replacement</string>
+    <string name="common">General</string>
+    <string name="notifications">Notifications</string>
+    <string name="appearance">Appearance</string>
+    <string name="security">Security</string>
+    <string name="about">About the app</string>
+    <string name="common_desc">Main sections behaviour</string>
+    <string name="notifications_desc">Choose displaying info</string>
+    <string name="appearance_desc">Color themes of the app</string>
+    <string name="security_desc">Passcode and other</string>
+    <string name="about_desc">Developers, links</string>
+    <string name="show_lesson_numbers">Show lesson numbers</string>
+    <string name="show_only_plan">Hide additional events</string>
+    <string name="show_only_plan_desc">Show only plan lessons</string>
+    <string name="main_rating">Class rating</string>
+    <string name="subject_rating">Subject ratings</string>
+    <string name="ratings">Ratings</string>
+    <string name="select">Select</string>
+    <string name="based_on_current_marks">Based on current period marks</string>
+    <string name="students_count">Students count</string>
+    <string name="class_results">Class results</string>
 </resources>

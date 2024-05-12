@@ -5,6 +5,13 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
+import androidx.biometric.BiometricManager
+import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
+import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_WEAK
+import androidx.biometric.BiometricManager.Authenticators.DEVICE_CREDENTIAL
+import androidx.biometric.BiometricPrompt
+import androidx.biometric.BiometricPrompt.AuthenticationCallback
+import androidx.biometric.BiometricPrompt.AuthenticationResult
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
@@ -24,9 +31,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.Backspace
 import androidx.compose.material.icons.automirrored.rounded.Logout
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Fingerprint
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -63,6 +73,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
+import androidx.core.content.ContextCompat
+import androidx.fragment.app.FragmentActivity
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.google.gson.Gson
@@ -92,6 +104,9 @@ import org.bxkr.octodiary.notificationPrefs
 import org.bxkr.octodiary.reloadEverythingLive
 import org.bxkr.octodiary.save
 import org.bxkr.octodiary.screenLive
+import org.bxkr.octodiary.screens.navsections.daybook.customScheduleRefreshListenerLive
+import org.bxkr.octodiary.screens.navsections.daybook.updatedScheduleLive
+import org.bxkr.octodiary.sumLists
 import org.bxkr.octodiary.ui.theme.OctoDiaryTheme
 import java.util.Calendar
 import java.util.Collections
@@ -104,10 +119,7 @@ fun NavScreen(modifier: Modifier, pinFinished: MutableState<Boolean>) {
         val secondPin = remember { mutableStateOf(emptyList<Int>()) }
         val navController = navControllerLive.observeAsState()
 
-        if (
-            initialPin.value.size == 4 &&
-            secondPin.value.size == 4
-        ) {
+        if (initialPin.value.size == 4 && secondPin.value.size == 4) {
             if (initialPin.value == secondPin.value) {
                 pinFinished.value = true
                 mainPrefs.save(
@@ -145,17 +157,18 @@ fun NavScreen(modifier: Modifier, pinFinished: MutableState<Boolean>) {
                         if (notificationPrefs.get<Long>("student_id") == null) {
                             notificationPrefs.save(
                                 "student_id" to DataService.profile.children[DataService.currentProfile].studentId,
-                                "mark_ids" to Gson().toJson(DataService.marksDate.payload.map { it.id }),
+                                "mark_ids" to Gson().toJson(sumLists(
+                                    DataService.marksSubject.map { it.currentPeriod?.marks?.map { it.id } }
+                                )),
                                 "total_count" to 0
                             )
                         }
-                        val pendingIntent =
-                            PendingIntent.getBroadcast(
-                                context,
-                                0,
-                                Intent(context, UpdateReceiver::class.java),
-                                PendingIntent.FLAG_IMMUTABLE
-                            )
+                        val pendingIntent = PendingIntent.getBroadcast(
+                            context,
+                            0,
+                            Intent(context, UpdateReceiver::class.java),
+                            PendingIntent.FLAG_IMMUTABLE
+                        )
                         val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
                         alarmManager.setRepeating(
                             AlarmManager.RTC_WAKEUP,
@@ -166,9 +179,9 @@ fun NavScreen(modifier: Modifier, pinFinished: MutableState<Boolean>) {
                     }
                 }
                 LaunchedEffect(rememberCoroutineScope()) {
-                    snapshotFlow { DataService.loadedEverything.value }
-                        .onEach { localLoadedState = it }
-                        .launchIn(this)
+                    snapshotFlow { DataService.loadedEverything.value }.onEach {
+                        localLoadedState = it
+                    }.launchIn(this)
                 }
                 LaunchedEffect(Unit) {
                     reloadEverythingLive.postValue {
@@ -181,15 +194,40 @@ fun NavScreen(modifier: Modifier, pinFinished: MutableState<Boolean>) {
                 }
                 AnimatedVisibility(localLoadedState) {
                     val refreshState = rememberPullToRefreshState()
+                    var defaultRefresh by remember { mutableStateOf(true) }
                     if (refreshState.isRefreshing) {
                         if (!isDemo) {
-                            DataService.loadedEverything.value = false
-                            DataService.loadingStarted = false
-                            DataService.updateAll()
+                            when (navController.value?.currentDestination?.route) {
+                                NavSection.Daybook.route -> {
+                                    val customScheduleRefreshListener =
+                                        customScheduleRefreshListenerLive.value
+                                    if (customScheduleRefreshListener != null) {
+                                        customScheduleRefreshListener()
+                                    } else {
+                                        defaultRefresh = false
+                                        DataService.updateEventCalendar {
+                                            updatedScheduleLive.postValue(
+                                                updatedScheduleLive.value?.not() ?: false
+                                            )
+                                            refreshState.endRefresh()
+                                        }
+                                    }
+                                }
+
+                                else -> {
+                                    defaultRefresh = true
+                                    DataService.loadedEverything.value = false
+                                    DataService.loadingStarted = false
+                                    DataService.updateAll(context)
+                                }
+                            }
                         } else refreshState.endRefresh()
                     }
-                    if (DataService.loadedEverything.value) {
+                    if (DataService.loadedEverything.value && defaultRefresh) {
                         refreshState.endRefresh()
+                    }
+                    LaunchedEffect(Unit) {
+                        DataService.sendStatistic {}
                     }
                     NavHost(
                         navController = navController.value!!,
@@ -204,8 +242,7 @@ fun NavScreen(modifier: Modifier, pinFinished: MutableState<Boolean>) {
                                 ) {
                                     it.composable()
                                     PullToRefreshContainer(
-                                        refreshState,
-                                        Modifier.align(Alignment.TopCenter)
+                                        refreshState, Modifier.align(Alignment.TopCenter)
                                     )
                                 }
                             }
@@ -213,12 +250,9 @@ fun NavScreen(modifier: Modifier, pinFinished: MutableState<Boolean>) {
                     }
                 }
                 AnimatedVisibility(!localLoadedState) {
-                    // FUTURE: ARCHIVE_RESTORE_DATA
                     var progress by remember { mutableFloatStateOf(0f) }
                     val progressAnimated by animateFloatAsState(
-                        progress,
-                        tween(200),
-                        label = "progress_anim"
+                        progress, tween(200), label = "progress_anim"
                     )
                     val coroutineScope = rememberCoroutineScope()
                     DataService.onSingleItemInUpdateAllLoadedHandler = { name, progressParam ->
@@ -228,20 +262,20 @@ fun NavScreen(modifier: Modifier, pinFinished: MutableState<Boolean>) {
                         cachePrefs.save(
                             name to Gson().toJson(
                                 DataService::class.java.getDeclaredField(name).get(DataService)
-                            ),
-                            "age" to System.currentTimeMillis()
+                            ), "age" to System.currentTimeMillis()
                         )
                     }
 
                     val activity = LocalActivity.current
                     DataService.tokenExpirationHandler = {
-                        activity.logOut()
+                        activity.logOut("Performed from token expiration handler")
                     }
 
                     if (!DataService.loadingStarted) {
                         if (cachePrefs.get<Long>("age")
-                                ?.let { (System.currentTimeMillis() - it) < 86400 } == true
+                                ?.let { (System.currentTimeMillis() - it) < 86400000 } == true
                         ) {
+                            DataService.loadingStarted = true
                             DataService.subsystem =
                                 Diary.values()[authPrefs.get<Int>("subsystem") ?: 0]
                             DataService.loadFromCache { cachePrefs.get<String>(it) ?: "" }
@@ -251,7 +285,7 @@ fun NavScreen(modifier: Modifier, pinFinished: MutableState<Boolean>) {
                             DataService.run { loadDemoCache() }
                             DataService.loadedEverything.value = true
                         } else {
-                            DataService.updateAll()
+                            DataService.updateAll(context)
                         }
                     }
                     Column(
@@ -270,9 +304,7 @@ fun NavScreen(modifier: Modifier, pinFinished: MutableState<Boolean>) {
             }
             if ((mainPrefs.get<Boolean>("first_launch") == true) && !pinFinished.value) {
                 SetPinDialog(
-                    pinFinished = pinFinished,
-                    initialPin = initialPin,
-                    secondPin = secondPin
+                    pinFinished = pinFinished, initialPin = initialPin, secondPin = secondPin
                 )
             }
         }
@@ -285,13 +317,9 @@ fun EnterPinDialog(
 ) {
     val currentPin = remember { mutableStateOf(emptyList<Int>()) }
     var wrongPin by remember { mutableStateOf(false) }
-    if (
-        currentPin.value.size == 4
-    ) {
-        if (
-            currentPin.value.joinToString("") ==
-            LocalContext.current.mainPrefs.get<String>("pin")
-        ) {
+    val fpShown = remember { mutableStateOf(false) }
+    if (currentPin.value.size == 4) {
+        if (currentPin.value.joinToString("") == LocalContext.current.mainPrefs.get<String>("pin")) {
             pinFinished.value = true
         } else {
             currentPin.value = emptyList()
@@ -299,14 +327,11 @@ fun EnterPinDialog(
         }
     }
 
-    Dialog(
-        properties = DialogProperties(
-            dismissOnBackPress = false,
-            dismissOnClickOutside = false,
-            usePlatformDefaultWidth = false
-        ),
-        onDismissRequest = { pinFinished.value = true }
-    ) {
+    Dialog(properties = DialogProperties(
+        dismissOnBackPress = false,
+        dismissOnClickOutside = false,
+        usePlatformDefaultWidth = false
+    ), onDismissRequest = { pinFinished.value = true }) {
         Surface(Modifier.fillMaxSize()) {
             Column(
                 Modifier.fillMaxSize(),
@@ -315,11 +340,9 @@ fun EnterPinDialog(
             ) {
                 val activity = LocalActivity.current
                 FilledTonalButton(
-                    modifier = Modifier.padding(16.dp),
-                    onClick = {
-                        activity.logOut()
-                    },
-                    contentPadding = ButtonDefaults.ButtonWithIconContentPadding
+                    modifier = Modifier.padding(16.dp), onClick = {
+                        activity.logOut("Passcode is forgotten")
+                    }, contentPadding = ButtonDefaults.ButtonWithIconContentPadding
                 ) {
                     Icon(
                         Icons.AutoMirrored.Rounded.Logout,
@@ -338,7 +361,7 @@ fun EnterPinDialog(
                     exit = fadeOut(tween(300)),
                     enter = fadeIn(tween(300))
                 ) {
-                    PinScreen(Modifier.fillMaxHeight(), into = currentPin)
+                    PinScreen(Modifier.fillMaxHeight(), into = currentPin, fp = true, fpShown)
                 }
                 AnimatedVisibility(
                     visible = wrongPin,
@@ -346,7 +369,7 @@ fun EnterPinDialog(
                     exit = fadeOut(tween(300)),
                     enter = fadeIn(tween(300))
                 ) {
-                    PinScreen(Modifier.fillMaxHeight(), into = currentPin)
+                    PinScreen(Modifier.fillMaxHeight(), into = currentPin, fp = true, fpShown)
                 }
             }
         }
@@ -361,34 +384,27 @@ fun SetPinDialog(
     closeButtonTitle: String = stringResource(id = R.string.skip),
 ) {
     val context = LocalContext.current
-    Dialog(
-        properties = DialogProperties(
-            dismissOnBackPress = false,
-            dismissOnClickOutside = false,
-            usePlatformDefaultWidth = false
-        ),
-        onDismissRequest = { pinFinished.value = true }
-    ) {
+    Dialog(properties = DialogProperties(
+        dismissOnBackPress = false,
+        dismissOnClickOutside = false,
+        usePlatformDefaultWidth = false
+    ), onDismissRequest = { pinFinished.value = true }) {
         Surface {
             Column(
-                Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
+                Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Row(
                     Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.End
+                        .padding(16.dp), horizontalArrangement = Arrangement.End
                 ) {
                     FilledTonalButton(
                         onClick = {
                             pinFinished.value = true
                             context.mainPrefs.save(
-                                "has_pin" to false,
-                                "first_launch" to false
+                                "has_pin" to false, "first_launch" to false
                             )
-                        },
-                        contentPadding = ButtonDefaults.ButtonWithIconContentPadding
+                        }, contentPadding = ButtonDefaults.ButtonWithIconContentPadding
                     ) {
                         Icon(
                             Icons.Rounded.Close,
@@ -400,8 +416,7 @@ fun SetPinDialog(
                     }
                 }
                 AnimatedContent(
-                    targetState = initialPin,
-                    label = "title_animation"
+                    targetState = initialPin, label = "title_animation"
                 ) { targetState ->
                     Text(
                         stringResource(
@@ -414,17 +429,14 @@ fun SetPinDialog(
                     )
                 }
                 AnimatedContent(
-                    targetState = initialPin,
-                    label = "pin_screen_animation"
+                    targetState = initialPin, label = "pin_screen_animation"
                 ) { targetState ->
                     if (targetState.value.size >= 4) {
                         PinScreen(
-                            Modifier.fillMaxSize(),
-                            secondPin
+                            Modifier.fillMaxSize(), secondPin
                         )
                     } else PinScreen(
-                        Modifier.fillMaxSize(),
-                        targetState
+                        Modifier.fillMaxSize(), targetState
                     )
                 }
             }
@@ -436,11 +448,26 @@ fun SetPinDialog(
 fun PinScreen(
     modifier: Modifier = Modifier,
     into: MutableState<List<Int>>,
+    fp: Boolean = false,
+    fpShown: MutableState<Boolean> = mutableStateOf(false)
 ) {
     val enteredNumbers = remember { mutableStateOf(emptyList<Int>()) }
+    val hapticFeedback = LocalHapticFeedback.current
+    val context = LocalActivity.current
+    val biometricManager = BiometricManager.from(context)
+    val isBiometricAvailable = biometricManager.canAuthenticate(
+        BIOMETRIC_STRONG or DEVICE_CREDENTIAL or BIOMETRIC_WEAK
+    ) == BiometricManager.BIOMETRIC_SUCCESS
 
     if (enteredNumbers.value.size >= 4) {
         into.value = enteredNumbers.value.take(4)
+    }
+
+    if (!fpShown.value && context.mainPrefs.get<String>("pin") != null) {
+        fpShown.value = true
+        if (isBiometricAvailable) {
+            biometricAuth(context, enteredNumbers)
+        }
     }
 
     Column(
@@ -465,27 +492,55 @@ fun PinScreen(
                                 if (enteredNumbers.value.size > it) {
                                     secondary
                                 } else secondaryContainer
-                            },
-                            MaterialTheme.shapes.medium
+                            }, MaterialTheme.shapes.medium
                         )
                 )
             }
         }
-        Column {
-            (0..9)
-                .toList()
-                .also { Collections.rotate(it, -1) }
-                .chunked(3)
-                .forEach { triplet ->
-                    Row(
-                        Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        triplet.forEach {
-                            PinKeyboardButton(it, enteredNumbers)
-                        }
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            (0..9).toList().also { Collections.rotate(it, -1) }.chunked(3).forEach { triplet ->
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (triplet[0] == 0 && isBiometricAvailable && fp) {
+                        Icon(Icons.Rounded.Fingerprint,
+                            stringResource(R.string.fingerprint),
+                            Modifier
+                                .size(72.dp)
+                                .clip(CircleShape)
+                                .clickable {
+                                    hapticFeedback.performHapticFeedback(
+                                        HapticFeedbackType.LongPress
+                                    )
+                                    biometricAuth(context, enteredNumbers)
+                                }
+                                .padding(16.dp),
+                            MaterialTheme.colorScheme.secondary)
+                    } else if (triplet[0] == 0) {
+                        Box(Modifier.size(72.dp))
+                    }
+                    triplet.forEach {
+                        PinKeyboardButton(it, enteredNumbers)
+                    }
+                    if (triplet[0] == 0) {
+                        Icon(Icons.AutoMirrored.Rounded.Backspace,
+                            stringResource(R.string.cancel),
+                            Modifier
+                                .size(72.dp)
+                                .clip(CircleShape)
+                                .clickable {
+                                    removeNumber(enteredNumbers)
+                                    hapticFeedback.performHapticFeedback(
+                                        HapticFeedbackType.LongPress
+                                    )
+                                }
+                                .padding(24.dp),
+                            MaterialTheme.colorScheme.secondary)
                     }
                 }
+            }
         }
     }
 }
@@ -501,9 +556,7 @@ fun PinKeyboardButton(number: Int, enteredNumbers: MutableState<List<Int>>) {
                 remember { MutableInteractionSource() },
                 enabled = enteredNumbers.value.size < 4,
                 indication = rememberRipple(
-                    true,
-                    64.dp,
-                    MaterialTheme.colorScheme.surfaceContainer
+                    true, 64.dp, MaterialTheme.colorScheme.surfaceContainer
                 ),
             ) {
                 clickNumber(number, enteredNumbers)
@@ -512,20 +565,17 @@ fun PinKeyboardButton(number: Int, enteredNumbers: MutableState<List<Int>>) {
                 )
             }
             .background(
-                MaterialTheme.colorScheme.surfaceVariant,
-                MaterialTheme.shapes.extraLarge
+                MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.shapes.extraLarge
             )
             .alpha(
                 if (enteredNumbers.value.size >= 4) .3f
                 else 1f
             )
             .padding(
-                horizontal = 24.dp,
-                vertical = 16.dp
+                horizontal = 24.dp, vertical = 16.dp
             ),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center
-    ) {
+        horizontalArrangement = Arrangement.Center) {
         Text(
             text = number.toString(),
             style = MaterialTheme.typography.displaySmall,
@@ -538,19 +588,43 @@ fun clickNumber(number: Int, enteredNumbers: MutableState<List<Int>>) {
     enteredNumbers.value += listOf(number)
 }
 
+fun removeNumber(enteredNumbers: MutableState<List<Int>>) {
+    if (enteredNumbers.value.isNotEmpty()) {
+        enteredNumbers.value = enteredNumbers.value.subList(0, enteredNumbers.value.lastIndex)
+    }
+}
+
+fun biometricAuth(context: FragmentActivity, enteredNumbers: MutableState<List<Int>>) {
+    with(context) {
+        val executor = ContextCompat.getMainExecutor(this)
+        val biometricPrompt =
+            BiometricPrompt(this, executor, object : AuthenticationCallback() {
+                override fun onAuthenticationSucceeded(result: AuthenticationResult) {
+                    super.onAuthenticationSucceeded(result)
+                    val pin = mainPrefs.get<String>("pin")
+                    if (pin != null) {
+                        enteredNumbers.value = pin.map { it.digitToInt() }
+                    }
+                }
+            })
+        val promptInfo = BiometricPrompt.PromptInfo.Builder()
+            .setTitle(getString(R.string.fingerprint))
+            .setAllowedAuthenticators(BIOMETRIC_STRONG or DEVICE_CREDENTIAL or BIOMETRIC_WEAK)
+            .build()
+        biometricPrompt.authenticate(promptInfo)
+    }
+}
+
 @Preview(
-    uiMode = Configuration.UI_MODE_NIGHT_NO,
-    locale = "ru"
+    uiMode = Configuration.UI_MODE_NIGHT_NO, locale = "ru"
 )
 @Composable
 fun PinDialogPreview() {
     OctoDiaryTheme {
         Surface(Modifier.fillMaxSize()) {
-            SetPinDialog(
-                remember { mutableStateOf(false) },
+            SetPinDialog(remember { mutableStateOf(false) },
                 remember { mutableStateOf(emptyList()) },
-                remember { mutableStateOf(emptyList()) }
-            )
+                remember { mutableStateOf(emptyList()) })
         }
     }
 }

@@ -3,6 +3,7 @@ package org.bxkr.octodiary
 import android.content.Context
 import androidx.compose.runtime.mutableStateOf
 import com.google.gson.Gson
+import okhttp3.ResponseBody
 import org.bxkr.octodiary.models.classmembers.ClassMember
 import org.bxkr.octodiary.models.classranking.RankingMember
 import org.bxkr.octodiary.models.events.Event
@@ -10,7 +11,6 @@ import org.bxkr.octodiary.models.homeworks.Homework
 import org.bxkr.octodiary.models.lessonschedule.LessonSchedule
 import org.bxkr.octodiary.models.mark.MarkInfo
 import org.bxkr.octodiary.models.marklistdate.MarkListDate
-import org.bxkr.octodiary.models.marklistsubject.MarkListSubjectItem
 import org.bxkr.octodiary.models.mealbalance.MealBalance
 import org.bxkr.octodiary.models.profile.ProfileResponse
 import org.bxkr.octodiary.models.profilesid.ProfilesId
@@ -19,6 +19,8 @@ import org.bxkr.octodiary.models.schoolinfo.SchoolInfo
 import org.bxkr.octodiary.models.sessionuser.SessionUser
 import org.bxkr.octodiary.models.subjectranking.SubjectRanking
 import org.bxkr.octodiary.models.visits.VisitsResponse
+import org.bxkr.octodiary.network.MESLoginService.refreshToken
+import org.bxkr.octodiary.network.NetworkService.externalApi
 import org.bxkr.octodiary.network.interfaces.DSchoolAPI
 import org.bxkr.octodiary.network.interfaces.MainSchoolAPI
 import org.bxkr.octodiary.network.interfaces.SchoolSessionAPI
@@ -94,6 +96,8 @@ object DataService {
     lateinit var eventCalendar: List<Event>
     var hasEventCalendar = false
 
+    lateinit var eventsRange: List<Long>
+
     lateinit var ranking: List<RankingMember>
     var hasRanking = false
 
@@ -112,7 +116,7 @@ object DataService {
     lateinit var marksDate: MarkListDate
     var hasMarksDate = false
 
-    lateinit var marksSubject: List<MarkListSubjectItem>
+    lateinit var marksSubject: List<org.bxkr.octodiary.models.marklistsubject.MarkListSubjectItem>
     var hasMarksSubject = false
 
     lateinit var homeworks: List<Homework>
@@ -126,6 +130,44 @@ object DataService {
 
     // ADD_NEW_FIELD_HERE
     // Don't forget to add demo cache data in res/raw folder, preferably with MES flavor
+
+    val states
+        get() =
+            listOfNotNull(
+                ::hasUserId,
+                ::hasSessionUser,
+                ::hasEventCalendar,
+                ::hasEventCalendar,
+                ::hasRanking,
+                ::hasClassMembers,
+                ::hasProfile,
+                ::hasVisits.takeIf { subsystem == Diary.MES },
+                ::hasMarksDate,
+                ::hasMarksSubject,
+                ::hasHomeworks,
+                ::hasMealBalance.takeIf { subsystem == Diary.MES },
+                ::hasSchoolInfo,
+                ::hasSubjectRanking
+            )
+
+    val fields
+        get() =
+            listOfNotNull(
+                ::userId,
+                ::sessionUser,
+                ::eventCalendar,
+                ::eventsRange,
+                ::ranking,
+                ::classMembers,
+                ::profile,
+                ::visits.takeIf { subsystem == Diary.MES },
+                ::marksDate,
+                ::marksSubject,
+                ::homeworks,
+                ::mealBalance.takeIf { subsystem == Diary.MES },
+                ::schoolInfo,
+                ::subjectRanking
+            )
 
     val loadedEverything = mutableStateOf(false)
 
@@ -163,36 +205,63 @@ object DataService {
         }
     }
 
-    fun updateEventCalendar(weeksBefore: Int = 1, weeksAfter: Int = 1, onUpdated: () -> Unit) {
+    fun updateEventCalendar(weeksBefore: Int = 0, weeksAfter: Int = 0, onUpdated: () -> Unit) {
         assert(this::token.isInitialized)
         assert(this::profile.isInitialized)
+        val startDate = Calendar.getInstance().also {
+            it.set(Calendar.WEEK_OF_YEAR, it.get(Calendar.WEEK_OF_YEAR) - weeksBefore)
+            it.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+        }
+        val endDate = Calendar.getInstance().also {
+            it.set(Calendar.WEEK_OF_YEAR, it.get(Calendar.WEEK_OF_YEAR) + weeksAfter)
+            it.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY)
+        }
         secondaryApi.events(
             "Bearer $token",
             personIds = profile.children[currentProfile].contingentGuid,
-            beginDate = Calendar.getInstance().also {
-                it.set(Calendar.WEEK_OF_YEAR, it.get(Calendar.WEEK_OF_YEAR) - weeksBefore)
-                it.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
-            }.time.formatToDay(),
-            endDate = Calendar.getInstance().also {
-                it.set(Calendar.WEEK_OF_YEAR, it.get(Calendar.WEEK_OF_YEAR) + weeksAfter)
-                it.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY)
-            }.time.formatToDay(),
+            beginDate = startDate.time.formatToDay(),
+            endDate = endDate.time.formatToDay(),
             expandFields = "homework,marks"
         ).baseEnqueue(::baseErrorFunction, ::baseInternalExceptionFunction) { body ->
             eventCalendar = body.response
+            eventsRange = listOf(startDate.time.time, endDate.time.time)
             hasEventCalendar = true
             onUpdated()
         }
     }
 
-    fun getMarkInfo(markId: Long, listener: (MarkInfo) -> Unit) {
+    fun getEventWeek(date: Date, listener: (events: List<Event>, range: List<Long>) -> Unit) {
+        assert(this::token.isInitialized)
+        assert(this::profile.isInitialized)
+        val startDate = Calendar.getInstance().also {
+            it.time = date
+            it.set(Calendar.WEEK_OF_YEAR, it.get(Calendar.WEEK_OF_YEAR))
+            it.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+        }
+        val endDate = Calendar.getInstance().also {
+            it.time = date
+            it.set(Calendar.WEEK_OF_YEAR, it.get(Calendar.WEEK_OF_YEAR))
+            it.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY)
+        }
+        secondaryApi.events(
+            "Bearer $token",
+            personIds = profile.children[currentProfile].contingentGuid,
+            beginDate = startDate.time.formatToDay(),
+            endDate = endDate.time.formatToDay(),
+            expandFields = "homework,marks"
+        ).baseEnqueue(::baseErrorFunction, ::baseInternalExceptionFunction) { body ->
+            listener(body.response, listOf(startDate.time.time, endDate.time.time))
+        }
+    }
+
+    fun getMarkInfo(markId: Long, errorListener: (String) -> Unit, listener: (MarkInfo) -> Unit) {
         assert(this::token.isInitialized)
         assert(this::profile.isInitialized)
         mainSchoolApi.markInfo(
             token,
             markId = markId,
             studentId = profile.children[currentProfile].studentId
-        ).baseEnqueue(::baseErrorFunction) { listener(it) }
+        ).baseEnqueue(errorListenerForMessage(errorListener)) { listener(it) }
     }
 
     fun updateRanking(onUpdated: () -> Unit) {
@@ -207,7 +276,18 @@ object DataService {
             token,
             personId = profile.children[currentProfile].contingentGuid,
             date = Date().formatToDay()
-        ).baseEnqueue(::baseErrorFunction, ::baseInternalExceptionFunction) {
+        ).baseEnqueue({ errorBody: ResponseBody, httpCode: Int, className: String? ->
+            val errorText = errorBody.string()
+
+            if (errorText.contains("Рейтинг не доступен.")) {
+                ranking = emptyList()
+                hasRanking = true
+                rankingFinished = true
+                if (classMembersFinished) onUpdated()
+            } else {
+                baseErrorFunction(errorBody, httpCode, className)
+            }
+        }, ::baseInternalExceptionFunction) {
             ranking = it
             hasRanking = true
             rankingFinished = true
@@ -215,7 +295,7 @@ object DataService {
         }
 
         // Class members request for matching names:
-//        dSchoolApi.classMembers(
+//        dSchoolApi.classMembers( todo: uncomment when serverside fixed (or idk)
 //            token,
 //            classUnitId = profile.children[currentProfile].classUnitId
 //        ).baseEnqueue(::baseErrorFunction, ::baseInternalExceptionFunction) {
@@ -238,7 +318,17 @@ object DataService {
             token,
             profile.children[currentProfile].contingentGuid,
             Date().formatToDay()
-        ).baseEnqueue(::baseErrorFunction) {
+        ).baseEnqueue({ errorBody: ResponseBody, httpCode: Int, className: String? ->
+            val errorText = errorBody.string()
+
+            if (errorText.contains("Рейтинг не доступен.")) {
+                subjectRanking = emptyList()
+                hasSubjectRanking = true
+                onUpdated()
+            } else {
+                baseErrorFunction(errorBody, httpCode, className)
+            }
+        }) {
             subjectRanking = it
             hasSubjectRanking = true
             onUpdated()
@@ -266,7 +356,7 @@ object DataService {
             profile.children[0].contractId,
             fromDate = Calendar.getInstance().apply {
                 time = Date()
-                set(Calendar.DAY_OF_YEAR, get(Calendar.DAY_OF_YEAR) - 7)
+                set(Calendar.DAY_OF_YEAR, get(Calendar.DAY_OF_YEAR) - 61)
             }.time.formatToDay(),
             toDate = Date().formatToDay()
         ).baseEnqueue(::baseErrorFunction, ::baseInternalExceptionFunction) { visitsResponse ->
@@ -288,7 +378,7 @@ object DataService {
             token,
             studentId = profile.children[currentProfile].studentId,
             fromDate = Calendar.getInstance().run {
-                set(Calendar.WEEK_OF_YEAR, get(Calendar.WEEK_OF_YEAR) - 1)
+                set(Calendar.WEEK_OF_YEAR, get(Calendar.WEEK_OF_YEAR) - 4)
                 time
             }.formatToDay(),
             toDate = Date().formatToDay()
@@ -362,7 +452,11 @@ object DataService {
         }
     }
 
-    fun getRankingForSubject(subjectId: Long, listener: (List<RankingForSubject>) -> Unit) {
+    fun getRankingForSubject(
+        subjectId: Long,
+        errorListener: (String) -> Unit,
+        listener: (List<RankingForSubject>) -> Unit,
+    ) {
         assert(this::token.isInitialized)
         assert(this::profile.isInitialized)
 
@@ -372,17 +466,23 @@ object DataService {
             profile.children[currentProfile].classUnitId,
             Date().formatToDay(),
             subjectId
-        ).baseEnqueue(::baseErrorFunction) { listener(it) }
+        ).baseEnqueue(errorFunction = errorListenerForMessage(errorListener)) { listener(it) }
     }
 
-    fun refreshToken(onUpdated: () -> Unit) {
+    fun refreshToken(context: Context, onUpdated: () -> Unit) {
         assert(this::token.isInitialized)
 
-        secondaryApi.refreshToken("Bearer $token")
-            .baseEnqueue(::baseErrorFunction) {
-                token = it
-                updateUserId { onUpdated() }
+        if (subsystem == Diary.MES) {
+            context.refreshToken {
+                onUpdated()
             }
+        } else {
+            secondaryApi.refreshToken("Bearer $token")
+                .baseEnqueue(::baseErrorFunction) {
+                    token = it
+                    updateUserId { onUpdated() }
+                }
+        }
     }
 
     fun setHomeworkDoneState(homeworkId: Long, state: Boolean, listener: () -> Unit) {
@@ -397,7 +497,11 @@ object DataService {
         }
     }
 
-    fun getLessonInfo(lessonId: Long, listener: (LessonSchedule) -> Unit) {
+    fun getLessonInfo(
+        lessonId: Long,
+        errorListener: (String) -> Unit,
+        listener: (LessonSchedule) -> Unit,
+    ) {
         assert(this::token.isInitialized)
         assert(this::profile.isInitialized)
 
@@ -405,16 +509,48 @@ object DataService {
             token,
             lessonId,
             profile.children[currentProfile].studentId
-        ).baseEnqueue(::baseErrorFunction) {
+        ).baseEnqueue(errorListenerForMessage(errorListener)) {
             listener(it)
         }
     }
 
-    fun updateAll() {
+    fun getLaunchUrl(homeworkId: Long, materialId: String, listener: (String) -> Unit) {
+        assert(this::token.isInitialized)
+
+        dSchoolApi.launchMaterial(token, homeworkId, materialId)
+            .baseEnqueue({ errorBody, httpCode, className ->
+                if (httpCode < 400) {
+                    listener(errorBody.string())
+                } else {
+                    baseErrorFunction(errorBody, httpCode, className)
+                }
+            }) {}
+    }
+
+    fun sendStatistic(onUpdated: () -> Unit) {
+        assert(this::userId.isInitialized)
+
+        externalApi().sendStat(
+            subsystem.ordinal,
+            encodeToBase64(hash(userId[0].id.toString()))
+        ).baseEnqueue { onUpdated() }
+    }
+
+    fun <Model> pushUserSettings(path: String, content: Model, onUpdated: () -> Unit) {
+        assert(this::token.isInitialized)
+
+        mainSchoolApi.pushUserSettings(token, path, Gson().toJsonTree(content).asJsonObject)
+            .baseEnqueue {
+                onUpdated()
+            }
+    }
+
+    fun updateAll(context: Context? = null) {
         if (loadingStarted) return else loadingStarted = true
-        listOfStates.forEach { it.set(false) }
+        // ADD_NEW_FIELD_HERE
+        states.forEach { it.set(false) }
         val onSingleItemLoad = { name: String ->
-            val statesInit = listOfStates.map { it.get() }
+            val statesInit = states.map { it.get() }
             onSingleItemInUpdateAllLoadedHandler?.invoke(name, (statesInit.count { it }
                 .toFloat()) / (statesInit.size.toFloat()))
             if (!(statesInit.contains(false))) {
@@ -422,13 +558,19 @@ object DataService {
             }
             println("$name response is loaded, $statesInit")
         }
+        if (context != null) {
+            refreshToken(context) {}
+        }
         updateUserId {
             onSingleItemLoad(::userId.name)
             updateSessionUser {
                 onSingleItemLoad(::sessionUser.name)
                 updateProfile {
                     onSingleItemLoad(::profile.name)
-                    updateEventCalendar { onSingleItemLoad(::eventCalendar.name) }
+                    updateEventCalendar {
+                        onSingleItemLoad(::eventCalendar.name)
+                        onSingleItemLoad(::eventsRange.name)
+                    }
                     updateMarksDate { onSingleItemLoad(::marksDate.name) }
                     updateMarksSubject { onSingleItemLoad(::marksSubject.name) }
                     updateHomeworks { onSingleItemLoad(::homeworks.name) }
@@ -442,14 +584,14 @@ object DataService {
                     updateSchoolInfo { onSingleItemLoad(::schoolInfo.name) }
                 }
             }
-            refreshToken {}
         }
     }
 
     fun loadFromCache(get: (String) -> String) {
-        listOfValues.map { it.name }.forEach {
+        fields.map { it.name }.forEachIndexed { index, it ->
             javaClass.getDeclaredField(it)
                 .set(this, Gson().fromJson(get(it), javaClass.getDeclaredField(it).genericType))
+            states[index].set(true)
         }
     }
 

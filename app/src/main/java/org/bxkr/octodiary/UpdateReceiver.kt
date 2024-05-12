@@ -14,8 +14,6 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import org.bxkr.octodiary.network.NetworkService
 import org.bxkr.octodiary.network.interfaces.MainSchoolAPI
-import java.text.SimpleDateFormat
-import java.util.Date
 
 private const val TAG = "Notifications"
 
@@ -26,7 +24,6 @@ class UpdateReceiver : BroadcastReceiver() {
             val token = authPrefs.get<String>("access_token")
             val studentId =
                 notificationPrefs.get<Long>("student_id")
-            val date = Date().formatToDay()
             if (
                 subsystem != null &&
                 token != null &&
@@ -37,11 +34,9 @@ class UpdateReceiver : BroadcastReceiver() {
                     MainSchoolAPI.getBaseUrl(
                         Diary.values()[subsystem]
                     )
-                ).markList(
+                ).subjectMarksShort(
                     accessToken = token,
                     studentId = studentId,
-                    fromDate = date,
-                    toDate = date
                 ).baseEnqueue(
                     errorFunction = { errorBody, httpCode, _ ->
                         errorReceiver(
@@ -63,22 +58,25 @@ class UpdateReceiver : BroadcastReceiver() {
                         object : TypeToken<List<Long>>() {}.type
                     ).toMutableList()
 
-                    currentMarks.filter { it.id !in pastMarkIds }.forEach { mark ->
-                        mark.run {
-                            Log.d(TAG, "| Sent mark id ${mark.id}")
-                            sendNotification(
-                                value,
-                                weight,
-                                subjectName,
-                                controlFormName,
-                                lessonDate
-                            )
-                        }
-                        pastMarkIds.apply {
-                            if (size >= 10) {
-                                removeAt(0)
+                    currentMarks.forEach { subject ->
+                        if (subject.marks != null) {
+                            subject.marks.filter { it.id !in pastMarkIds }.forEach { mark ->
+                                mark.run {
+                                    Log.d(TAG, "| Sent mark id ${mark.id}")
+                                    sendNotification(
+                                        value,
+                                        weight,
+                                        subject.subjectName,
+                                        controlFormName
+                                    )
+                                }
+                                pastMarkIds.apply {
+                                    if (size >= (currentMarks.count() * 5)) {
+                                        removeAt(0)
+                                    }
+                                    add(mark.id)
+                                }
                             }
-                            add(mark.id)
                         }
                     }
 
@@ -94,23 +92,22 @@ class UpdateReceiver : BroadcastReceiver() {
         value: String,
         weight: Int,
         subjectName: String,
-        controlFormName: String,
-        lessonDate: String
+        controlFormName: String
     ) {
         val totalCount = notificationPrefs.get<Int>("total_count") ?: 0
         val suffix = if (weight != 1) "^$weight" else ""
         val notification: Notification = Notification.Builder(this, "data_update")
             .setContentTitle(getText(R.string.notification_new_mark_title))
             .setContentText(
-                getString(
+                if (notificationPrefs.get<Boolean>("_hide_mark_value") == true) getString(
+                    R.string.notification_new_mark_text_no_value,
+                    subjectName,
+                    controlFormName
+                ) else getString(
                     R.string.notification_new_mark_text,
                     value + suffix,
                     subjectName,
-                    controlFormName,
-                    SimpleDateFormat(
-                        "dd LLL",
-                        resources.configuration.locales[0]
-                    ).format(lessonDate.parseFromDay())
+                    controlFormName
                 )
             )
             .setAutoCancel(true)

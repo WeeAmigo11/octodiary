@@ -12,8 +12,8 @@ android {
         applicationId = "org.bxkr.octodiary"
         minSdk = 26
         targetSdk = 34
-        versionCode = 25
-        versionName = "2.0.3-gp"
+        versionCode = 26
+        versionName = "2.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -72,6 +72,11 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.glide)
     implementation(libs.converter.scalars)
+    implementation(libs.androidx.glance.appwidget)
+    implementation(libs.androidx.glance.material3)
+    implementation(libs.androidx.biometric.ktx)
+    implementation(libs.vico.compose.m3)
+    implementation(libs.vico.compose)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.espresso.core)
