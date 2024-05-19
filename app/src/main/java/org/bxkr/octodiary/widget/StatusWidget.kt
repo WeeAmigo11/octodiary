@@ -37,9 +37,6 @@ import androidx.glance.layout.size
 import androidx.glance.layout.wrapContentHeight
 import androidx.glance.text.FontStyle
 import androidx.glance.text.TextAlign
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
-import org.bxkr.octodiary.CachePrefs
 import org.bxkr.octodiary.MainActivity
 import org.bxkr.octodiary.R
 import org.bxkr.octodiary.cachePrefs
@@ -47,6 +44,7 @@ import org.bxkr.octodiary.formatToDay
 import org.bxkr.octodiary.formatToTime
 import org.bxkr.octodiary.formatToWeekday
 import org.bxkr.octodiary.get
+import org.bxkr.octodiary.getFromJson
 import org.bxkr.octodiary.getRussianWeekdayOnFormat
 import org.bxkr.octodiary.models.events.Event
 import org.bxkr.octodiary.parseLongDate
@@ -293,10 +291,6 @@ class StatusWidget : GlanceAppWidget() {
             }
             if (updateWidgetAt != null) context.setUpdateFor(updateWidgetAt!!)
         }
-    }
-
-    private inline fun <reified T> CachePrefs.getFromJson(key: String): T {
-        return this.get<String>(key).run { Gson().fromJson(this, object : TypeToken<T>() {}.type) }
     }
 
     @Composable

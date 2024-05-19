@@ -62,6 +62,7 @@ class UpdateReceiver : BroadcastReceiver() {
                         if (subject.marks != null) {
                             subject.marks.filter { it.id !in pastMarkIds }.forEach { mark ->
                                 mark.run {
+                                    updateCacheMarks(context)
                                     Log.d(TAG, "| Sent mark id ${mark.id}")
                                     sendNotification(
                                         value,
@@ -92,7 +93,7 @@ class UpdateReceiver : BroadcastReceiver() {
         value: String,
         weight: Int,
         subjectName: String,
-        controlFormName: String
+        controlFormName: String,
     ) {
         val totalCount = notificationPrefs.get<Int>("total_count") ?: 0
         val suffix = if (weight != 1) "^$weight" else ""
@@ -138,5 +139,34 @@ class UpdateReceiver : BroadcastReceiver() {
             TAG,
             "$type occurred! Trace:\n$message"
         )
+    }
+
+    private fun updateCacheMarks(context: Context) {
+        val token = context.authPrefs.get<String>("access_token")
+        if (token == null) return
+        DataService.subsystem = Diary.values()[context.authPrefs.get<Int>("subsystem") ?: 0]
+        DataService.token = token
+        DataService.profile = context.cachePrefs.getFromJson("profile")
+        DataService.mainSchoolApi =
+            NetworkService.mainSchoolApi(MainSchoolAPI.getBaseUrl(DataService.subsystem))
+
+        val continueFn = {
+            context.cachePrefs.save(
+                "marksDate" to DataService.marksDate,
+                "marksSubject" to DataService.marksSubject
+            )
+        }
+        var loadedDate = false
+        var loadedSubject = false
+        DataService.updateMarksDate {
+            if (loadedSubject) {
+                continueFn()
+            }
+        }
+        DataService.updateMarksSubject {
+            if (loadedDate) {
+                continueFn()
+            }
+        }
     }
 }

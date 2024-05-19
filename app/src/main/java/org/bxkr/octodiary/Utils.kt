@@ -480,3 +480,7 @@ fun Context.openUri(uri: String) {
     )
     ContextCompat.startActivity(this, browserIntent, null)
 }
+
+inline fun <reified T> CachePrefs.getFromJson(key: String): T {
+    return this.get<String>(key).run { Gson().fromJson(this, object : TypeToken<T>() {}.type) }
+}
