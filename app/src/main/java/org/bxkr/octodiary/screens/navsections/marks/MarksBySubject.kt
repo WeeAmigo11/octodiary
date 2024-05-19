@@ -57,7 +57,7 @@ fun MarksBySubject(scrollToSubjectId: Long? = null) {
                             .run {
                                 when (filter) {
                                     SubjectMarkFilterType.Alphabetical -> sortedBy { it.subjectName }
-                                    SubjectMarkFilterType.ByAverage -> sortedByDescending { it.average.toDoubleOrNull() }
+                                    SubjectMarkFilterType.ByAverage -> sortedByDescending { it.periods?.first { it.title == periodState }?.value?.toDoubleOrNull() }
                                     SubjectMarkFilterType.ByRanking -> sortedBy { subject ->
                                         DataService.subjectRanking.firstOrNull { it.subjectId == subject.subjectId }?.rank?.rankPlace
                                     }
