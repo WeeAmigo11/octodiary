@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.content.pm.PackageManager.NameNotFoundException
 import android.graphics.Matrix
 import android.graphics.Typeface
+import android.net.Uri
 import android.text.Layout
 import android.util.Log
 import androidx.annotation.RawRes
@@ -24,6 +25,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -470,3 +472,11 @@ inline fun <reified T> Context.getDemoProperty(@RawRes propertyRes: Int): T {
 }
 
 val demoScheduleDate = Date(1710190800000)
+
+fun Context.openUri(uri: String) {
+    val browserIntent = Intent(
+        Intent.ACTION_VIEW,
+        Uri.parse(uri)
+    )
+    ContextCompat.startActivity(this, browserIntent, null)
+}

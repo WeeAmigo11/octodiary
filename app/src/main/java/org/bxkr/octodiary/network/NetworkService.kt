@@ -42,12 +42,20 @@ object NetworkService {
         const val REDIRECT_URI = "dnevnik-mes://authRegionRedirect"
     }
 
+    /**
+     *  @see Developer
+     **/
     object ExternalIntegrationConfig {
         const val BOT_AUTH_URL =
             "https://octodiary.dsop.online/redir2bot?token=%s&system=%s&test=%s"
         const val TELEGRAM_CHANNEL_URL = "https://t.me/OctoDiary"
         const val TELEGRAM_REPORT_URL = "https://t.me/OctoDiaryBot?start=feedback"
+        const val TELEGRAM_BOT_URL = "https://t.me/OctoDiaryBot"
+        const val PYTHON_LIB_URL = "https://github.com/OctoDiary/OctoDiary-py"
         const val VERIFY_TOKEN = "930dd75f10cd6288f1bbd248cd2a79690e58fac6702a5fdcb77ea560269d2500"
+        const val GITHUB_REPO_URL = "https://github.com/OctoDiary/OctoDiary-kt"
+        const val CONTRIBUTORS_GITHUB_URL =
+            "https://github.com/OctoDiary/OctoDiary-kt/graphs/contributors"
     }
 
     object BaseUrl {

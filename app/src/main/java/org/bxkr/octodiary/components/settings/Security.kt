@@ -37,6 +37,8 @@ fun Security() {
         }
     }
 
+    BasicSwitchPreference(R.string.fingerprint, prefKey = "biometric", defaultValue = true)
+
     AnimatedVisibility(setPin) {
         val pinFinished = remember { mutableStateOf(false) }
         val initialPin = remember { mutableStateOf(emptyList<Int>()) }
