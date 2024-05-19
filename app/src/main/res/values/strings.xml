@@ -288,4 +288,12 @@
     <string name="based_on_current_marks">Based on current period marks</string>
     <string name="students_count">Students count</string>
     <string name="class_results">Class results</string>
+    <string name="and_other_contributors">and other contributors…</string>
+    <string name="other_octodiary_projects">Other OctoDiary projects</string>
+    <string name="bot">Telegram bot</string>
+    <string name="open">Open</string>
+    <string name="bot_description">Notifications and useful data in your chats</string>
+    <string name="python_lib">Python library</string>
+    <string name="python_lib_description">Use MES API in your Python projects straightly</string>
+    <string name="developers">Developers</string>
 </resources>

@@ -233,4 +233,12 @@
     <string name="based_on_current_marks">На основе оценок за текущий период</string>
     <string name="students_count">Количество учеников</string>
     <string name="class_results">Результат по классу</string>
+    <string name="and_other_contributors">и другие участники…</string>
+    <string name="other_octodiary_projects">Другие проекты OctoDiary</string>
+    <string name="bot">Телеграм-бот</string>
+    <string name="open">Открыть</string>
+    <string name="bot_description">Уведомления и полезные данные прямо в чатах</string>
+    <string name="python_lib">Python-библиотека</string>
+    <string name="python_lib_description">Используйте API МЭШ в ваших Python-проектах напрямую</string>
+    <string name="developers">Разработчики</string>
 </resources>
