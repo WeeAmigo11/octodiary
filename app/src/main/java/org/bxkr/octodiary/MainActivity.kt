@@ -77,6 +77,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import org.bxkr.octodiary.components.DebugMenu
+import org.bxkr.octodiary.components.MigrationDialog
 import org.bxkr.octodiary.components.ProfileChooser
 import org.bxkr.octodiary.components.SettingsDialog
 import org.bxkr.octodiary.screens.CallbackScreen
@@ -86,7 +88,6 @@ import org.bxkr.octodiary.screens.NavScreen
 import org.bxkr.octodiary.screens.navsections.daybook.DayChooser
 import org.bxkr.octodiary.ui.theme.CustomColorScheme
 import org.bxkr.octodiary.ui.theme.OctoDiaryTheme
-import java.util.UUID
 
 val modalBottomSheetStateLive = MutableLiveData(false)
 val modalBottomSheetContentLive = MutableLiveData<@Composable () -> Unit> {}
@@ -98,6 +99,7 @@ val contentDependentActionIconLive = MutableLiveData(Icons.Rounded.FilterAlt)
 val screenLive = MutableLiveData<Screen>()
 val modalDialogStateLive = MutableLiveData(false)
 val modalDialogContentLive = MutableLiveData<@Composable () -> Unit> {}
+val modalDialogCloseListenerLive = MutableLiveData<() -> Unit> {}
 val reloadEverythingLive = MutableLiveData {}
 val darkThemeLive = MutableLiveData<Boolean>(null)
 val colorSchemeLive = MutableLiveData(-1)
@@ -160,7 +162,7 @@ class MainActivity : FragmentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     private fun MyApp(
-        modifier: Modifier = Modifier
+        modifier: Modifier = Modifier,
     ) {
         var title by rememberSaveable { mutableIntStateOf(R.string.app_name) }
         screenLive.value = if (authPrefs.get<Boolean>("auth") == true) {
@@ -184,7 +186,22 @@ class MainActivity : FragmentActivity() {
         val dialogContent = modalDialogContentLive.observeAsState()
         val showFilter = showFilterLive.observeAsState(false)
         val launchUrl = launchUrlLive.observeAsState()
-
+        if (authPrefs.get<String>("access_token") != null) {
+            if ((mainPrefs.get<Int>("version") ?: 25) <= 25) {
+                modalDialogCloseListenerLive.value = {
+                    mainPrefs.save("version" to BuildConfig.VERSION_CODE)
+                    logOut("Migration from version 25")
+                }
+                modalDialogContentLive.value = {
+                    MigrationDialog { modalDialogCloseListenerLive.value?.invoke() }
+                }
+                modalDialogStateLive.value = true
+            } else if (mainPrefs.get<Int>("version") != BuildConfig.VERSION_CODE) {
+                mainPrefs.save("version" to BuildConfig.VERSION_CODE)
+            }
+        } else if (mainPrefs.get<Int>("version") != BuildConfig.VERSION_CODE) {
+            mainPrefs.save("version" to BuildConfig.VERSION_CODE)
+        }
 
         if (launchUrl.value != null) {
             val tabIntent = CustomTabsIntent.Builder().build()
@@ -229,6 +246,9 @@ class MainActivity : FragmentActivity() {
                             }
                         }
                     }, actions = {
+                        if (BuildConfig.DEBUG) {
+                            DebugMenu(this@MainActivity)
+                        }
                         if (localLoadedState && currentScreen.value == Screen.MainNav) {
                             val currentRoute =
                                 navController.value!!.currentBackStackEntryAsState().value?.destination?.route
@@ -363,7 +383,11 @@ class MainActivity : FragmentActivity() {
                     }
                 }
                 if (showDialog.value == true) {
-                    Dialog(onDismissRequest = { modalDialogStateLive.postValue(false) }) {
+                    Dialog(onDismissRequest = {
+                        modalDialogStateLive.postValue(false)
+                        modalDialogCloseListenerLive.value?.invoke()
+                        modalDialogCloseListenerLive.value = {}
+                    }) {
                         Card(
                             Modifier.fillMaxWidth(),
                             shape = MaterialTheme.shapes.large,

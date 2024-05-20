@@ -3,6 +3,7 @@ package org.bxkr.octodiary
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.content.pm.PackageManager.NameNotFoundException
 import android.graphics.Matrix
@@ -151,6 +152,18 @@ fun Prefs.clear() {
     ctx.getSharedPreferences(prefPath, Context.MODE_PRIVATE).edit(commit = true) {
         clear()
     }
+}
+
+val Prefs.raw: SharedPreferences
+    get() = ctx.getSharedPreferences(prefPath, Context.MODE_PRIVATE)
+
+inline fun <reified T> String.asGeneric(): T = when (T::class) {
+    String::class -> this as T
+    Boolean::class -> this.toBoolean() as T
+    Int::class -> this.toInt() as T
+    Long::class -> this.toLong() as T
+    Float::class -> this.toFloat() as T
+    else -> throw IllegalStateException("Unknown Generic Type")
 }
 
 inline fun <reified T> Call<T>.baseEnqueue(

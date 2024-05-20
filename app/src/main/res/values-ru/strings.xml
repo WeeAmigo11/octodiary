@@ -241,4 +241,6 @@
     <string name="python_lib">Python-библиотека</string>
     <string name="python_lib_description">Используйте API МЭШ в ваших Python-проектах напрямую</string>
     <string name="developers">Разработчики</string>
+    <string name="migration">Миграция</string>
+    <string name="migration_description">К сожалению, требуется повторная авторизация после обновления. Приносим свои извинения!</string>
 </resources>
