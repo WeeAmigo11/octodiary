@@ -298,4 +298,5 @@
     <string name="developers">Developers</string>
     <string name="migration">Migration</string>
     <string name="migration_description">Unfortunately, re-authorization is required after the update. We apologize!</string>
+    <string name="show_student_id">Show student ID</string>
 </resources>
