@@ -49,7 +49,6 @@ import com.patrykandpatrick.vico.core.cartesian.data.CartesianValueFormatter
 import com.patrykandpatrick.vico.core.cartesian.data.ColumnCartesianLayerModel
 import com.patrykandpatrick.vico.core.cartesian.data.columnSeries
 import com.patrykandpatrick.vico.core.cartesian.layer.ColumnCartesianLayer
-import com.patrykandpatrick.vico.core.common.Defaults
 import com.patrykandpatrick.vico.core.common.component.LineComponent
 import com.patrykandpatrick.vico.core.common.data.ExtraStore
 import com.patrykandpatrick.vico.core.common.shape.Shape
@@ -206,8 +205,8 @@ fun ClassResults(markInfo: MarkInfo) {
                     results[entry.x.roundToInt()].markValue.five.toString() == markInfo.value
                 return LineComponent(
                     if (isCurrent) primaryColor else secondaryColor,
-                    Defaults.COLUMN_WIDTH,
-                    Shape.rounded(Defaults.COLUMN_ROUNDNESS_PERCENT)
+                    8f,
+                    Shape.rounded(40)
                 )
             }
 
@@ -217,8 +216,8 @@ fun ClassResults(markInfo: MarkInfo) {
             ): LineComponent {
                 return LineComponent(
                     secondaryColor,
-                    Defaults.COLUMN_WIDTH,
-                    Shape.rounded(Defaults.COLUMN_ROUNDNESS_PERCENT)
+                    8f,
+                    Shape.rounded(40)
                 )
             }
         }
@@ -290,38 +289,40 @@ fun RatingButton(subject: MarkListSubjectItem) {
 @Composable
 fun AverageChip(subject: MarkListSubjectItem) {
     val navController = navControllerLive.observeAsState().value
-    Row(
-        Modifier
-            .padding(top = 8.dp)
-            .clip(CircleShape)
-            .let {
-                if (navController != null) {
-                    it.clickable {
-                        modalBottomSheetStateLive.postValue(false)
-                        scrollToSubjectIdLive.value = subject.subjectId
-                        navController.navigate(route = NavSection.Marks.route)
-                    }
-                } else it
-            }
-            .background(MaterialTheme.colorScheme.tertiaryContainer, CircleShape)
-            .padding(4.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        val textStyle = MaterialTheme.typography.labelLarge
-        Icon(
-            Icons.AutoMirrored.Rounded.TrendingUp,
-            stringResource(R.string.average_mark),
+    if (subject.currentPeriod != null) {
+        Row(
             Modifier
-                .padding(horizontal = 4.dp)
-                .size(textStyle.fontSize.value.dp),
-            MaterialTheme.colorScheme.tertiary
-        )
-        Text(
-            subject.currentPeriod?.fixedValue ?: subject.currentPeriod?.value ?: "",
-            Modifier.padding(end = 4.dp),
-            color = MaterialTheme.colorScheme.tertiary,
-            style = textStyle
-        )
+                .padding(top = 8.dp)
+                .clip(CircleShape)
+                .let {
+                    if (navController != null) {
+                        it.clickable {
+                            modalBottomSheetStateLive.postValue(false)
+                            scrollToSubjectIdLive.value = subject.subjectId
+                            navController.navigate(route = NavSection.Marks.route)
+                        }
+                    } else it
+                }
+                .background(MaterialTheme.colorScheme.tertiaryContainer, CircleShape)
+                .padding(4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            val textStyle = MaterialTheme.typography.labelLarge
+            Icon(
+                Icons.AutoMirrored.Rounded.TrendingUp,
+                stringResource(R.string.average_mark),
+                Modifier
+                    .padding(horizontal = 4.dp)
+                    .size(textStyle.fontSize.value.dp),
+                MaterialTheme.colorScheme.tertiary
+            )
+            Text(
+                subject.currentPeriod?.fixedValue ?: subject.currentPeriod?.value ?: "",
+                Modifier.padding(end = 4.dp),
+                color = MaterialTheme.colorScheme.tertiary,
+                style = textStyle
+            )
+        }
     }
 }
 
