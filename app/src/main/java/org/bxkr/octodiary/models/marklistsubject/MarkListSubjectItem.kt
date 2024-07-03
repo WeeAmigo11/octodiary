@@ -19,7 +19,7 @@ data class MarkListSubjectItem(
     @SerializedName("subject_name")
     val subjectName: String,
     @SerializedName("year_mark")
-    val yearMark: Any?,
+    val yearMark: String?,
 ) {
     val currentPeriod: Period?
         get() =

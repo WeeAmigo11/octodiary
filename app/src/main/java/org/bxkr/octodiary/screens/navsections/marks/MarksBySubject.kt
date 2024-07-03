@@ -1,15 +1,22 @@
 package org.bxkr.octodiary.screens.navsections.marks
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SecondaryScrollableTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
@@ -19,10 +26,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.coroutineScope
 import org.bxkr.octodiary.DataService
+import org.bxkr.octodiary.R
 import org.bxkr.octodiary.contentDependentActionLive
 import org.bxkr.octodiary.parseFromDay
 import java.util.Date
@@ -44,75 +54,104 @@ fun MarksBySubject(scrollToSubjectId: Long? = null) {
                 ?: periods?.get(0)?.first
         )
     }
+    var finalSelected by remember { mutableStateOf(false) }
     Column(Modifier.fillMaxHeight(), verticalArrangement = Arrangement.Bottom) {
-        Crossfade(
-            targetState = currentPeriod, modifier = Modifier.weight(1f), label = "subject_anim"
-        ) { periodState ->
-            AnimatedContent(targetState = filterState.value, label = "filter_anim") { filter ->
-                Column {
-                    val subjects =
-                        DataService.marksSubject.filter {
-                            it.periods != null && it.periods.map { it.title }.contains(periodState)
-                        }
-                            .run {
-                                when (filter) {
-                                    SubjectMarkFilterType.Alphabetical -> sortedBy { it.subjectName }
-                                    SubjectMarkFilterType.ByAverage -> sortedByDescending { it.periods?.first { it.title == periodState }?.value?.toDoubleOrNull() }
-                                    SubjectMarkFilterType.ByRanking -> sortedBy { subject ->
-                                        DataService.subjectRanking.firstOrNull { it.subjectId == subject.subjectId }?.rank?.rankPlace
-                                    }
+        AnimatedVisibility(visible = !finalSelected, modifier = Modifier.weight(1f)) {
+            Crossfade(
+                targetState = currentPeriod, label = "subject_anim"
+            ) { periodState ->
+                AnimatedContent(targetState = filterState.value, label = "filter_anim") { filter ->
+                    Column {
+                        val subjects =
+                            DataService.marksSubject.filter {
+                                it.periods != null && it.periods.map { it.title }
+                                    .contains(periodState)
+                            }
+                                .run {
+                                    when (filter) {
+                                        SubjectMarkFilterType.Alphabetical -> sortedBy { it.subjectName }
+                                        SubjectMarkFilterType.ByAverage -> sortedByDescending { it.periods?.first { it.title == periodState }?.value?.toDoubleOrNull() }
+                                        SubjectMarkFilterType.ByRanking -> sortedBy { subject ->
+                                            DataService.subjectRanking.firstOrNull { it.subjectId == subject.subjectId }?.rank?.rankPlace
+                                        }
 
-                                    SubjectMarkFilterType.ByUpdated -> sortedByDescending {
-                                        it.periods?.first { it.title == periodState }?.marks?.maxBy { it1 ->
-                                            it1.date.parseFromDay().toInstant().toEpochMilli()
-                                        }?.date?.parseFromDay()?.toInstant()?.toEpochMilli() ?: 0
+                                        SubjectMarkFilterType.ByUpdated -> sortedByDescending {
+                                            it.periods?.first { it.title == periodState }?.marks?.maxBy { it1 ->
+                                                it1.date.parseFromDay().toInstant().toEpochMilli()
+                                            }?.date?.parseFromDay()?.toInstant()?.toEpochMilli()
+                                                ?: 0
+                                        }
                                     }
                                 }
-                            }
-                    val lazyColumnState = rememberLazyListState()
-                    LazyColumn(
-                        Modifier
-                            .fillMaxHeight()
-                            .padding(horizontal = 16.dp)
-                            .weight(1f),
-                        lazyColumnState
-                    ) {
-                        items(subjects) {
-                            if (it.periods != null && it.periods.any { it.title == periodState }) {
-                                val sentPeriod = it.periods.first { it.title == periodState }
-                                SubjectCard(
-                                    period = sentPeriod,
-                                    it.subjectId,
-                                    it.subjectName,
-                                    sentPeriod == it.currentPeriod
-                                )
-                            }
-                        }
-                    }
-                    if (scrollToSubjectId != null) {
-                        LaunchedEffect(Unit) {
-                            coroutineScope {
-                                lazyColumnState.animateScrollToItem(subjects.indexOfFirst { it.subjectId == scrollToSubjectId })
-                                scrollToSubjectIdLive.postValue(null)
+                        val lazyColumnState = rememberLazyListState()
+                        LazyColumn(
+                            Modifier
+                                .fillMaxHeight()
+                                .padding(horizontal = 16.dp)
+                                .weight(1f),
+                            lazyColumnState
+                        ) {
+                            items(subjects) {
+                                if (it.periods != null && it.periods.any { it.title == periodState }) {
+                                    val sentPeriod = it.periods.first { it.title == periodState }
+                                    SubjectCard(
+                                        period = sentPeriod,
+                                        it.subjectId,
+                                        it.subjectName,
+                                        sentPeriod == it.currentPeriod
+                                    )
+                                }
                             }
                         }
-                    }
-                    SecondaryScrollableTabRow(
-                        selectedTabIndex = periods?.map { it.first }?.indexOf(currentPeriod) ?: 0,
-                        divider = {},
-                        edgePadding = 0.dp
-                    ) {
-                        periods?.forEachIndexed { index: Int, period: Pair<String, Pair<String, String>> ->
-                            Tab(
-                                selected = periods.map { it.first }.indexOf(currentPeriod) == index,
-                                text = { Text(period.first) },
-                                onClick = {
-                                    currentPeriod = periods[index].first
-                                })
+                        if (scrollToSubjectId != null) {
+                            LaunchedEffect(Unit) {
+                                coroutineScope {
+                                    lazyColumnState.animateScrollToItem(subjects.indexOfFirst { it.subjectId == scrollToSubjectId })
+                                    scrollToSubjectIdLive.postValue(null)
+                                }
+                            }
                         }
                     }
                 }
             }
+        }
+        AnimatedVisibility(visible = finalSelected, modifier = Modifier.weight(1f)) {
+            FinalsScreen()
+        }
+        SecondaryScrollableTabRow(
+            selectedTabIndex = if (!finalSelected) periods?.map { it.first }
+                ?.indexOf(currentPeriod) ?: 0 else periods?.map { it.first }?.size
+                ?: 0,
+            divider = {},
+            edgePadding = 0.dp
+        ) {
+            periods?.forEachIndexed { index: Int, period: Pair<String, Pair<String, String>> ->
+                Tab(
+                    selected = (periods.map { it.first }
+                        .indexOf(currentPeriod) == index) && !finalSelected,
+                    text = { Text(period.first) },
+                    onClick = {
+                        currentPeriod = periods[index].first
+                        finalSelected = false
+                    })
+            }
+            Tab(
+                selected = finalSelected,
+                text = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Rounded.Star,
+                            stringResource(R.string.finals),
+                            Modifier
+                                .padding(end = 4.dp)
+                                .size(16.dp),
+                            MaterialTheme.colorScheme.secondary
+                        )
+                        Text(stringResource(R.string.finals))
+                    }
+                },
+                onClick = { finalSelected = true }
+            )
         }
     }
 }

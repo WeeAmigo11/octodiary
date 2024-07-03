@@ -244,4 +244,6 @@
     <string name="migration">Миграция</string>
     <string name="migration_description">К сожалению, требуется повторная авторизация после обновления. Приносим свои извинения!</string>
     <string name="show_student_id">Показать ID ученика</string>
+    <string name="finals">Итоговые</string>
+    <string name="year">Год</string>
 </resources>

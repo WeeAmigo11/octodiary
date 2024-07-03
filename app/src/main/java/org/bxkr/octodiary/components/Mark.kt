@@ -105,6 +105,20 @@ fun MarkComp(
 }
 
 @Composable
+fun MarkSimple(value: String, modifier: Modifier = Modifier) {
+    Box(
+        modifier
+            .size(40.dp)
+            .background(MaterialTheme.colorScheme.secondaryContainer, MaterialTheme.shapes.small)
+    ) {
+        Text(
+            value, Modifier.align(Alignment.Center), MaterialTheme.colorScheme.onSecondaryContainer,
+            style = MaterialTheme.typography.labelLarge
+        )
+    }
+}
+
+@Composable
 fun MarkSheetContent(mark: Mark, subjectId: Long) {
     var markInfo by remember { mutableStateOf<MarkInfo?>(null) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
