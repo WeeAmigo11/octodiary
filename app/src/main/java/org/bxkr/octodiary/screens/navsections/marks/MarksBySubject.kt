@@ -1,7 +1,6 @@
 package org.bxkr.octodiary.screens.navsections.marks
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -56,67 +55,73 @@ fun MarksBySubject(scrollToSubjectId: Long? = null) {
     }
     var finalSelected by remember { mutableStateOf(false) }
     Column(Modifier.fillMaxHeight(), verticalArrangement = Arrangement.Bottom) {
-        AnimatedVisibility(visible = !finalSelected, modifier = Modifier.weight(1f)) {
-            Crossfade(
-                targetState = currentPeriod, label = "subject_anim"
-            ) { periodState ->
-                AnimatedContent(targetState = filterState.value, label = "filter_anim") { filter ->
-                    Column {
-                        val subjects =
-                            DataService.marksSubject.filter {
-                                it.periods != null && it.periods.map { it.title }
-                                    .contains(periodState)
-                            }
-                                .run {
-                                    when (filter) {
-                                        SubjectMarkFilterType.Alphabetical -> sortedBy { it.subjectName }
-                                        SubjectMarkFilterType.ByAverage -> sortedByDescending { it.periods?.first { it.title == periodState }?.value?.toDoubleOrNull() }
-                                        SubjectMarkFilterType.ByRanking -> sortedBy { subject ->
-                                            DataService.subjectRanking.firstOrNull { it.subjectId == subject.subjectId }?.rank?.rankPlace
-                                        }
+        Crossfade(targetState = finalSelected, modifier = Modifier.weight(1f)) {
+            if (!it) {
+                Crossfade(
+                    targetState = currentPeriod, label = "subject_anim"
+                ) { periodState ->
+                    AnimatedContent(
+                        targetState = filterState.value,
+                        label = "filter_anim"
+                    ) { filter ->
+                        Column {
+                            val subjects =
+                                DataService.marksSubject.filter {
+                                    it.periods != null && it.periods.map { it.title }
+                                        .contains(periodState)
+                                }
+                                    .run {
+                                        when (filter) {
+                                            SubjectMarkFilterType.Alphabetical -> sortedBy { it.subjectName }
+                                            SubjectMarkFilterType.ByAverage -> sortedByDescending { it.periods?.first { it.title == periodState }?.value?.toDoubleOrNull() }
+                                            SubjectMarkFilterType.ByRanking -> sortedBy { subject ->
+                                                DataService.subjectRanking.firstOrNull { it.subjectId == subject.subjectId }?.rank?.rankPlace
+                                            }
 
-                                        SubjectMarkFilterType.ByUpdated -> sortedByDescending {
-                                            it.periods?.first { it.title == periodState }?.marks?.maxBy { it1 ->
-                                                it1.date.parseFromDay().toInstant().toEpochMilli()
-                                            }?.date?.parseFromDay()?.toInstant()?.toEpochMilli()
-                                                ?: 0
+                                            SubjectMarkFilterType.ByUpdated -> sortedByDescending {
+                                                it.periods?.first { it.title == periodState }?.marks?.maxBy { it1 ->
+                                                    it1.date.parseFromDay().toInstant()
+                                                        .toEpochMilli()
+                                                }?.date?.parseFromDay()?.toInstant()?.toEpochMilli()
+                                                    ?: 0
+                                            }
                                         }
                                     }
-                                }
-                        val lazyColumnState = rememberLazyListState()
-                        LazyColumn(
-                            Modifier
-                                .fillMaxHeight()
-                                .padding(horizontal = 16.dp)
-                                .weight(1f),
-                            lazyColumnState
-                        ) {
-                            items(subjects) {
-                                if (it.periods != null && it.periods.any { it.title == periodState }) {
-                                    val sentPeriod = it.periods.first { it.title == periodState }
-                                    SubjectCard(
-                                        period = sentPeriod,
-                                        it.subjectId,
-                                        it.subjectName,
-                                        sentPeriod == it.currentPeriod
-                                    )
+                            val lazyColumnState = rememberLazyListState()
+                            LazyColumn(
+                                Modifier
+                                    .fillMaxHeight()
+                                    .padding(horizontal = 16.dp)
+                                    .weight(1f),
+                                lazyColumnState
+                            ) {
+                                items(subjects) {
+                                    if (it.periods != null && it.periods.any { it.title == periodState }) {
+                                        val sentPeriod =
+                                            it.periods.first { it.title == periodState }
+                                        SubjectCard(
+                                            period = sentPeriod,
+                                            it.subjectId,
+                                            it.subjectName,
+                                            sentPeriod == it.currentPeriod
+                                        )
+                                    }
                                 }
                             }
-                        }
-                        if (scrollToSubjectId != null) {
-                            LaunchedEffect(Unit) {
-                                coroutineScope {
-                                    lazyColumnState.animateScrollToItem(subjects.indexOfFirst { it.subjectId == scrollToSubjectId })
-                                    scrollToSubjectIdLive.postValue(null)
+                            if (scrollToSubjectId != null) {
+                                LaunchedEffect(Unit) {
+                                    coroutineScope {
+                                        lazyColumnState.animateScrollToItem(subjects.indexOfFirst { it.subjectId == scrollToSubjectId })
+                                        scrollToSubjectIdLive.postValue(null)
+                                    }
                                 }
                             }
                         }
                     }
                 }
+            } else {
+                FinalsScreen()
             }
-        }
-        AnimatedVisibility(visible = finalSelected, modifier = Modifier.weight(1f)) {
-            FinalsScreen()
         }
         SecondaryScrollableTabRow(
             selectedTabIndex = if (!finalSelected) periods?.map { it.first }
