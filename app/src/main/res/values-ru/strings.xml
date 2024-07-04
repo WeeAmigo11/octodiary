@@ -247,4 +247,5 @@
     <string name="finals">Итоговые</string>
     <string name="year">Год</string>
     <string name="hide_default_weight">Скрывать вес 1 во всех оценках</string>
+    <string name="show_breaks">Показывать перемены</string>
 </resources>

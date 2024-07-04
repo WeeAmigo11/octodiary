@@ -532,3 +532,9 @@ fun getMarkConfig(): MarkConfig {
     )
 }
 
+@Composable
+fun areBreaksShown(): Boolean {
+    val context = LocalContext.current
+    return context.mainPrefs.get("breaks") ?: true
+}
+

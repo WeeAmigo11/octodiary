@@ -24,6 +24,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.bxkr.octodiary.DataService
 import org.bxkr.octodiary.R
+import org.bxkr.octodiary.areBreaksShown
 import org.bxkr.octodiary.formatToDay
 import org.bxkr.octodiary.formatToHumanDay
 import org.bxkr.octodiary.get
@@ -38,6 +39,7 @@ import java.util.Date
 @Composable
 fun DashboardScreen() {
     val showNumbers = LocalContext.current.mainPrefs.get("show_lesson_numbers") ?: true
+    val showBreaks = areBreaksShown()
     LazyColumn(
         verticalArrangement = Arrangement.Bottom,
         modifier = Modifier
@@ -83,7 +85,7 @@ fun DashboardScreen() {
                     DataService.eventCalendar.filter {
                         it.startAt.parseLongDate().formatToDay() == day
                     }
-                } ?: listOf(), showNumbers)
+                } ?: listOf(), showNumbers, showBreaks)
         item {
             if (LocalContext.current.mainPrefs.get("main_rating") ?: true) {
                 Text(

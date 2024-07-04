@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.MutableLiveData
 import org.bxkr.octodiary.DataService
 import org.bxkr.octodiary.R
+import org.bxkr.octodiary.areBreaksShown
 import org.bxkr.octodiary.demoScheduleDate
 import org.bxkr.octodiary.formatToDay
 import org.bxkr.octodiary.get
@@ -72,6 +73,7 @@ fun WeekPager(eventsLoaded: List<Event>) {
     var isLoadingNewEvents by remember { mutableStateOf(false) }
     var currentDateRange by remember { mutableStateOf(DataService.eventsRange) }
     val showNumbers = LocalContext.current.mainPrefs.get("show_lesson_numbers") ?: true
+    val showBreaks = areBreaksShown()
     val weekdays = remember { (1..7).toList().also { Collections.rotate(it, -1) } }
     val dayPosition =
         rememberPagerState(
@@ -137,7 +139,7 @@ fun WeekPager(eventsLoaded: List<Event>) {
             AnimatedVisibility(visible = !isLoadingNewEvents) {
                 if (dayEvents.isNotEmpty()) {
                     LazyColumn(Modifier.fillMaxSize()) {
-                        DayItem(dayEvents, showNumbers)
+                        DayItem(dayEvents, showNumbers, showBreaks)
                     }
                 } else {
                     Column(

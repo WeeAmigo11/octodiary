@@ -24,6 +24,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.bxkr.octodiary.DataService
 import org.bxkr.octodiary.R
+import org.bxkr.octodiary.areBreaksShown
 import org.bxkr.octodiary.formatToDay
 import org.bxkr.octodiary.get
 import org.bxkr.octodiary.mainPrefs
@@ -47,6 +48,7 @@ fun DaybookScreen() {
     val recompositionTrigger = remember { mutableStateOf(false) }
     key(recompositionTrigger.value) {
         val showNumbers = LocalContext.current.mainPrefs.get("show_lesson_numbers") ?: true
+        val showBreaks = areBreaksShown()
         val weekSplitCalendar = key(eventCalendar) {
             eventCalendar.fold(mutableListOf<MutableList<Event>>()) { sum, it ->
                 if (sum.isEmpty() || sum.last().first().startAt.parseLongDate()
@@ -185,7 +187,7 @@ fun DaybookScreen() {
                             )
                             if (daySplitCalendar.size > page) {
                                 LazyColumn(Modifier.fillMaxSize()) {
-                                    DayItem(day = daySplitCalendar[page], showNumbers)
+                                    DayItem(day = daySplitCalendar[page], showNumbers, showBreaks)
                                 }
                             } else {
                                 Column(

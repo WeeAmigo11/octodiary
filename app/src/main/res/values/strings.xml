@@ -302,4 +302,5 @@
     <string name="finals">Finals</string>
     <string name="year">Year</string>
     <string name="hide_default_weight">Hide weight 1 in all marks</string>
+    <string name="show_breaks">Show breaks</string>
 </resources>

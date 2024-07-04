@@ -8,6 +8,11 @@ import org.bxkr.octodiary.R
 fun Common() {
     Category(stringResource(R.string.diary)) {
         BasicSwitchPreference(
+            titleRes = R.string.show_breaks,
+            prefKey = "breaks",
+            defaultValue = true
+        )
+        BasicSwitchPreference(
             titleRes = R.string.show_lesson_numbers,
             prefKey = "show_lesson_numbers",
             defaultValue = true
