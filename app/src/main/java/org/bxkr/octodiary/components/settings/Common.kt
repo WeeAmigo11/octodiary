@@ -31,4 +31,11 @@ fun Common() {
             defaultValue = true
         )
     }
+    Category(stringResource(R.string.marks)) {
+        BasicSwitchPreference(
+            titleRes = R.string.hide_default_weight,
+            prefKey = "hide_default_weight",
+            defaultValue = true
+        )
+    }
 }

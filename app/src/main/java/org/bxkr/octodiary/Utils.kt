@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.asAndroidPath
 import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -47,6 +48,7 @@ import com.patrykandpatrick.vico.core.common.component.TextComponent
 import com.patrykandpatrick.vico.core.common.copyColor
 import com.patrykandpatrick.vico.core.common.shape.Corner
 import okhttp3.ResponseBody
+import org.bxkr.octodiary.components.MarkConfig
 import org.bxkr.octodiary.models.rankingforsubject.ErrorBody
 import retrofit2.Call
 import retrofit2.Callback
@@ -520,5 +522,13 @@ fun convertToRoman(number: Int): String {
         }
     }
     return ""
+}
+
+@Composable
+fun getMarkConfig(): MarkConfig {
+    val context = LocalContext.current
+    return MarkConfig(
+        hideDefaultWeight = context.mainPrefs.get("hide_default_weight") ?: true
+    )
 }
 

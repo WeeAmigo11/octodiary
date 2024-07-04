@@ -35,6 +35,7 @@ import org.bxkr.octodiary.CloverShape
 import org.bxkr.octodiary.DataService
 import org.bxkr.octodiary.R
 import org.bxkr.octodiary.components.MarkComp
+import org.bxkr.octodiary.components.MarkConfig
 import org.bxkr.octodiary.get
 import org.bxkr.octodiary.mainPrefs
 import org.bxkr.octodiary.modalBottomSheetContentLive
@@ -43,7 +44,13 @@ import org.bxkr.octodiary.models.events.Mark
 import org.bxkr.octodiary.models.marklistsubject.Period
 
 @Composable
-fun SubjectCard(period: Period, subjectId: Long, subjectName: String, showRating: Boolean) {
+fun SubjectCard(
+    period: Period,
+    subjectId: Long,
+    subjectName: String,
+    showRating: Boolean,
+    markConfig: MarkConfig,
+) {
     val isGlow = subjectId == scrollToSubjectIdLive.value
     AnimatedContent(targetState = isGlow) { isGlowA ->
         Card(
@@ -128,7 +135,11 @@ fun SubjectCard(period: Period, subjectId: Long, subjectName: String, showRating
                 ) {
                     LazyRow(Modifier.weight(1f, fill = true)) {
                         items(period.marks) {
-                            MarkComp(Mark.fromMarkListSubject(it), subjectId = subjectId)
+                            MarkComp(
+                                Mark.fromMarkListSubject(it),
+                                subjectId = subjectId,
+                                markConfig = markConfig
+                            )
                         }
                     }
                     if ((LocalContext.current.mainPrefs.get("subject_rating")

@@ -58,6 +58,7 @@ import org.bxkr.octodiary.NavSection
 import org.bxkr.octodiary.R
 import org.bxkr.octodiary.get
 import org.bxkr.octodiary.getDemoProperty
+import org.bxkr.octodiary.getMarkConfig
 import org.bxkr.octodiary.isDemo
 import org.bxkr.octodiary.mainPrefs
 import org.bxkr.octodiary.modalBottomSheetContentLive
@@ -72,12 +73,17 @@ import org.bxkr.octodiary.screens.navsections.marks.SubjectRatingBottomSheet
 import org.bxkr.octodiary.screens.navsections.marks.scrollToSubjectIdLive
 import kotlin.math.roundToInt
 
+data class MarkConfig(
+    val hideDefaultWeight: Boolean,
+)
+
 @Composable
 fun MarkComp(
     mark: Mark,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     subjectId: Long,
+    markConfig: MarkConfig,
     onClick: (Mark, Long) -> Unit = ::defaultMarkClick,
 ) {
     FilledTonalIconButton(
@@ -95,11 +101,13 @@ fun MarkComp(
                 Modifier.align(Alignment.Center),
                 style = MaterialTheme.typography.labelLarge
             )
-            Text(
-                mark.weight.toString(),
-                Modifier.align(Alignment.BottomEnd),
-                style = MaterialTheme.typography.labelMedium
-            )
+            if (!markConfig.hideDefaultWeight || mark.weight != 1) {
+                Text(
+                    mark.weight.toString(),
+                    Modifier.align(Alignment.BottomEnd),
+                    style = MaterialTheme.typography.labelMedium
+                )
+            }
         }
     }
 }
@@ -164,7 +172,7 @@ fun BoxScope.MarkInfo(markInfo: MarkInfo, subject: MarkListSubjectItem?, mark: M
             .align(Alignment.TopEnd)
             .padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        MarkComp(mark, enabled = false, subjectId = 0L)
+        MarkComp(mark, enabled = false, subjectId = 0L, markConfig = getMarkConfig())
         if (subject != null) {
             RatingButton(subject)
             AverageChip(subject)

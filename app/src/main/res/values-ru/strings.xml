@@ -246,4 +246,5 @@
     <string name="show_student_id">Показать ID ученика</string>
     <string name="finals">Итоговые</string>
     <string name="year">Год</string>
+    <string name="hide_default_weight">Скрывать вес 1 во всех оценках</string>
 </resources>

@@ -53,6 +53,7 @@ import kotlinx.coroutines.launch
 import org.bxkr.octodiary.R
 import org.bxkr.octodiary.components.MarkComp
 import org.bxkr.octodiary.formatToTime
+import org.bxkr.octodiary.getMarkConfig
 import org.bxkr.octodiary.modalBottomSheetContentLive
 import org.bxkr.octodiary.modalBottomSheetStateLive
 import org.bxkr.octodiary.models.events.Event
@@ -72,6 +73,7 @@ fun EventItem(event: Event, index: Int = -1, showLessonNumbers: Boolean = true) 
             shrinkTowards = Alignment.Top, animationSpec = tween(200)
         )
     }
+    val markConfig = getMarkConfig()
     Column(Modifier.clickable {
         isExpanded = !isExpanded
     }) {
@@ -177,7 +179,11 @@ fun EventItem(event: Event, index: Int = -1, showLessonNumbers: Boolean = true) 
                                 Row {
                                     event.marks.forEach {
                                         if (event.subjectId != null) {
-                                            MarkComp(it, subjectId = event.subjectId)
+                                            MarkComp(
+                                                it,
+                                                subjectId = event.subjectId,
+                                                markConfig = markConfig
+                                            )
                                         }
                                     }
                                 }

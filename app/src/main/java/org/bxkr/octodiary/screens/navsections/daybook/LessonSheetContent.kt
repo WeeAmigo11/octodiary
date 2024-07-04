@@ -42,6 +42,7 @@ import org.bxkr.octodiary.components.MarkComp
 import org.bxkr.octodiary.components.WebViewDialog
 import org.bxkr.octodiary.formatToHumanDay
 import org.bxkr.octodiary.getDemoProperty
+import org.bxkr.octodiary.getMarkConfig
 import org.bxkr.octodiary.isDemo
 import org.bxkr.octodiary.models.lessonschedule.LessonSchedule
 import org.bxkr.octodiary.parseFromDay
@@ -138,9 +139,10 @@ fun LessonSheetContent(lessonId: Long) {
                             }
                         }
                     }
+                    val markConfig = getMarkConfig()
                     LazyRow {
                         items(marks) {
-                            MarkComp(it, subjectId = subjectId)
+                            MarkComp(it, subjectId = subjectId, markConfig = markConfig)
                         }
                     }
                 }

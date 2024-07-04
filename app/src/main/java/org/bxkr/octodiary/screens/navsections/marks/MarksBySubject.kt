@@ -33,6 +33,7 @@ import kotlinx.coroutines.coroutineScope
 import org.bxkr.octodiary.DataService
 import org.bxkr.octodiary.R
 import org.bxkr.octodiary.contentDependentActionLive
+import org.bxkr.octodiary.getMarkConfig
 import org.bxkr.octodiary.parseFromDay
 import java.util.Date
 
@@ -54,6 +55,7 @@ fun MarksBySubject(scrollToSubjectId: Long? = null) {
         )
     }
     var finalSelected by remember { mutableStateOf(false) }
+    val markConfig = getMarkConfig()
     Column(Modifier.fillMaxHeight(), verticalArrangement = Arrangement.Bottom) {
         Crossfade(targetState = finalSelected, modifier = Modifier.weight(1f)) {
             if (!it) {
@@ -103,7 +105,8 @@ fun MarksBySubject(scrollToSubjectId: Long? = null) {
                                             period = sentPeriod,
                                             it.subjectId,
                                             it.subjectName,
-                                            sentPeriod == it.currentPeriod
+                                            sentPeriod == it.currentPeriod,
+                                            markConfig
                                         )
                                     }
                                 }
