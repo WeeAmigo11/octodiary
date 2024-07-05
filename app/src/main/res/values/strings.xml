@@ -303,4 +303,6 @@
     <string name="year">Year</string>
     <string name="hide_default_weight">Hide weight 1 in all marks</string>
     <string name="show_breaks">Show breaks</string>
+    <string name="mark_highlighting">Mark highlighting</string>
+    <string name="mark_highlighting_desc">Add color to bad marks</string>
 </resources>

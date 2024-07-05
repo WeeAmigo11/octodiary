@@ -18,6 +18,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -75,6 +76,7 @@ import kotlin.math.roundToInt
 
 data class MarkConfig(
     val hideDefaultWeight: Boolean,
+    val markHighlighting: Boolean,
 )
 
 @Composable
@@ -86,10 +88,21 @@ fun MarkComp(
     markConfig: MarkConfig,
     onClick: (Mark, Long) -> Unit = ::defaultMarkClick,
 ) {
+    var color = MaterialTheme.colorScheme.run {
+        if (markConfig.markHighlighting) {
+            when (mark.value) {
+                "3" -> tertiaryContainer
+                "2" -> errorContainer
+                else -> secondaryContainer
+            }
+        } else secondaryContainer
+    }
+
     FilledTonalIconButton(
         onClick = { onClick(mark, subjectId) },
         modifier = modifier.clickable(enabled) { onClick(mark, subjectId) },
-        shape = MaterialTheme.shapes.small
+        shape = MaterialTheme.shapes.small,
+        colors = IconButtonDefaults.filledTonalIconButtonColors(containerColor = color)
     ) {
         Box(
             Modifier

@@ -528,7 +528,8 @@ fun convertToRoman(number: Int): String {
 fun getMarkConfig(): MarkConfig {
     val context = LocalContext.current
     return MarkConfig(
-        hideDefaultWeight = context.mainPrefs.get("hide_default_weight") ?: true
+        hideDefaultWeight = context.mainPrefs.get("hide_default_weight") ?: true,
+        markHighlighting = context.mainPrefs.get("mark_highlighting") ?: true
     )
 }
 

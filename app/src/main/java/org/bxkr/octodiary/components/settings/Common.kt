@@ -42,5 +42,11 @@ fun Common() {
             prefKey = "hide_default_weight",
             defaultValue = true
         )
+        BasicSwitchPreference(
+            titleRes = R.string.mark_highlighting,
+            descriptionRes = R.string.mark_highlighting_desc,
+            prefKey = "mark_highlighting",
+            defaultValue = true
+        )
     }
 }
