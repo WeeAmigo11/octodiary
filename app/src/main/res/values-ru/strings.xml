@@ -251,4 +251,10 @@
     <string name="mark_highlighting">Подсветка оценок</string>
     <string name="mark_highlighting_desc">Выделять плохие оценки цветом</string>
     <string name="menu">меню</string>
+    <string name="log_in_by_token">Вход по токену</string>
+    <string name="token_auth_warning">Авторизация будет активна до истечения срока действия токена</string>
+    <string name="token">Токен</string>
+    <string name="invalid_token">Не является JWT токеном!</string>
+    <string name="token_description">Система: %s\nАктивен до: %s</string>
+    <string name="paste">Вставить</string>
 </resources>

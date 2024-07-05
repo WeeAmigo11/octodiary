@@ -114,11 +114,18 @@ fun encodeToBase64(byteArray: ByteArray): String {
 }
 
 @OptIn(ExperimentalEncodingApi::class)
-inline fun <reified T> decodeFromBase64Json(string: String, charset: Charset = Charsets.UTF_8): T {
-    return Gson().fromJson(
-        Base64.UrlSafe.decode(string).toString(charset),
-        object : TypeToken<T>() {}.type
-    )
+inline fun <reified T> decodeFromBase64JsonOrNull(
+    string: String,
+    charset: Charset = Charsets.UTF_8,
+): T? {
+    try {
+        return Gson().fromJson(
+            Base64.UrlSafe.decode(string).toString(charset),
+            object : TypeToken<T>() {}.type
+        )
+    } catch (e: RuntimeException) {
+        return null
+    }
 }
 
 fun Prefs.save(vararg addPrefs: Pair<String, Any?>) {
@@ -272,6 +279,12 @@ fun String.parseSimpleLongDate(): Date =
 /** Formats [Date] to human time [String] **/
 fun Date.formatToTime(): String = SimpleDateFormat("HH:mm", Locale.ROOT).format(this)
 
+/** Formats [Date] to human date [String] **/
+@ReadOnlyComposable
+@Composable
+fun Date.formatToLongHumanDate(): String =
+    SimpleDateFormat("d LLL yyyy H:mm", LocalConfiguration.current.locales[0]).format(this)
+
 /** Parses [String] of long date without TZ and then formats it to human date [String] **/
 @ReadOnlyComposable
 @Composable
@@ -382,9 +395,11 @@ fun DataService.errorListenerForMessage(errorListener: (String) -> Unit): (error
     }
 }
 
+val String.jwtPayload
+    get() = split(".").getOrNull(1)?.let { decodeFromBase64JsonOrNull<Map<String, String>>(it) }
+
 fun String.isJwtExpired() =
-    split(".")[1].let { decodeFromBase64Json<Map<String, String>>(it) }.get("exp")
-        ?.toIntOrNull()?.let { Date().time > it }
+    jwtPayload?.get("exp")?.toIntOrNull()?.let { Date().time > it }
 
 
 fun <T> sumLists(list: List<List<T>?>): List<T> {

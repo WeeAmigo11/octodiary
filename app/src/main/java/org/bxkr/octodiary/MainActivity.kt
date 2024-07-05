@@ -87,6 +87,7 @@ import org.bxkr.octodiary.components.DebugMenu
 import org.bxkr.octodiary.components.MigrationDialog
 import org.bxkr.octodiary.components.ProfileChooser
 import org.bxkr.octodiary.components.SettingsDialog
+import org.bxkr.octodiary.components.TokenLogin
 import org.bxkr.octodiary.components.settings.About
 import org.bxkr.octodiary.screens.CallbackScreen
 import org.bxkr.octodiary.screens.CallbackType
@@ -322,6 +323,13 @@ class MainActivity : FragmentActivity() {
                                 )
                             }
                             DropdownMenu(expanded, { expanded = false }) {
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.log_in_by_token)) },
+                                    onClick = {
+                                        modalDialogContentLive.value = { TokenLogin() }
+                                        modalDialogStateLive.postValue(true)
+                                    }
+                                )
                                 DropdownMenuItem(
                                     text = { Text(stringResource(R.string.about)) },
                                     onClick = { showAboutDialog = true })
