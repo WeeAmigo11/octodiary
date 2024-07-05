@@ -36,6 +36,7 @@ import org.bxkr.octodiary.DataService
 import org.bxkr.octodiary.R
 import org.bxkr.octodiary.components.MarkComp
 import org.bxkr.octodiary.components.MarkConfig
+import org.bxkr.octodiary.components.settings.CommonPrefs
 import org.bxkr.octodiary.get
 import org.bxkr.octodiary.mainPrefs
 import org.bxkr.octodiary.modalBottomSheetContentLive
@@ -142,7 +143,7 @@ fun SubjectCard(
                             )
                         }
                     }
-                    if ((LocalContext.current.mainPrefs.get("subject_rating")
+                    if ((LocalContext.current.mainPrefs.get(CommonPrefs.subjectRating.prefKey)
                             ?: true) and showRating
                     ) {
                         DataService.subjectRanking.firstOrNull { it.subjectId == subjectId }

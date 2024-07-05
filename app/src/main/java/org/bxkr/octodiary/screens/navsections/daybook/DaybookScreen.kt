@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import org.bxkr.octodiary.DataService
 import org.bxkr.octodiary.R
 import org.bxkr.octodiary.areBreaksShown
+import org.bxkr.octodiary.components.settings.CommonPrefs
 import org.bxkr.octodiary.formatToDay
 import org.bxkr.octodiary.get
 import org.bxkr.octodiary.mainPrefs
@@ -41,13 +42,14 @@ import kotlin.math.roundToInt
 @OptIn(ExperimentalFoundationApi::class)
 fun DaybookScreen() {
     val eventCalendar = DataService.eventCalendar.let {
-        if (LocalContext.current.mainPrefs.get("show_only_plan") ?: false) {
+        if (LocalContext.current.mainPrefs.get(CommonPrefs.showOnlyPlan.prefKey) ?: false) {
             it.filter { it.source == "PLAN" }
         } else it
     }
     val recompositionTrigger = remember { mutableStateOf(false) }
     key(recompositionTrigger.value) {
-        val showNumbers = LocalContext.current.mainPrefs.get("show_lesson_numbers") ?: true
+        val showNumbers =
+            LocalContext.current.mainPrefs.get(CommonPrefs.showLessonNumbers.prefKey) ?: true
         val showBreaks = areBreaksShown()
         val weekSplitCalendar = key(eventCalendar) {
             eventCalendar.fold(mutableListOf<MutableList<Event>>()) { sum, it ->

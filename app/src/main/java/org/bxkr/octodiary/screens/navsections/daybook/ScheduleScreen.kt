@@ -32,6 +32,7 @@ import androidx.lifecycle.MutableLiveData
 import org.bxkr.octodiary.DataService
 import org.bxkr.octodiary.R
 import org.bxkr.octodiary.areBreaksShown
+import org.bxkr.octodiary.components.settings.CommonPrefs
 import org.bxkr.octodiary.demoScheduleDate
 import org.bxkr.octodiary.formatToDay
 import org.bxkr.octodiary.get
@@ -54,7 +55,7 @@ val daySelectedLive = MutableLiveData<Date>()
 fun ScheduleScreen() {
     key(updatedScheduleLive.observeAsState().value) {
         val eventCalendar = DataService.eventCalendar.let {
-            if (LocalContext.current.mainPrefs.get("show_only_plan") ?: false) {
+            if (LocalContext.current.mainPrefs.get(CommonPrefs.showOnlyPlan.prefKey) ?: false) {
                 it.filter { it.source == "PLAN" }
             } else it
         }
@@ -72,7 +73,8 @@ fun WeekPager(eventsLoaded: List<Event>) {
     var events by remember { mutableStateOf(eventsLoaded) }
     var isLoadingNewEvents by remember { mutableStateOf(false) }
     var currentDateRange by remember { mutableStateOf(DataService.eventsRange) }
-    val showNumbers = LocalContext.current.mainPrefs.get("show_lesson_numbers") ?: true
+    val showNumbers =
+        LocalContext.current.mainPrefs.get(CommonPrefs.showLessonNumbers.prefKey) ?: true
     val showBreaks = areBreaksShown()
     val weekdays = remember { (1..7).toList().also { Collections.rotate(it, -1) } }
     val dayPosition =

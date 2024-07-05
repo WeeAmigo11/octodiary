@@ -11,13 +11,15 @@ import org.bxkr.octodiary.get
 import org.bxkr.octodiary.mainPrefs
 import org.bxkr.octodiary.save
 
+class SwitchPreferenceSpec(
+    @StringRes val titleRes: Int,
+    @StringRes val descriptionRes: Int? = null,
+    val prefKey: String,
+    val defaultValue: Boolean,
+)
+
 @Composable
-fun BasicSwitchPreference(
-    @StringRes titleRes: Int,
-    @StringRes descriptionRes: Int? = null,
-    prefKey: String,
-    defaultValue: Boolean,
-) {
+fun SwitchPreferenceSpec.BasicSwitchPreference() {
     val context = LocalContext.current
     val state = remember { mutableStateOf(context.mainPrefs.get(prefKey) ?: defaultValue) }
 

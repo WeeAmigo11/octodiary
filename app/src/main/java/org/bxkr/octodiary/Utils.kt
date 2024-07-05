@@ -49,6 +49,7 @@ import com.patrykandpatrick.vico.core.common.copyColor
 import com.patrykandpatrick.vico.core.common.shape.Corner
 import okhttp3.ResponseBody
 import org.bxkr.octodiary.components.MarkConfig
+import org.bxkr.octodiary.components.settings.CommonPrefs
 import org.bxkr.octodiary.models.rankingforsubject.ErrorBody
 import retrofit2.Call
 import retrofit2.Callback
@@ -528,14 +529,14 @@ fun convertToRoman(number: Int): String {
 fun getMarkConfig(): MarkConfig {
     val context = LocalContext.current
     return MarkConfig(
-        hideDefaultWeight = context.mainPrefs.get("hide_default_weight") ?: true,
-        markHighlighting = context.mainPrefs.get("mark_highlighting") ?: true
+        hideDefaultWeight = context.mainPrefs.get(CommonPrefs.hideDefaultWeight.prefKey) ?: true,
+        markHighlighting = context.mainPrefs.get(CommonPrefs.markHighlighting.prefKey) ?: true
     )
 }
 
 @Composable
 fun areBreaksShown(): Boolean {
     val context = LocalContext.current
-    return context.mainPrefs.get("breaks") ?: true
+    return context.mainPrefs.get(CommonPrefs.breaks.prefKey) ?: true
 }
 

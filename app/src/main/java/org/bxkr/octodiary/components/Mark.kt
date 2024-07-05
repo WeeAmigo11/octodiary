@@ -57,6 +57,7 @@ import org.bxkr.octodiary.CloverShape
 import org.bxkr.octodiary.DataService
 import org.bxkr.octodiary.NavSection
 import org.bxkr.octodiary.R
+import org.bxkr.octodiary.components.settings.CommonPrefs
 import org.bxkr.octodiary.get
 import org.bxkr.octodiary.getDemoProperty
 import org.bxkr.octodiary.getMarkConfig
@@ -296,7 +297,7 @@ fun ClassResults(markInfo: MarkInfo) {
 @Composable
 fun RatingButton(subject: MarkListSubjectItem) {
     val context = LocalContext.current
-    if (context.mainPrefs.get("subject_rating") ?: true) {
+    if (context.mainPrefs.get(CommonPrefs.subjectRating.prefKey) ?: true) {
         DataService.subjectRanking.firstOrNull { it.subjectId == subject.subjectId }
             ?.let {
                 FilledIconButton(
