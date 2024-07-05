@@ -305,4 +305,5 @@
     <string name="show_breaks">Show breaks</string>
     <string name="mark_highlighting">Mark highlighting</string>
     <string name="mark_highlighting_desc">Add color to bad marks</string>
+    <string name="menu">menu</string>
 </resources>

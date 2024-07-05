@@ -250,4 +250,5 @@
     <string name="show_breaks">Показывать перемены</string>
     <string name="mark_highlighting">Подсветка оценок</string>
     <string name="mark_highlighting_desc">Выделять плохие оценки цветом</string>
+    <string name="menu">меню</string>
 </resources>

@@ -22,14 +22,19 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.FilterAlt
 import androidx.compose.material.icons.rounded.Groups
+import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -67,6 +72,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.MutableLiveData
@@ -81,6 +87,7 @@ import org.bxkr.octodiary.components.DebugMenu
 import org.bxkr.octodiary.components.MigrationDialog
 import org.bxkr.octodiary.components.ProfileChooser
 import org.bxkr.octodiary.components.SettingsDialog
+import org.bxkr.octodiary.components.settings.About
 import org.bxkr.octodiary.screens.CallbackScreen
 import org.bxkr.octodiary.screens.CallbackType
 import org.bxkr.octodiary.screens.LoginScreen
@@ -303,6 +310,43 @@ class MainActivity : FragmentActivity() {
                                         contentDependentAction.value?.invoke()
                                     }
 
+                                }
+                            }
+                        } else if (currentScreen.value == Screen.Login) {
+                            var expanded by remember { mutableStateOf(false) }
+                            var showAboutDialog by remember { mutableStateOf(false) }
+                            IconButton(onClick = { expanded = !expanded }) {
+                                Icon(
+                                    Icons.Rounded.MoreVert,
+                                    stringResource(R.string.menu)
+                                )
+                            }
+                            DropdownMenu(expanded, { expanded = false }) {
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.about)) },
+                                    onClick = { showAboutDialog = true })
+                            }
+                            AnimatedVisibility(showAboutDialog) {
+                                Dialog(
+                                    onDismissRequest = { showAboutDialog = false },
+                                    properties = DialogProperties(
+                                        usePlatformDefaultWidth = false
+                                    )
+                                ) {
+                                    Surface(Modifier.fillMaxSize()) {
+                                        Column(Modifier.verticalScroll(rememberScrollState())) {
+                                            IconButton(
+                                                onClick = { showAboutDialog = false },
+                                                Modifier.padding(8.dp)
+                                            ) {
+                                                Icon(
+                                                    Icons.AutoMirrored.Rounded.ArrowBack,
+                                                    stringResource(R.string.back)
+                                                )
+                                            }
+                                            About()
+                                        }
+                                    }
                                 }
                             }
                         }
