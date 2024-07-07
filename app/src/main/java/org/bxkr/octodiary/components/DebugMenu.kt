@@ -16,13 +16,17 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import org.bxkr.octodiary.MainActivity
+import org.bxkr.octodiary.authPrefs
 import org.bxkr.octodiary.components.debugutils.PrefEditor
+import org.bxkr.octodiary.components.debugutils.RemoteEditor
+import org.bxkr.octodiary.get
 
 @Composable
 fun DebugMenu(
@@ -64,9 +68,13 @@ fun DebugMenu(
     }
     DropdownMenu(isShownMenu, onDismissRequest = { isShownMenu = false }) {
         DebugMenuItems.values().forEach {
-            DropdownMenuItem(
-                { Text(it.title) },
-                onClick = { currentFunction = { it.function(context) { currentFunction = {} } } })
+            if (it.showCondition()) {
+                DropdownMenuItem(
+                    { Text(it.title) },
+                    onClick = {
+                        currentFunction = { it.function(context) { currentFunction = {} } }
+                    })
+            }
         }
     }
     currentFunction()
@@ -75,6 +83,11 @@ fun DebugMenu(
 enum class DebugMenuItems(
     val title: String,
     val function: @Composable MainActivity.(clearFn: () -> Unit) -> Unit,
+    val showCondition: @Composable () -> Boolean = { true },
 ) {
-    PreferenceEditor("Preference editor", { clearFn -> PrefEditor { clearFn() } })
+    PreferenceEditor("Preference editor", { clearFn -> PrefEditor { clearFn() } }),
+    RemoteSettingsEditor(
+        "Remote settings editor",
+        { clearFn -> RemoteEditor { clearFn() } },
+        { LocalContext.current.authPrefs.get<String>("access_token") != null })
 }

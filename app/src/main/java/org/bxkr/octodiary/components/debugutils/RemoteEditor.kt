@@ -1,6 +1,5 @@
 package org.bxkr.octodiary.components.debugutils
 
-import android.content.Context
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -23,6 +22,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
@@ -30,9 +30,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,14 +45,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.google.gson.Gson
-import org.bxkr.octodiary.MainActivity
-import org.bxkr.octodiary.Prefs
-import org.bxkr.octodiary.clear
-import org.bxkr.octodiary.raw
-import org.bxkr.octodiary.save
+import com.google.gson.reflect.TypeToken
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import org.bxkr.octodiary.DataService
+import org.bxkr.octodiary.baseEnqueue
+import org.bxkr.octodiary.snackbarHostStateLive
 
 @Composable
-fun MainActivity.PrefEditor(clear: () -> Unit) {
+fun RemoteEditor(clear: () -> Unit) {
     Dialog(
         onDismissRequest = { clear() },
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -63,7 +66,7 @@ fun MainActivity.PrefEditor(clear: () -> Unit) {
             ) {
                 Surface {
                     Text(
-                        "Preference editor",
+                        "Remote settings editor",
                         Modifier.padding(16.dp),
                         style = MaterialTheme.typography.headlineSmall
                     )
@@ -88,7 +91,7 @@ fun MainActivity.PrefEditor(clear: () -> Unit) {
                         Icon(Icons.AutoMirrored.Rounded.ArrowForward, "go")
                     }
                 },
-                label = { Text(text = "Storage name") })
+                label = { Text(text = "Remote storage name") })
             AnimatedVisibility(confirmedKey != null) {
                 Surface { confirmedKey?.let { Editor(it) } }
             }
@@ -98,86 +101,138 @@ fun MainActivity.PrefEditor(clear: () -> Unit) {
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun Context.Editor(key: String) {
-    val prefs = object : Prefs(key, this) {}
-    val all = prefs.raw.all
-    var currentFunction: @Composable () -> Unit by remember { mutableStateOf({}) }
-    LazyColumn(Modifier.padding(16.dp)) {
-        item {
-            Button(onClick = {
-                currentFunction = {
-                    AddPref({ name, value -> prefs.save(name to value) }) {
-                        currentFunction = {}
-                    }
-                }
-            }, Modifier.fillMaxWidth()) {
-                Text(text = "Add")
+private fun Editor(key: String) {
+    var isLoaded by remember { mutableStateOf(false) }
+    var map: Map<String, Any> by remember { mutableStateOf(mapOf()) }
+
+    LaunchedEffect(Unit) {
+        DataService.mainSchoolApi.pullUserSettingsRaw(
+            DataService.token,
+            key
+        ).baseEnqueue { response ->
+            if (response.isNotBlank()) {
+                map = Gson().fromJson(
+                    response,
+                    object : TypeToken<Map<String, Any>>() {}.type
+                )
             }
-            AnimatedVisibility(all.isNotEmpty()) {
-                var confirmNeeded by remember { mutableStateOf(false) }
-                OutlinedButton({
-                    if (confirmNeeded) {
-                        prefs.clear()
-                        currentFunction = {}
-                        confirmNeeded = false
-                    } else confirmNeeded = true
-                }, Modifier.fillMaxWidth()) {
-                    AnimatedVisibility(!confirmNeeded) {
-                        Text("Delete this storage")
-                    }
-                    AnimatedVisibility(confirmNeeded) {
-                        Text("Confirm")
-                    }
-                }
-            }
+            isLoaded = true
         }
-        items(all.toList()) {
-            Column {
-                var showMenu by remember { mutableStateOf(false) }
-                Row(
-                    Modifier
-                        .combinedClickable(onLongClick = {
-                            showMenu = true
+    }
+    var currentFunction: @Composable () -> Unit by remember { mutableStateOf({}) }
+    val coroutineScope = rememberCoroutineScope()
+    AnimatedVisibility(isLoaded) {
+        LazyColumn(Modifier.padding(16.dp)) {
+            item {
+                Button(onClick = {
+                    currentFunction = {
+                        AddPref({ name, value ->
+                            map = map.toMutableMap().apply { this[name] = value }
+                            sendStorage(key, map, coroutineScope)
                         }) {
-                            currentFunction = {
-                                EditPref(it.second, { it1 ->
-                                    prefs.save(it.first to it1)
-                                }) { currentFunction = {} }
-                            }
+                            currentFunction = {}
                         }
-                        .fillMaxWidth()
-                        .padding(8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(
-                        it.first,
-                        Modifier.padding(end = 8.dp),
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    Text(
-                        it.second.toString(), maxLines = 2, overflow = TextOverflow.Ellipsis
-                    )
+                    }
+                }, Modifier.fillMaxWidth()) {
+                    Text(text = "Add")
                 }
-                val clipboardManager = LocalClipboardManager.current
-                val copy = { it: String -> clipboardManager.setText(AnnotatedString(it)) }
-                DropdownMenu(showMenu, { showMenu = false }) {
-                    DropdownMenuItem(text = { Text("Copy key") }, onClick = {
-                        copy(it.first)
-                        showMenu = false
-                    })
-                    DropdownMenuItem(text = { Text("Copy value") }, onClick = {
-                        copy(it.second.toString())
-                        showMenu = false
-                    })
-                    DropdownMenuItem(text = { Text("Copy all storage in JSON") }, onClick = {
-                        copy(Gson().toJson(all))
-                        showMenu = false
-                    })
+                AnimatedVisibility(map.isNotEmpty()) {
+                    var confirmNeeded by remember { mutableStateOf(false) }
+                    OutlinedButton({
+                        if (confirmNeeded) {
+                            map = mapOf()
+                            sendStorage(key, map, coroutineScope)
+                            confirmNeeded = false
+                        } else confirmNeeded = true
+                    }, Modifier.fillMaxWidth()) {
+                        AnimatedVisibility(!confirmNeeded) {
+                            Text("Delete this storage")
+                        }
+                        AnimatedVisibility(confirmNeeded) {
+                            Text("Confirm")
+                        }
+                    }
                 }
-                HorizontalDivider()
+            }
+            items(map.toList()) {
+                Column {
+                    var showMenu by remember { mutableStateOf(false) }
+                    Row(
+                        Modifier
+                            .combinedClickable(onLongClick = {
+                                showMenu = true
+                            }) {
+                                currentFunction = {
+                                    EditPref(it.second, { it1 ->
+                                        map = if (it1 == null) {
+                                            map
+                                                .toMutableMap()
+                                                .apply { remove(it.first) }
+                                        } else map
+                                            .toMutableMap()
+                                            .apply { this[it.first] = it1 }
+                                        sendStorage(key, map, coroutineScope)
+                                    }) { currentFunction = {} }
+                                }
+                            }
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text(
+                            it.first,
+                            Modifier.padding(end = 8.dp),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            it.second.toString(), maxLines = 2, overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                    val clipboardManager = LocalClipboardManager.current
+                    val copy = { it: String -> clipboardManager.setText(AnnotatedString(it)) }
+                    DropdownMenu(showMenu, { showMenu = false }) {
+                        DropdownMenuItem(text = { Text("Copy key") }, onClick = {
+                            copy(it.first)
+                            showMenu = false
+                        })
+                        DropdownMenuItem(text = { Text("Copy value") }, onClick = {
+                            copy(it.second.toString())
+                            showMenu = false
+                        })
+                        DropdownMenuItem(text = { Text("Copy all storage in JSON") }, onClick = {
+                            copy(Gson().toJson(map))
+                            showMenu = false
+                        })
+                    }
+                    HorizontalDivider()
+                }
             }
         }
     }
+
+    AnimatedVisibility(!isLoaded) {
+        LinearProgressIndicator(
+            Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        )
+    }
+
     currentFunction()
+}
+
+private fun sendStorage(key: String, storage: Map<String, Any>, coroutineScope: CoroutineScope) {
+    val errorFn = { code: String ->
+        coroutineScope.launch {
+            snackbarHostStateLive.value?.showSnackbar("Cannot push storage! Code: $code")
+        }
+    }
+    DataService.mainSchoolApi.pushUserSettings(
+        DataService.token,
+        key,
+        Gson().toJsonTree(storage).asJsonObject
+    ).baseEnqueue(errorFunction = { _, httpCode, _ ->
+        errorFn(httpCode.toString())
+    }, noConnectionFunction = { _, _ -> errorFn("no_connection") }) {}
 }
 
 @Composable
@@ -260,7 +315,7 @@ private fun AddPref(saveFn: ((String, Any) -> Unit), clear: () -> Unit) {
             )
 
             val allowedTypeNames = remember {
-                PrefTypes.values().map { it.sample::class.simpleName to it.sample }.toMap()
+                RemotePrefTypes.values().map { it.sample::class.simpleName to it.sample }.toMap()
             }
 
             var inputValue: String by remember { mutableStateOf("0") }
@@ -276,7 +331,8 @@ private fun AddPref(saveFn: ((String, Any) -> Unit), clear: () -> Unit) {
                 if (!illegalType) {
                     selectedType = it
                     val enumObject =
-                        PrefTypes.values().first { it.sample::class.simpleName == selectedType }
+                        RemotePrefTypes.values()
+                            .first { it.sample::class.simpleName == selectedType }
                     inputValue = enumObject.sample.toString()
                     selectedValue = enumObject.sample
                 } else inputValue = ""
@@ -290,7 +346,8 @@ private fun AddPref(saveFn: ((String, Any) -> Unit), clear: () -> Unit) {
                 inputValue = it
                 try {
                     val enumObject =
-                        PrefTypes.values().first { it.sample::class.simpleName == selectedType }
+                        RemotePrefTypes.values()
+                            .first { it.sample::class.simpleName == selectedType }
                     selectedValue = enumObject.castFn(inputValue)
                     isIllegal = false
                 } catch (e: IllegalArgumentException) {
@@ -309,7 +366,7 @@ private fun AddPref(saveFn: ((String, Any) -> Unit), clear: () -> Unit) {
     })
 }
 
-private enum class PrefTypes(val sample: Any, val castFn: (String) -> Any) {
+private enum class RemotePrefTypes(val sample: Any, val castFn: (String) -> Any) {
     StringT("", { it }),
     BooleanT(true, { it.toBooleanStrict() }),
     IntT(0, { it.toInt() }),
