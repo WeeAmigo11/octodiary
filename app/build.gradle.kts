@@ -1,7 +1,19 @@
+import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.util.archivesName
+import java.io.ByteArrayOutputStream
+
 @Suppress("DSL_SCOPE_VIOLATION") // TODO: Remove once KTIJ-19369 is fixed
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.kotlinAndroid)
+}
+
+val gitLatestCommit: String = ByteArrayOutputStream().use { outputStream ->
+    project.exec {
+        executable("git")
+        args("log", "--oneline", "-1", "--format=format:%h", ".")
+        standardOutput = outputStream
+    }
+    outputStream.toString()
 }
 
 android {
@@ -14,6 +26,7 @@ android {
         targetSdk = 34
         versionCode = 26
         versionName = "2.1.0"
+        archivesName = gitLatestCommit
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
