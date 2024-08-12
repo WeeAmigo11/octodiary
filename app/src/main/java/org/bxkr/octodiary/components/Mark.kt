@@ -127,11 +127,21 @@ fun MarkComp(
 }
 
 @Composable
-fun MarkSimple(value: String, modifier: Modifier = Modifier) {
+fun MarkSimple(value: String, markConfig: MarkConfig, modifier: Modifier = Modifier) {
+    val color = MaterialTheme.colorScheme.run {
+        if (markConfig.markHighlighting) {
+            when (value) {
+                "3" -> tertiaryContainer
+                "2" -> errorContainer
+                else -> secondaryContainer
+            }
+        } else secondaryContainer
+    }
+
     Box(
         modifier
             .size(40.dp)
-            .background(MaterialTheme.colorScheme.secondaryContainer, MaterialTheme.shapes.small)
+            .background(color, MaterialTheme.shapes.small)
     ) {
         Text(
             value, Modifier.align(Alignment.Center), MaterialTheme.colorScheme.onSecondaryContainer,

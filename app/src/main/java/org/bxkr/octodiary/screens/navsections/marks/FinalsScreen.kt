@@ -40,6 +40,7 @@ import org.bxkr.octodiary.DataService
 import org.bxkr.octodiary.R
 import org.bxkr.octodiary.components.MarkSimple
 import org.bxkr.octodiary.convertToRoman
+import org.bxkr.octodiary.getMarkConfig
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -47,6 +48,7 @@ fun FinalsScreen() {
     val subjects = DataService.marksSubject
     val periods = subjects.maxByOrNull { it.periods?.size ?: 0 }?.periods ?: listOf()
     val scrollState = rememberScrollState()
+    val markConfig = getMarkConfig()
     LazyColumn {
         item {
             Column {
@@ -93,7 +95,7 @@ fun FinalsScreen() {
                         }
                         VerticalDivider(Modifier.height(56.dp))
                         Cell {
-                            MarkSimple(stringResource(R.string.year))
+                            MarkSimple(stringResource(R.string.year), markConfig)
                         }
                     }
                 }
@@ -116,18 +118,18 @@ fun FinalsScreen() {
                             val fixedValue =
                                 subject.periods?.firstOrNull { it.title == period.title }?.fixedValue
                             if (fixedValue != null) {
-                                MarkSimple(fixedValue)
+                                MarkSimple(fixedValue, markConfig)
                             } else {
-                                MarkSimple("0", Modifier.alpha(0f))
+                                MarkSimple("0", markConfig, Modifier.alpha(0f))
                             }
                         }
                     }
                     VerticalDivider(Modifier.height(56.dp))
                     Cell {
                         if (subject.yearMark != null) {
-                            MarkSimple(subject.yearMark)
+                            MarkSimple(subject.yearMark, markConfig)
                         } else {
-                            MarkSimple("0", Modifier.alpha(0f))
+                            MarkSimple("0", markConfig, Modifier.alpha(0f))
                         }
                     }
                 }
