@@ -257,4 +257,7 @@
     <string name="invalid_token">Не является JWT токеном!</string>
     <string name="token_description">Система: %s\nАктивен до: %s</string>
     <string name="paste">Вставить</string>
+    <string name="changelog_text_25">• Новый вид расписания\n• Итоговые оценки\n• Виджет состояния учёбы</string>
+    <string name="changelog">Список изменений</string>
+    <string name="click_to_show_more">Нажмите, чтобы показать больше</string>
 </resources>

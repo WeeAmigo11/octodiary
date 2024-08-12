@@ -311,4 +311,7 @@
     <string name="invalid_token">Invalid JWT token!</string>
     <string name="token_description">Subsystem: %s\nValid through: %s</string>
     <string name="paste">Paste</string>
+    <string name="changelog_text_25">• New schedule design\n• Final marks\n• Learning status widget</string>
+    <string name="changelog">Changelog</string>
+    <string name="click_to_show_more">Click to show more</string>
 </resources>
