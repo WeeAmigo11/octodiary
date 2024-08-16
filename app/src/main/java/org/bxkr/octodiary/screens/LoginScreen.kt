@@ -148,9 +148,9 @@ private fun ColumnScope.PrimaryLogInButton(diary: Diary, setAlertTrigger: (() ->
             )
             .clip(MaterialTheme.shapes.medium)
             .clickable {
-                setAlertTrigger({
+                setAlertTrigger {
                     diary.primaryLogInFunction(context)
-                })
+                }
             },
         verticalAlignment = Alignment.CenterVertically
     ) {
