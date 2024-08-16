@@ -100,8 +100,8 @@ fun MarkComp(
     }
 
     FilledTonalIconButton(
-        onClick = { onClick(mark, subjectId) },
-        modifier = modifier.clickable(enabled) { onClick(mark, subjectId) },
+        onClick = { if (enabled) onClick(mark, subjectId) },
+        modifier = modifier,
         shape = MaterialTheme.shapes.small,
         colors = IconButtonDefaults.filledTonalIconButtonColors(containerColor = color)
     ) {
