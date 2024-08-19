@@ -20,6 +20,7 @@ glance-appwidget = "1.1.0"
 glance-material3 = "1.1.0"
 biometric-ktx = "1.2.0-alpha05"
 vico = "2.0.0-alpha.19"
+zoomable = "1.0.0-alpha02"
 
 [libraries]
 core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }
@@ -49,6 +50,7 @@ androidx-glance-material3 = { group = "androidx.glance", name = "glance-material
 androidx-biometric-ktx = { group = "androidx.biometric", name = "biometric-ktx", version.ref = "biometric-ktx" }
 vico-compose = { group = "com.patrykandpatrick.vico", name = "compose", version.ref = "vico" }
 vico-compose-m3 = { group = "com.patrykandpatrick.vico", name = "compose-m3", version.ref = "vico" }
+zoomable = { group = "me.saket.telephoto", name = "zoomable", version.ref = "zoomable" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

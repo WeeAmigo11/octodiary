@@ -103,8 +103,8 @@
     <string name="play">играть</string>
     <string name="pause">пауза</string>
     <string name="previous">предыдущее</string>
-    <string name="next">следующее</string>
-    <string name="back">назад</string>
+    <string name="next">Следующее</string>
+    <string name="back">Назад</string>
     <string name="homework_mode">Режим домашней работы</string>
     <string name="homework_mode_summary">Экран с полезной информацией при выполнении домашних работ</string>
     <string name="music_controls">Управление музыкой</string>
@@ -257,7 +257,15 @@
     <string name="invalid_token">Не является JWT токеном!</string>
     <string name="token_description">Система: %s\nАктивен до: %s</string>
     <string name="paste">Вставить</string>
-    <string name="changelog_text_25">• Новый вид расписания\n• Итоговые оценки\n• Виджет состояния учёбы</string>
+    <string name="changelog_text_26">• Новый вид расписания\n• Итоговые оценки\n• Виджет состояния учёбы</string>
     <string name="changelog">Список изменений</string>
     <string name="click_to_show_more">Нажмите, чтобы показать больше</string>
+    <string name="changes_label">изменения</string>
+    <string name="c26_newdaybook_title">Новый вид расписания</string>
+    <string name="c26_newdaybook_subtitle">Перемены, индикаторы, номера уроков и календарь</string>
+    <string name="c26_finals_title">Итоговые оценки</string>
+    <string name="c26_finals_subtitle">Оценки за каждый период и за год</string>
+    <string name="c26_version_name">Версия 2.1.0</string>
+    <string name="back_exit">назад/выйти</string>
+    <string name="close">Закрыть</string>
 </resources>

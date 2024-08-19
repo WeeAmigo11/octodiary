@@ -94,6 +94,7 @@ dependencies {
     implementation(libs.androidx.biometric.ktx)
     implementation(libs.vico.compose.m3)
     implementation(libs.vico.compose)
+    implementation(libs.zoomable)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.espresso.core)

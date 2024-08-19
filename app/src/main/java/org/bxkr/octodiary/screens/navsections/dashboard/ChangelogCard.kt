@@ -36,6 +36,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.bxkr.octodiary.BuildConfig
 import org.bxkr.octodiary.R
+import org.bxkr.octodiary.components.ChangelogDialog
 import org.bxkr.octodiary.get
 import org.bxkr.octodiary.mainPrefs
 import org.bxkr.octodiary.save
@@ -49,29 +50,26 @@ fun ChangelogCard(context: Context) {
             MaterialTheme.colorScheme.tertiaryContainer,
         )
     )
-    val mainPrefs = context.mainPrefs
-    var shown by remember {
-        mutableStateOf(
-            (mainPrefs.get<Int>("read_changelog_version") ?: 24) < BuildConfig.VERSION_CODE
-        )
-    }
-    AnimatedVisibility(shown) {
+    var isCardShown by remember { mutableStateOf(context.getInitialIsShown()) }
+    var isDialogShown by remember { mutableStateOf(false) }
+    AnimatedVisibility(isCardShown) {
         Row(
             Modifier
                 .background(
                     background,
-                    MaterialTheme.shapes.large
+                    MaterialTheme.shapes.extraLarge
                 )
-                .clip(MaterialTheme.shapes.large)
+                .clip(MaterialTheme.shapes.extraLarge)
                 .fillMaxWidth()
                 .combinedClickable(
                     onLongClick = {
-                        mainPrefs.save("read_changelog_version" to BuildConfig.VERSION_CODE)
-                        shown = false
+                        context.saveNewVersion()
+                        isCardShown = false
                     },
                     onClick = {
-                        mainPrefs.save("read_changelog_version" to BuildConfig.VERSION_CODE)
-                        shown = false
+                        context.saveNewVersion()
+                        isCardShown = false
+                        isDialogShown = true
                     }
                 )
                 .padding(16.dp),
@@ -99,10 +97,14 @@ fun ChangelogCard(context: Context) {
                             .background(DividerDefaults.color, shape = CircleShape)
                     )
                     Column(Modifier.padding(start = 8.dp)) {
-                        Text(stringResource(R.string.changelog_text_25))
+                        Text(stringResource(R.string.changelog_text_26))
                     }
                 }
-                Text(stringResource(R.string.click_to_show_more))
+                Text(
+                    stringResource(R.string.click_to_show_more),
+                    Modifier.padding(top = 4.dp),
+                    style = MaterialTheme.typography.labelLarge
+                )
             }
             Icon(
                 Icons.AutoMirrored.Rounded.ArrowForward,
@@ -114,4 +116,13 @@ fun ChangelogCard(context: Context) {
             )
         }
     }
+    AnimatedVisibility(isDialogShown) {
+        ChangelogDialog { isDialogShown = false }
+    }
 }
+
+private fun Context.getInitialIsShown() =
+    (mainPrefs.get<Int>("read_changelog_version") ?: 25) < BuildConfig.VERSION_CODE
+
+private fun Context.saveNewVersion() =
+    mainPrefs.save("read_changelog_version" to BuildConfig.VERSION_CODE)

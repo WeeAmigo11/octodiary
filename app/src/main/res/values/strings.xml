@@ -154,8 +154,8 @@
     <string name="play">play</string>
     <string name="pause">pause</string>
     <string name="previous">previous</string>
-    <string name="next">next</string>
-    <string name="back">back</string>
+    <string name="next">Next</string>
+    <string name="back">Back</string>
     <string name="homework_mode">Homework mode</string>
     <string name="homework_mode_summary">Screen with useful information when doing the homework</string>
     <string name="music_controls">Music controls</string>
@@ -311,7 +311,15 @@
     <string name="invalid_token">Invalid JWT token!</string>
     <string name="token_description">Subsystem: %s\nValid through: %s</string>
     <string name="paste">Paste</string>
-    <string name="changelog_text_25">• New schedule design\n• Final marks\n• Learning status widget</string>
+    <string name="changelog_text_26">• New schedule design\n• Final marks\n• Learning status widget</string>
     <string name="changelog">Changelog</string>
     <string name="click_to_show_more">Click to show more</string>
+    <string name="changes_label">changes</string>
+    <string name="c26_newdaybook_title">New look of schedule</string>
+    <string name="c26_newdaybook_subtitle">Breaks, indicators, numbers and calendar</string>
+    <string name="c26_finals_title">Final marks</string>
+    <string name="c26_finals_subtitle">Marks for each module and for year</string>
+    <string name="c26_version_name">Version 2.1.0</string>
+    <string name="back_exit">back/exit</string>
+    <string name="close">Close</string>
 </resources>
