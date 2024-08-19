@@ -62,26 +62,27 @@ fun LazyListScope.DayItem(
             val currentEndDate = it.finishAt.parseLongDate()
             val nextStartDate = day[index + 1].startAt.parseLongDate()
             val breakDuration = (nextStartDate.time - currentEndDate.time).div(60000).toInt()
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .border(
-                        2.dp,
-                        MaterialTheme.colorScheme.surfaceContainer,
-                        MaterialTheme.shapes.extraSmall
-                    ),
-                verticalAlignment = Alignment.CenterVertically
-            )
-            {
-                Text(
-                    pluralStringResource(R.plurals.minute_break, breakDuration, breakDuration),
+            if (breakDuration > 0) {
+                Row(
                     Modifier
-                        .alpha(.6f)
-                        .padding(start = 16.dp),
-                    MaterialTheme.colorScheme.onSecondaryContainer
-                )
+                        .fillMaxWidth()
+                        .border(
+                            2.dp,
+                            MaterialTheme.colorScheme.surfaceContainer,
+                            MaterialTheme.shapes.extraSmall
+                        ),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        pluralStringResource(R.plurals.minute_break, breakDuration, breakDuration),
+                        Modifier
+                            .alpha(.6f)
+                            .padding(start = 16.dp),
+                        MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                }
+                Spacer(Modifier.height(2.dp))
             }
-            Spacer(Modifier.height(2.dp))
         }
     }
     item {
