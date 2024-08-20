@@ -10,6 +10,12 @@ abstract class Changelog {
     @get:StringRes
     abstract val versionName: Int
 
+    @get:StringRes
+    abstract val versionShortname: Int
+
+    @get:StringRes
+    abstract val shortDescription: Int
+
     data class ChangelogItem(
         val composable: @Composable () -> Unit,
         @StringRes val title: Int,

@@ -23,7 +23,8 @@ fun OctoDiaryTheme(
     dynamicColor: Boolean = true,
     lightScheme: ColorScheme = LightColorScheme,
     darkScheme: ColorScheme = DarkColorScheme,
-    content: @Composable () -> Unit
+    portable: Boolean = false,
+    content: @Composable () -> Unit,
 ) {
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
@@ -35,7 +36,7 @@ fun OctoDiaryTheme(
         else -> lightScheme
     }
     val view = LocalView.current
-    if (!view.isInEditMode) {
+    if (!view.isInEditMode && !portable) {
         SideEffect {
             val window = (view.context as Activity).window
             window.statusBarColor = colorScheme.outlineVariant.toArgb()

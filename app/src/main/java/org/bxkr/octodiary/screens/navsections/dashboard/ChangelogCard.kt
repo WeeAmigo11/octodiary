@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import org.bxkr.octodiary.BuildConfig
 import org.bxkr.octodiary.R
 import org.bxkr.octodiary.components.ChangelogDialog
+import org.bxkr.octodiary.components.changelog.Changelog
 import org.bxkr.octodiary.get
 import org.bxkr.octodiary.mainPrefs
 import org.bxkr.octodiary.save
@@ -52,6 +53,7 @@ fun ChangelogCard(context: Context) {
     )
     var isCardShown by remember { mutableStateOf(context.getInitialIsShown()) }
     var isDialogShown by remember { mutableStateOf(false) }
+    val changelog = Changelog.currentChangelog
     AnimatedVisibility(isCardShown) {
         Row(
             Modifier
@@ -84,7 +86,7 @@ fun ChangelogCard(context: Context) {
                         style = MaterialTheme.typography.titleMedium
                     )
                     Text(
-                        "v${BuildConfig.VERSION_NAME}",
+                        stringResource(changelog.versionShortname),
                         color = MaterialTheme.colorScheme.onTertiaryContainer
                     )
                 }
@@ -97,7 +99,7 @@ fun ChangelogCard(context: Context) {
                             .background(DividerDefaults.color, shape = CircleShape)
                     )
                     Column(Modifier.padding(start = 8.dp)) {
-                        Text(stringResource(R.string.changelog_text_26))
+                        Text(stringResource(changelog.shortDescription))
                     }
                 }
                 Text(

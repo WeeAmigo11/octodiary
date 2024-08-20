@@ -1,5 +1,6 @@
 package org.bxkr.octodiary
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
@@ -24,6 +25,7 @@ import androidx.compose.ui.graphics.asAndroidPath
 import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -460,6 +462,7 @@ fun rememberMarker(
         )
     val guideline = rememberAxisGuidelineComponent()
     return remember(label, labelPosition, indicator, showIndicator, guideline) {
+        @SuppressLint("RestrictedApi")
         object : DefaultCartesianMarker(
             label = label,
             labelPosition = labelPosition,
@@ -555,3 +558,10 @@ fun areBreaksShown(): Boolean {
     return context.mainPrefs.get(CommonPrefs.breaks.prefKey) ?: true
 }
 
+@Composable
+fun Int.pxToDp() = with(LocalDensity.current) { this@pxToDp.toDp() }
+
+inline fun <reified T> Context.getDemoField(@RawRes rawId: Int): T =
+    resources.openRawResource(rawId).bufferedReader(Charsets.UTF_8).use { it.readText() }.let {
+        Gson().fromJson(it, object : TypeToken<T>() {}.type)
+    }

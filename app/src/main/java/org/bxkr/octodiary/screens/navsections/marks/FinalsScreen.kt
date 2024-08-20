@@ -41,11 +41,11 @@ import org.bxkr.octodiary.R
 import org.bxkr.octodiary.components.MarkSimple
 import org.bxkr.octodiary.convertToRoman
 import org.bxkr.octodiary.getMarkConfig
+import org.bxkr.octodiary.models.marklistsubject.MarkListSubjectItem
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun FinalsScreen() {
-    val subjects = DataService.marksSubject
+fun FinalsScreen(subjects: List<MarkListSubjectItem> = DataService.marksSubject) {
     val periods = subjects.maxByOrNull { it.periods?.size ?: 0 }?.periods ?: listOf()
     val scrollState = rememberScrollState()
     val markConfig = getMarkConfig()
@@ -59,7 +59,8 @@ fun FinalsScreen() {
                                 stringResource(R.string.subject),
                                 Modifier
                                     .align(Alignment.CenterStart)
-                                    .padding(8.dp), style = MaterialTheme.typography.titleMedium
+                                    .padding(8.dp), style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
                         periods.forEachIndexed { index, period ->
@@ -87,6 +88,7 @@ fun FinalsScreen() {
                                         Text(
                                             convertToRoman(index + 1),
                                             Modifier.align(Alignment.Center),
+                                            color = MaterialTheme.colorScheme.onSurface,
                                             style = MaterialTheme.typography.labelLarge
                                         )
                                     }
@@ -110,7 +112,8 @@ fun FinalsScreen() {
                             subject.subjectName,
                             Modifier
                                 .align(Alignment.CenterStart)
-                                .padding(8.dp), maxLines = 1, overflow = TextOverflow.Ellipsis
+                                .padding(8.dp), maxLines = 1, overflow = TextOverflow.Ellipsis,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
                     periods.forEach { period ->

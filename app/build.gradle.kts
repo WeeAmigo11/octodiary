@@ -95,6 +95,7 @@ dependencies {
     implementation(libs.vico.compose.m3)
     implementation(libs.vico.compose)
     implementation(libs.zoomable)
+    implementation(libs.dotsindicator)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.espresso.core)
