@@ -264,8 +264,11 @@
     <string name="c26_newdaybook_subtitle">Перемены, индикаторы, номера уроков и календарь</string>
     <string name="c26_finals_title">Итоговые оценки</string>
     <string name="c26_finals_subtitle">Оценки за каждый период и за год</string>
+    <string name="c26_widget_title">Виджет</string>
+    <string name="c26_widget_subtitle">Показывает текущее состояние учёбы</string>
     <string name="c26_version_name">Версия 2.1.0</string>
     <string name="c26_description">• Новый вид расписания\n• Итоговые оценки\n• Виджет состояния учёбы</string>
     <string name="back_exit">назад/выйти</string>
     <string name="close">Закрыть</string>
+    <string name="background">Фон</string>
 </resources>

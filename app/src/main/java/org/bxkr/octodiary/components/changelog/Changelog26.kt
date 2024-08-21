@@ -1,18 +1,26 @@
 package org.bxkr.octodiary.components.changelog
 
 import android.net.Uri
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredWidth
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -23,8 +31,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntSize
@@ -64,13 +76,14 @@ class Changelog26 : Changelog() {
             R.string.c26_finals_subtitle
         ),
         ChangelogItem(
-            @Composable { Finals() },
-            R.string.c26_finals_title,
-            R.string.c26_finals_subtitle
+            @Composable { Widget() },
+            R.string.c26_widget_title,
+            R.string.c26_widget_subtitle
         )
     )
 
     @OptIn(ExperimentalGlideComposeApi::class)
+    @Suppress("DEPRECATION")
     @Composable
     private fun NewDaybook() {
         Box(
@@ -178,6 +191,58 @@ class Changelog26 : Changelog() {
         }
     }
 
+    @OptIn(ExperimentalGlideComposeApi::class)
+    @Composable
+    private fun Widget() {
+        val items = ImageLinks.WIDGET_IMAGES
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.radialGradient(
+                        listOf(
+                            MaterialTheme.colorScheme.primary,
+                            MaterialTheme.colorScheme.surface
+                        )
+                    )
+                ), Alignment.Center
+        ) {
+            GlideImage(
+                ImageLinks.WIDGET_BACKGROUND, stringResource(R.string.background),
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 36.dp)
+                    .clip(MaterialTheme.shapes.extraLarge)
+            )
+
+            val listState = rememberLazyListState(Int.MAX_VALUE / 2)
+            LaunchedEffect(Unit) {
+                while (true) {
+                    listState.animateScrollBy(
+                        200f,
+                        tween(500, easing = LinearEasing)
+                    )
+                }
+            }
+            LazyRow(
+                state = listState, modifier = Modifier
+                    .rotate(20f)
+                    .requiredWidth(LocalConfiguration.current.screenWidthDp.dp * 2)
+            ) {
+                items(Int.MAX_VALUE) {
+                    val index = it % items.size
+                    GlideImage(
+                        items[index],
+                        stringResource(R.string.image),
+                        Modifier
+                            .padding(8.dp)
+                            .height(192.dp)
+                    )
+                }
+            }
+        }
+    }
+
     @Composable
     private fun ImageFailure() = Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Icon(Icons.Rounded.Warning, "Error")
@@ -189,5 +254,13 @@ class Changelog26 : Changelog() {
             "https://raw.githubusercontent.com/OctoDiary/.github/master/assets/c26_newdaybook_image.png"
         const val FINALS_FRAME =
             "https://raw.githubusercontent.com/OctoDiary/.github/master/assets/c26_finals_frame.png"
+        const val WIDGET_BACKGROUND =
+            "https://raw.githubusercontent.com/OctoDiary/.github/master/assets/c26_widget_background.webp"
+        val WIDGET_IMAGES = listOf(
+            "https://raw.githubusercontent.com/OctoDiary/.github/master/assets/c26_widget_rest.png",
+            "https://raw.githubusercontent.com/OctoDiary/.github/master/assets/c26_widget_inclass.png",
+            "https://raw.githubusercontent.com/OctoDiary/.github/master/assets/c26_widget_break.png",
+            "https://raw.githubusercontent.com/OctoDiary/.github/master/assets/c26_widget_holidays.png"
+        )
     }
 }
