@@ -37,7 +37,7 @@ import com.bumptech.glide.integration.compose.RequestState
 import com.bumptech.glide.integration.compose.placeholder
 import kotlinx.coroutines.delay
 import org.bxkr.octodiary.R
-import org.bxkr.octodiary.getDemoField
+import org.bxkr.octodiary.getDemoProperty
 import org.bxkr.octodiary.pxToDp
 import org.bxkr.octodiary.screens.navsections.marks.FinalsScreen
 import org.bxkr.octodiary.ui.theme.OctoDiaryTheme
@@ -161,7 +161,7 @@ class Changelog26 : Changelog() {
                     ) {
                         val scrollState = rememberScrollState()
                         FinalsScreen(
-                            context.getDemoField(R.raw.demo_marks_subject),
+                            context.getDemoProperty(R.raw.demo_marks_subject),
                             scrollState
                         )
                         LaunchedEffect(Unit) {

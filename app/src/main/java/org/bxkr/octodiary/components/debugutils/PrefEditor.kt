@@ -209,32 +209,36 @@ private fun EditPref(pref: Any?, setFn: (Any?) -> Unit, clear: () -> Unit) {
             )
             if (pref != null) {
                 var inputValue by remember { mutableStateOf(prefState.toString()) }
-                TextField(
-                    value = inputValue,
-                    isError = isIllegal,
-                    supportingText = {
-                        AnimatedContent(isIllegal) { boolean ->
-                            Text(if (boolean) "Illegal input string" else "")
-                        }
-                    },
-                    onValueChange = {
-                        inputValue = it
-                        try {
-                            prefState = when (pref) {
-                                is String -> it
-                                is Boolean -> it.toBooleanStrict()
-                                is Int -> it.toInt()
-                                is Long -> it.toLong()
-                                is Float -> it.toFloat()
-                                else -> prefState
+                if (inputValue.length < 1000) {
+                    TextField(
+                        value = inputValue,
+                        isError = isIllegal,
+                        supportingText = {
+                            AnimatedContent(isIllegal) { boolean ->
+                                Text(if (boolean) "Illegal input string" else "")
                             }
-                            isIllegal = false
-                        } catch (e: IllegalArgumentException) {
-                            isIllegal = true
-                        }
-                    },
-                    singleLine = true
-                )
+                        },
+                        onValueChange = {
+                            inputValue = it
+                            try {
+                                prefState = when (pref) {
+                                    is String -> it
+                                    is Boolean -> it.toBooleanStrict()
+                                    is Int -> it.toInt()
+                                    is Long -> it.toLong()
+                                    is Float -> it.toFloat()
+                                    else -> prefState
+                                }
+                                isIllegal = false
+                            } catch (e: IllegalArgumentException) {
+                                isIllegal = true
+                            }
+                        },
+                        singleLine = true
+                    )
+                } else {
+                    Text("Too long string!")
+                }
             }
         }
     })

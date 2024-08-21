@@ -560,8 +560,3 @@ fun areBreaksShown(): Boolean {
 
 @Composable
 fun Int.pxToDp() = with(LocalDensity.current) { this@pxToDp.toDp() }
-
-inline fun <reified T> Context.getDemoField(@RawRes rawId: Int): T =
-    resources.openRawResource(rawId).bufferedReader(Charsets.UTF_8).use { it.readText() }.let {
-        Gson().fromJson(it, object : TypeToken<T>() {}.type)
-    }

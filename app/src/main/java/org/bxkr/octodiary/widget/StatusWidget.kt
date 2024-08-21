@@ -9,7 +9,13 @@ import android.widget.RemoteViews
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
-import androidx.glance.*
+import androidx.glance.ColorFilter
+import androidx.glance.GlanceId
+import androidx.glance.GlanceModifier
+import androidx.glance.GlanceTheme
+import androidx.glance.Image
+import androidx.glance.ImageProvider
+import androidx.glance.LocalContext
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.AndroidRemoteViews
 import androidx.glance.appwidget.GlanceAppWidget
@@ -17,15 +23,39 @@ import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.lazy.LazyColumn
 import androidx.glance.appwidget.lazy.items
 import androidx.glance.appwidget.provideContent
-import androidx.glance.layout.*
+import androidx.glance.background
+import androidx.glance.layout.Alignment
+import androidx.glance.layout.Box
+import androidx.glance.layout.Column
+import androidx.glance.layout.ColumnScope
+import androidx.glance.layout.ContentScale
+import androidx.glance.layout.Row
+import androidx.glance.layout.fillMaxSize
+import androidx.glance.layout.fillMaxWidth
+import androidx.glance.layout.padding
+import androidx.glance.layout.size
+import androidx.glance.layout.wrapContentHeight
 import androidx.glance.text.FontStyle
 import androidx.glance.text.TextAlign
-import org.bxkr.octodiary.*
+import org.bxkr.octodiary.CachePrefs
+import org.bxkr.octodiary.MainActivity
 import org.bxkr.octodiary.R
+import org.bxkr.octodiary.cachePrefs
+import org.bxkr.octodiary.formatToDay
+import org.bxkr.octodiary.formatToTime
+import org.bxkr.octodiary.formatToWeekday
+import org.bxkr.octodiary.get
+import org.bxkr.octodiary.getFromJson
+import org.bxkr.octodiary.getRussianWeekdayOnFormat
+import org.bxkr.octodiary.mainPrefs
 import org.bxkr.octodiary.models.events.Event
+import org.bxkr.octodiary.parseLongDate
 import org.bxkr.octodiary.ui.theme.Typography
 import org.bxkr.octodiary.widget.StatusWidget.Companion.setUpdateFor
-import java.util.*
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 class StatusWidget : GlanceAppWidget() {
 	override suspend fun provideGlance(context: Context, id: GlanceId) {
@@ -56,17 +86,22 @@ class StatusWidget : GlanceAppWidget() {
 @Composable
 private fun Content(cache: CachePrefs) {
 	val context = LocalContext.current
+	val date = (context.mainPrefs.get<Long>("widget_date") ?: Date().time).let {
+		Date().apply {
+			time = it
+		}
+	}
 
 	val events = cache.getFromJson<List<Event>>("eventCalendar")
 	val currentEvent = events.firstOrNull {
-		it.startAt.parseLongDate().time <= Date().time && it.finishAt.parseLongDate().time > Date().time
+		it.startAt.parseLongDate().time <= date.time && it.finishAt.parseLongDate().time > date.time
 	}
 	val nearestStartingEvent =
-		events.filter { it.startAt.parseLongDate().time > Date().time }.minByOrNull {
-			it.startAt.parseLongDate().time - Date().time
+		events.filter { it.startAt.parseLongDate().time > date.time }.minByOrNull {
+			it.startAt.parseLongDate().time - date.time
 		}
 	val timeTillNextEvent =
-		if (nearestStartingEvent != null) (nearestStartingEvent.startAt.parseLongDate().time - Date().time) else null
+		if (nearestStartingEvent != null) (nearestStartingEvent.startAt.parseLongDate().time - date.time) else null
 
 	var updateWidgetAt: Date? = null
 
@@ -113,6 +148,11 @@ private fun ColumnScope.CurrentEvent(
 	setUpdateWidgetAt: (Date) -> Unit
 ) {
 	val context = LocalContext.current
+	val date = (context.mainPrefs.get<Long>("widget_date") ?: Date().time).let {
+		Date().apply {
+			time = it
+		}
+	}
 	// Event is currently running (lesson)
 	Header(stringRes(R.string.at_lesson_now))
 	Column(GlanceModifier.fillMaxWidth().defaultWeight()) {
@@ -133,7 +173,7 @@ private fun ColumnScope.CurrentEvent(
 			RemoteViews(context.packageName, R.layout.widget_chronometer)
 		remoteViews.setChronometer(
 			R.id.chronometer,
-			SystemClock.elapsedRealtime() - (Date().time - currentEvent.finishAt.parseLongDate().time),
+			SystemClock.elapsedRealtime() - (date.time - currentEvent.finishAt.parseLongDate().time),
 			stringRes(R.string.s_till_the_end),
 			true
 		)
@@ -149,7 +189,7 @@ private fun ColumnScope.CurrentEvent(
 		verticalAlignment = Alignment.Vertical.Bottom
 	) {
 		if (nearestStartingEvent != null && (nearestStartingEvent.startAt.parseLongDate()
-				.formatToDay() == Date().formatToDay())
+				.formatToDay() == date.formatToDay())
 		) {
 			ThemedText(
 				text = stringRes(
@@ -177,6 +217,11 @@ private fun NextEvent(
 	setUpdateWidgetAt: (Date) -> Unit
 ) {
 	val context = LocalContext.current
+	val date = (context.mainPrefs.get<Long>("widget_date") ?: Date().time).let {
+		Date().apply {
+			time = it
+		}
+	}
 	setUpdateWidgetAt(nearestStartingEvent!!.startAt.parseLongDate())
 	if (timeTillNextEvent <= 40 * 60 * 1000) {
 		// No event is currently running, next event is soon (break)
@@ -191,7 +236,7 @@ private fun NextEvent(
 			RemoteViews(context.packageName, R.layout.widget_chronometer)
 		remoteViews.setChronometer(
 			R.id.chronometer,
-			SystemClock.elapsedRealtime() - (Date().time - nearestStartingEvent.startAt.parseLongDate().time),
+			SystemClock.elapsedRealtime() - (date.time - nearestStartingEvent.startAt.parseLongDate().time),
 			stringRes(R.string.s_till_the_start),
 			true
 		)
@@ -226,7 +271,7 @@ private fun NextEvent(
 		val locale = context.resources.configuration.locales[0]
 		val onTime =
 			if (nearestStartingEvent.startAt.parseLongDate()
-					.formatToDay() != Date().formatToDay()
+					.formatToDay() != date.formatToDay()
 			) {
 				if (locale.language == Locale("ru").language) Calendar.getInstance()
 					.apply {
@@ -274,6 +319,8 @@ private fun NextEvent(
 @Composable
 fun Header(title: String) {
 	val context = LocalContext.current
+	val editedDate = context.mainPrefs.get<Long>("widget_date")?.let { Date(it) }
+	val format = "dd.MM, H:mm"
 	Row(
 		GlanceModifier.fillMaxWidth(),
 		verticalAlignment = Alignment.Vertical.CenterVertically
@@ -291,12 +338,16 @@ fun Header(title: String) {
 			GlanceModifier.defaultWeight(),
 			horizontalAlignment = Alignment.Horizontal.End
 		) {
-			AndroidRemoteViews(
-				RemoteViews(
-					context.packageName,
-					R.layout.widget_textclock
-				), GlanceModifier.fillMaxWidth()
-			)
+			if (editedDate == null) {
+				AndroidRemoteViews(
+					RemoteViews(
+						context.packageName,
+						R.layout.widget_textclock
+					), GlanceModifier.fillMaxWidth()
+				)
+			} else {
+				ThemedText(SimpleDateFormat(format, Locale.ROOT).format(editedDate))
+			}
 		}
 	}
 }

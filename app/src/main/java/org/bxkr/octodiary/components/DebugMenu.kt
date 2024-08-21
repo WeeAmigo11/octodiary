@@ -26,6 +26,7 @@ import org.bxkr.octodiary.MainActivity
 import org.bxkr.octodiary.authPrefs
 import org.bxkr.octodiary.components.debugutils.PrefEditor
 import org.bxkr.octodiary.components.debugutils.RemoteEditor
+import org.bxkr.octodiary.components.debugutils.WidgetConfig
 import org.bxkr.octodiary.get
 
 @Composable
@@ -89,5 +90,9 @@ enum class DebugMenuItems(
     RemoteSettingsEditor(
         "Remote settings editor",
         { clearFn -> RemoteEditor { clearFn() } },
-        { LocalContext.current.authPrefs.get<String>("access_token") != null })
+        { LocalContext.current.authPrefs.get<String>("access_token") != null }),
+    ConfigureWidget(
+        "Widget config",
+        { clearFn -> WidgetConfig { clearFn() } }
+    )
 }
