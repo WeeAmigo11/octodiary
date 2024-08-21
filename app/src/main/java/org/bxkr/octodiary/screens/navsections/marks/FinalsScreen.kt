@@ -2,6 +2,7 @@ package org.bxkr.octodiary.screens.navsections.marks
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.LocalOverscrollConfiguration
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -45,9 +46,11 @@ import org.bxkr.octodiary.models.marklistsubject.MarkListSubjectItem
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun FinalsScreen(subjects: List<MarkListSubjectItem> = DataService.marksSubject) {
+fun FinalsScreen(
+    subjects: List<MarkListSubjectItem> = DataService.marksSubject,
+    scrollState: ScrollState = rememberScrollState(),
+) {
     val periods = subjects.maxByOrNull { it.periods?.size ?: 0 }?.periods ?: listOf()
-    val scrollState = rememberScrollState()
     val markConfig = getMarkConfig()
     LazyColumn {
         item {
