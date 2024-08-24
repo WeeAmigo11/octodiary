@@ -280,4 +280,5 @@
     <string name="add_students_help_description">Если ваш класс стал пустым, вы можете добавить своих одноклассников через эту форму, и они отобразятся в рейтингах в этом приложении. Эта информация сохраняется в вашем аккаунте %s, поэтому вам не надо будет заполнять эту информацию заново при перезаходе.</string>
     <string name="student_id">ID ученика</string>
     <string name="delete">Удалить</string>
+    <string name="mark_calculator">Калькулятор оценок</string>
 </resources>
