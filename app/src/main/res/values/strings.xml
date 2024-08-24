@@ -348,4 +348,5 @@
     <string name="c26_calc_subtitle">Count your future average and final grades</string>
     <string name="c26_highlighting_title">Mark highlighting</string>
     <string name="c26_highlighting_subtitle">Bad marks became more noticable (you can disalbe this in settings)</string>
+    <string name="no_periods_yet">no periods yet</string>
 </resources>

@@ -293,4 +293,5 @@
     <string name="c26_calc_subtitle">Рассчитывайте предполагаемые средние и финальные баллы</string>
     <string name="c26_highlighting_title">Подсветка оценок</string>
     <string name="c26_highlighting_subtitle">Плохие оценки стали заметнее (можно отключить в настройках)</string>
+    <string name="no_periods_yet">пока нет периодов</string>
 </resources>
