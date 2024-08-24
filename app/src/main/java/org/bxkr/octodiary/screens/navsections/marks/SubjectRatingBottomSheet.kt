@@ -75,14 +75,15 @@ fun SubjectRatingBottomSheet(subjectId: Long, subjectName: String) {
                                 middleName ?: ""
                             ).fastJoinToString(" ")
                         }
-                            ?: it.personId
+
                     }
 
                     RankingMemberCard(
                         rankPlace = it.rank.rankPlace,
                         average = it.rank.averageMarkFive,
-                        memberName = memberName,
-                        highlighted = DataService.run { it.personId == profile.children[currentProfile].contingentGuid }
+                        memberName = memberName ?: it.personId,
+                        highlighted = DataService.run { it.personId == profile.children[currentProfile].contingentGuid },
+                        isAnonymized = memberName == null
                     )
                 }
             }

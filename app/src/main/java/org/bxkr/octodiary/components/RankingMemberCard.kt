@@ -30,6 +30,7 @@ fun RankingMemberCard(
     average: Double,
     memberName: String,
     highlighted: Boolean,
+    isAnonymized: Boolean,
 ) {
     OutlinedCard(
         Modifier.padding(bottom = 8.dp),
@@ -50,7 +51,7 @@ fun RankingMemberCard(
                     average.toString(),
                     modifier = Modifier.padding(end = 4.dp)
                 )
-                var nameShown by remember { mutableStateOf(false) }
+                var nameShown by remember { mutableStateOf(!isAnonymized) }
                 var nameCopied by remember { mutableStateOf(false) }
                 val clipboardManager = LocalClipboardManager.current
                 AnimatedVisibility(!nameShown) {
@@ -66,6 +67,7 @@ fun RankingMemberCard(
                                     nameShown = !nameShown
                                     if (!nameCopied) {
                                         clipboardManager.setText(AnnotatedString(memberName))
+                                        nameCopied = true
                                     }
                                 },
                             color = MaterialTheme.colorScheme.secondary
@@ -80,7 +82,7 @@ fun RankingMemberCard(
                             .padding(end = 4.dp)
                             .fillMaxWidth()
                             .clickable {
-                                nameShown = !nameShown
+                                if (isAnonymized) nameShown = !nameShown
                             }
                     )
                 }

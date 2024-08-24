@@ -24,13 +24,13 @@ fun RankingList() {
                 DataService.classMembers.firstOrNull { classMember ->
                     rankingMember.personId == classMember.personId
                 }?.user?.run { listOf(lastName, firstName, middleName ?: "").fastJoinToString(" ") }
-                    ?: rankingMember.personId
             }
             RankingMemberCard(
                 rankPlace = rankingMember.rank.rankPlace,
                 average = rankingMember.rank.averageMarkFive,
-                memberName = memberName,
-                highlighted = DataService.run { rankingMember.personId == profile.children[currentProfile].contingentGuid }
+                memberName = memberName ?: rankingMember.personId,
+                highlighted = DataService.run { rankingMember.personId == profile.children[currentProfile].contingentGuid },
+                isAnonymized = memberName == null
             )
         }
     }
