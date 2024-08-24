@@ -288,4 +288,5 @@
     <string name="buttons">Кнопки</string>
     <string name="keyboard">Клавиатура</string>
     <string name="add_mark_help_buttons">Нажимайте на соответствующие оценки с плюсами, и с их учётом будет рассчитан новый средний балл</string>
+    <string name="add_to_home_screen">Добавить на главный экран</string>
 </resources>

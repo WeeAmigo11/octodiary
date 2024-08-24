@@ -1,5 +1,8 @@
 package org.bxkr.octodiary.components.changelog
 
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
+import android.content.Context
 import android.net.Uri
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
@@ -17,8 +20,11 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.AddToHomeScreen
 import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -55,7 +61,9 @@ import org.bxkr.octodiary.screens.navsections.marks.FinalsScreen
 import org.bxkr.octodiary.ui.theme.OctoDiaryTheme
 import org.bxkr.octodiary.ui.theme.blue.DarkColorScheme
 import org.bxkr.octodiary.ui.theme.blue.LightColorScheme
+import org.bxkr.octodiary.widget.StatusWidgetReceiver
 import kotlin.math.roundToInt
+
 
 class Changelog26 : Changelog() {
     override val versionName: Int
@@ -152,8 +160,6 @@ class Changelog26 : Changelog() {
                     } else 1f
                     val temp = frameSize!!.width.toFloat() / 1751f
                     val imageScale = if (temp != 0f) temp else 1f
-                    println(scale)
-                    println(imageScale)
                     Box(
                         Modifier
                             .padding(
@@ -240,6 +246,23 @@ class Changelog26 : Changelog() {
                     )
                 }
             }
+            val context = LocalContext.current
+            ExtendedFloatingActionButton(
+                { Text(stringResource(R.string.add_to_home_screen)) },
+                {
+                    Icon(
+                        Icons.AutoMirrored.Rounded.AddToHomeScreen,
+                        stringResource(R.string.add_to_home_screen)
+                    )
+                },
+                {
+                    pinWidget(context, StatusWidgetReceiver::class.java)
+                },
+                Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(8.dp),
+                elevation = FloatingActionButtonDefaults.loweredElevation()
+            )
         }
     }
 
@@ -247,6 +270,11 @@ class Changelog26 : Changelog() {
     private fun ImageFailure() = Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Icon(Icons.Rounded.Warning, "Error")
         Text(stringResource(R.string.error_occurred))
+    }
+
+    private fun <T> pinWidget(context: Context, className: Class<T>) {
+        val myProvider = ComponentName(context, className)
+        AppWidgetManager.getInstance(context).requestPinAppWidget(myProvider, null, null)
     }
 
     object ImageLinks {
