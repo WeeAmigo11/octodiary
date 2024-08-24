@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Star
@@ -27,13 +27,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.coroutineScope
 import org.bxkr.octodiary.DataService
 import org.bxkr.octodiary.R
 import org.bxkr.octodiary.contentDependentActionLive
+import org.bxkr.octodiary.get
 import org.bxkr.octodiary.getMarkConfig
+import org.bxkr.octodiary.mainPrefs
 import org.bxkr.octodiary.parseFromDay
 import java.util.Date
 
@@ -90,6 +93,7 @@ fun MarksBySubject(scrollToSubjectId: Long? = null) {
                                         }
                                     }
                             val lazyColumnState = rememberLazyListState()
+                            val context = LocalContext.current
                             LazyColumn(
                                 Modifier
                                     .fillMaxHeight()
@@ -97,7 +101,10 @@ fun MarksBySubject(scrollToSubjectId: Long? = null) {
                                     .weight(1f),
                                 lazyColumnState
                             ) {
-                                items(subjects) {
+                                val helpingIndex = (0..3).random()
+                                val showHints =
+                                    context.mainPrefs.get<Boolean>("show_calc_hint") ?: true
+                                itemsIndexed(subjects) { index, it ->
                                     if (it.periods != null && it.periods.any { it.title == periodState }) {
                                         val sentPeriod =
                                             it.periods.first { it.title == periodState }
@@ -106,7 +113,8 @@ fun MarksBySubject(scrollToSubjectId: Long? = null) {
                                             it.subjectId,
                                             it.subjectName,
                                             sentPeriod == it.currentPeriod,
-                                            markConfig
+                                            markConfig,
+                                            showHintOnce = (index == helpingIndex) && showHints
                                         )
                                     }
                                 }

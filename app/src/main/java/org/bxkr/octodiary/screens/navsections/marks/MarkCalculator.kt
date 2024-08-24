@@ -27,6 +27,7 @@ import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -63,6 +64,7 @@ fun MarkCalculator(
     var marks by remember { mutableStateOf(period.marks) }
     var marksAll by remember { mutableStateOf(period.marks) }
     val mainPrefs = LocalContext.current.mainPrefs
+    LaunchedEffect(Unit) { mainPrefs.save("show_calc_hint" to false) }
     var choice by remember { mutableStateOf(mainPrefs.get<String>("calculator_mode") ?: "buttons") }
     Box(Modifier.fillMaxWidth()) {
         Helper(choice, Modifier.align(Alignment.TopEnd))

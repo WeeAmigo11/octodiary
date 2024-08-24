@@ -78,6 +78,7 @@ fun SubjectCard(
     showRating: Boolean,
     markConfig: MarkConfig,
     showHint: Boolean = false,
+    showHintOnce: Boolean = false,
 ) {
     val density = LocalDensity.current
     val draggableAnchors = with(density) {
@@ -87,6 +88,7 @@ fun SubjectCard(
             DragValue.End at -56.dp.toPx()
         }
     }
+    var blockShowingSheet by remember { mutableStateOf(showHintOnce) }
     val anchoredDraggableState = AnchoredDraggableState(
         initialValue = DragValue.Center,
         anchors = draggableAnchors,
@@ -94,11 +96,12 @@ fun SubjectCard(
         velocityThreshold = { with(density) { 56.dp.toPx() } },
         animationSpec = tween(if (showHint) 800 else 500),
         confirmValueChange = {
-            if ((it == DragValue.Start || it == DragValue.End) && !showHint) {
+            if ((it == DragValue.Start || it == DragValue.End) && !showHint && !blockShowingSheet) {
                 modalBottomSheetContentLive.value =
                     { MarkCalculator(period, subjectId, subjectName, markConfig) }
                 modalBottomSheetStateLive.postValue(true)
             }
+            if (blockShowingSheet) blockShowingSheet = false
             false
         }
     )
@@ -110,6 +113,14 @@ fun SubjectCard(
                 delay(1600)
                 anchoredDraggableState.animateTo(DragValue.Center)
             }
+        }
+    }
+    if (showHintOnce) {
+        LaunchedEffect(Unit) {
+            delay(2000)
+            anchoredDraggableState.animateTo(DragValue.End)
+            delay(500)
+            anchoredDraggableState.animateTo(DragValue.Center)
         }
     }
     val isGlow = subjectId == scrollToSubjectIdLive.value
