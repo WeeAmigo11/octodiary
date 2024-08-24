@@ -326,4 +326,13 @@
     <string name="back_exit">back/exit</string>
     <string name="close">Close</string>
     <string name="background">Background</string>
+    <string name="add_student">Add student</string>
+    <string name="last_name">Last name</string>
+    <string name="first_name">First name</string>
+    <string name="new_student">New student</string>
+    <string name="add">Add</string>
+    <string name="what_is_it">What is it?</string>
+    <string name="add_students_help_description">If your class became empty, you can add your classmates through this form, and they will appear in ratings across the app. This data will be saved in your %s account, so you won\'t be required to fill this information again when re-logging.</string>
+    <string name="student_id">Student ID</string>
+    <string name="delete">Delete</string>
 </resources>

@@ -224,13 +224,14 @@ interface MainSchoolAPI {
         @Header("X-Mes-Subsystem") mesSubsystem: String = MESAPIConfig.FAMILYMP
     ): Call<LessonSchedule>
 
-    @GET("usersettings/v1")
-    fun <Model> pullUserSettings(
-        @Header("auth-token") accessToken: String,
-        @Query("name") path: String,
-        @Header("X-Mes-Subsystem") mesSubsystem: String = MESAPIConfig.FAMILYMP,
-        @Query("subsystem_id") subsystemId: Int = 1,
-    ): Call<Model>
+    // bullshit
+//    @GET("usersettings/v1")
+//    fun <Model> pullUserSettings(
+//        @Header("auth-token") accessToken: String,
+//        @Query("name") path: String,
+//        @Header("X-Mes-Subsystem") mesSubsystem: String = MESAPIConfig.FAMILYMP,
+//        @Query("subsystem_id") subsystemId: Int = 1,
+//    ): Call<Model>
 
     @GET("usersettings/v1")
     fun pullUserSettingsRaw(

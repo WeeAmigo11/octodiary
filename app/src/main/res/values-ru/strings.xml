@@ -271,4 +271,13 @@
     <string name="back_exit">назад/выйти</string>
     <string name="close">Закрыть</string>
     <string name="background">Фон</string>
+    <string name="add_student">Добавить ученика</string>
+    <string name="last_name">Фамилия</string>
+    <string name="first_name">Имя</string>
+    <string name="new_student">Новый ученик</string>
+    <string name="add">Добавить</string>
+    <string name="what_is_it">Что это?</string>
+    <string name="add_students_help_description">Если ваш класс стал пустым, вы можете добавить своих одноклассников через эту форму, и они отобразятся в рейтингах в этом приложении. Эта информация сохраняется в вашем аккаунте %s, поэтому вам не надо будет заполнять эту информацию заново при перезаходе.</string>
+    <string name="student_id">ID ученика</string>
+    <string name="delete">Удалить</string>
 </resources>

@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import com.google.gson.Gson
 import okhttp3.ResponseBody
 import org.bxkr.octodiary.models.classmembers.ClassMember
+import org.bxkr.octodiary.models.classmembers.OctoClassMembers
 import org.bxkr.octodiary.models.classranking.RankingMember
 import org.bxkr.octodiary.models.events.Event
 import org.bxkr.octodiary.models.homeworks.Homework
@@ -36,40 +37,6 @@ object DataService {
     lateinit var schoolSessionApi: SchoolSessionAPI
 
     lateinit var token: String
-
-    val listOfValues
-        get() = listOfNotNull(
-            ::userId,
-            ::sessionUser,
-            ::eventCalendar,
-            ::ranking,
-            ::classMembers,
-            ::profile,
-            ::visits.takeIf { subsystem == Diary.MES },
-            ::marksDate,
-            ::marksSubject,
-            ::homeworks,
-            ::mealBalance.takeIf { subsystem == Diary.MES },
-            ::schoolInfo,
-            ::subjectRanking
-        )
-
-    val listOfStates
-        get() = listOfNotNull(
-            ::hasUserId,
-            ::hasSessionUser,
-            ::hasEventCalendar,
-            ::hasRanking,
-            ::hasClassMembers,
-            ::hasProfile,
-            ::hasVisits.takeIf { subsystem == Diary.MES },
-            ::hasMarksDate,
-            ::hasMarksSubject,
-            ::hasHomeworks,
-            ::hasMealBalance.takeIf { subsystem == Diary.MES },
-            ::hasSchoolInfo,
-            ::hasSubjectRanking
-        )
 
     val mapOfDemoResourceIds = mapOf(
         ::userId to R.raw.demo_user_id,
@@ -296,19 +263,26 @@ object DataService {
         }
 
         // Class members request for matching names:
-//        dSchoolApi.classMembers( todo: uncomment when serverside fixed (or idk)
-//            token,
-//            classUnitId = profile.children[currentProfile].classUnitId
-//        ).baseEnqueue(::baseErrorFunction, ::baseInternalExceptionFunction) {
-//            classMembers = it
-//            hasClassMembers = true
-//            classMembersFinished = true
-//            if (rankingFinished) onUpdated()
-//        }
-        classMembers = listOf()
-        hasClassMembers = true
-        classMembersFinished = true
-        if (rankingFinished) onUpdated()
+        mainSchoolApi.pullUserSettingsRaw(token, "od_class_members")
+            .baseEnqueue({ errorBody, httpCode, className ->
+                classMembers = listOf()
+                hasClassMembers = true
+                classMembersFinished = true
+                if (rankingFinished) onUpdated()
+            }, ::baseInternalExceptionFunction) { unparsed ->
+                val parsed = unparsed.fromJson<OctoClassMembers>()
+                if (parsed != null) parsed.let {
+                    classMembers = it.classMembers ?: listOf()
+                    hasClassMembers = true
+                    classMembersFinished = true
+                    if (rankingFinished) onUpdated()
+                } else {
+                    classMembers = listOf()
+                    hasClassMembers = true
+                    classMembersFinished = true
+                    if (rankingFinished) onUpdated()
+                }
+            }
     }
 
     fun updateSubjectRanking(onUpdated: () -> Unit) {
@@ -537,11 +511,18 @@ object DataService {
         ).baseEnqueue { onUpdated() }
     }
 
-    fun <Model> pushUserSettings(path: String, content: Model, onUpdated: () -> Unit) {
+    fun <Model> pushUserSettings(
+        path: String,
+        content: Model,
+        onError: (String) -> Unit = {},
+        onUpdated: () -> Unit,
+    ) {
         assert(this::token.isInitialized)
 
         mainSchoolApi.pushUserSettings(token, path, Gson().toJsonTree(content).asJsonObject)
-            .baseEnqueue {
+            .baseEnqueueOrNull(
+                { errorBody, _, _ -> onError(errorBody.string()) },
+                { throwable, _ -> onError(throwable.message ?: "null throwable message") }) {
                 onUpdated()
             }
     }
@@ -597,9 +578,9 @@ object DataService {
     }
 
     fun Context.loadDemoCache() =
-        DataService.loadFromCache {
+        loadFromCache {
             resources.openRawResource(
-                DataService.mapOfDemoResourceIds.getValue(
+                mapOfDemoResourceIds.getValue(
                     it
                 )
             ).bufferedReader(Charsets.UTF_8).use { it.readText() }

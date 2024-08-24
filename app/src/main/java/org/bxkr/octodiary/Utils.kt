@@ -169,14 +169,14 @@ fun Prefs.clear() {
 val Prefs.raw: SharedPreferences
     get() = ctx.getSharedPreferences(prefPath, Context.MODE_PRIVATE)
 
-inline fun <reified T> String.asGeneric(): T = when (T::class) {
-    String::class -> this as T
-    Boolean::class -> this.toBoolean() as T
-    Int::class -> this.toInt() as T
-    Long::class -> this.toLong() as T
-    Float::class -> this.toFloat() as T
-    else -> throw IllegalStateException("Unknown Generic Type")
-}
+//inline fun <reified T> String.asGeneric(): T = when (T::class) {
+//    String::class -> this as T
+//    Boolean::class -> this.toBoolean() as T
+//    Int::class -> this.toInt() as T
+//    Long::class -> this.toLong() as T
+//    Float::class -> this.toFloat() as T
+//    else -> throw IllegalStateException("Unknown Generic Type")
+//}
 
 inline fun <reified T> Call<T>.baseEnqueue(
     noinline errorFunction: ((errorBody: ResponseBody, httpCode: Int, className: String?) -> Unit) = { _, _, _ -> },
@@ -189,6 +189,29 @@ inline fun <reified T> Call<T>.baseEnqueue(
     ) {
         val body = response.body()
         if (response.isSuccessful && body != null) {
+            function(body)
+        } else {
+            response.errorBody()
+                ?.let { it1 -> errorFunction(it1, response.code(), T::class.simpleName) }
+        }
+    }
+
+    override fun onFailure(call: Call<T>, t: Throwable) {
+        noConnectionFunction(t, T::class.simpleName)
+    }
+})
+
+inline fun <reified T> Call<T>.baseEnqueueOrNull(
+    noinline errorFunction: ((errorBody: ResponseBody, httpCode: Int, className: String?) -> Unit) = { _, _, _ -> },
+    noinline noConnectionFunction: ((t: Throwable, className: String?) -> Unit) = { _, _ -> },
+    noinline function: (body: T?) -> Unit,
+) = enqueue(object : Callback<T> {
+    override fun onResponse(
+        call: Call<T>,
+        response: Response<T>,
+    ) {
+        val body = response.body()
+        if (response.isSuccessful) {
             function(body)
         } else {
             response.errorBody()
@@ -385,7 +408,7 @@ fun Calendar.getRussianWeekdayOnFormat(): String =
         else -> "в ${getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale("ru"))}"
     }
 
-fun DataService.errorListenerForMessage(errorListener: (String) -> Unit): (errorBody: ResponseBody, httpCode: Int, className: String?) -> Unit {
+fun errorListenerForMessage(errorListener: (String) -> Unit): (errorBody: ResponseBody, httpCode: Int, className: String?) -> Unit {
     return { errorBody: ResponseBody, httpCode: Int, className: String? ->
         val contents = errorBody.string()
         try {
@@ -401,7 +424,7 @@ val String.jwtPayload
     get() = split(".").getOrNull(1)?.let { decodeFromBase64JsonOrNull<Map<String, String>>(it) }
 
 fun String.isJwtExpired() =
-    jwtPayload?.get("exp")?.toIntOrNull()?.let { Date().time > it }
+    jwtPayload?.get("exp")?.toLongOrNull()?.let { Date().time > it * 1000 }
 
 
 fun <T> sumLists(list: List<List<T>?>): List<T> {
@@ -415,7 +438,7 @@ fun getWeekday(date: Date): Int = Calendar.getInstance().run {
     get(Calendar.DAY_OF_WEEK)
 }
 
-fun Date.isDateBetween(start: Date, end: Date): Boolean = time > start.time && time < end.time
+//fun Date.isDateBetween(start: Date, end: Date): Boolean = time > start.time && time < end.time
 fun Date.isDateBetween(range: List<Long>): Boolean = time > range[0] && time < range[1]
 
 @Composable
@@ -560,3 +583,6 @@ fun areBreaksShown(): Boolean {
 
 @Composable
 fun Int.pxToDp() = with(LocalDensity.current) { this@pxToDp.toDp() }
+
+inline fun <reified T> String.fromJson(): T? =
+    Gson().fromJson(this, object : TypeToken<T>() {}.type)
