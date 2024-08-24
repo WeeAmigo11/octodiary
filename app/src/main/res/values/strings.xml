@@ -336,4 +336,11 @@
     <string name="student_id">Student ID</string>
     <string name="delete">Delete</string>
     <string name="mark_calculator">Mark calculator</string>
+    <string name="add_mark">New marks</string>
+    <string name="help">Help</string>
+    <string name="add_mark_help_keyboard">Enter new marks separated by spaces, use the ^ symbol to indicate the weight, for example \"5^2 4 3\"</string>
+    <string name="remove_non_numeric_marks">Remove non-numeric marks</string>
+    <string name="buttons">Buttons</string>
+    <string name="keyboard">Keyboard</string>
+    <string name="add_mark_help_buttons">Click on the corresponding marks with pluses and a new average grade will be calculated taking them into account</string>
 </resources>

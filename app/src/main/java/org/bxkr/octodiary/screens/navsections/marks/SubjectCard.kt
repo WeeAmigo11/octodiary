@@ -91,7 +91,8 @@ fun SubjectCard(
         animationSpec = tween(500),
         confirmValueChange = {
             if (it == DragValue.Start || it == DragValue.End) {
-                modalBottomSheetContentLive.value = { MarkCalculator() }
+                modalBottomSheetContentLive.value =
+                    { MarkCalculator(period, subjectId, subjectName, markConfig) }
                 modalBottomSheetStateLive.postValue(true)
             }
             false
@@ -177,49 +178,9 @@ private fun CardContent(
                 overflow = TextOverflow.Ellipsis
             )
             Row {
-                FilterChip(
-                    onClick = {},
-                    label = {
-                        Text(
-                            period.value, color = when (period.dynamic) {
-                                "UP" -> MaterialTheme.colorScheme.onPrimaryContainer
-                                else -> MaterialTheme.colorScheme.onTertiaryContainer
-                            }
-                        )
-                    },
-                    selected = true,
-                    colors = FilterChipDefaults.filterChipColors(selectedContainerColor = if (period.dynamic == "UP") MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.tertiaryContainer),
-                    leadingIcon = {
-                        if (period.dynamic == "UP") {
-                            Icon(
-                                imageVector = Icons.Rounded.ArrowDropUp,
-                                contentDescription = period.dynamic,
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                        } else {
-                            Icon(
-                                imageVector = Icons.Rounded.ArrowDropDown,
-                                contentDescription = period.dynamic,
-                                tint = MaterialTheme.colorScheme.tertiary
-                            )
-                        }
-                    },
-                    modifier = Modifier.padding(start = 16.dp)
-                )
+                AverageChip(period.value, period.dynamic)
                 if (period.fixedValue != null) {
-                    FilterChip(
-                        selected = true,
-                        onClick = {},
-                        label = { Text(period.fixedValue) },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Rounded.Done,
-                                contentDescription = stringResource(id = R.string.final_mark),
-                                modifier = Modifier.size(FilterChipDefaults.IconSize)
-                            )
-                        },
-                        modifier = Modifier.padding(start = 16.dp)
-                    )
+                    FinalChip(period.fixedValue)
                 }
             }
         }
@@ -263,4 +224,62 @@ private fun CardContent(
             }
         }
     }
+}
+
+@Composable
+fun AverageChip(value: String, dynamic: String, showArrow: Boolean = true) {
+    FilterChip(
+        onClick = {},
+        label = {
+            AnimatedContent(value, label = "average_anim") { newValue ->
+                Text(
+                    newValue, color = when (dynamic) {
+                        "UP" -> MaterialTheme.colorScheme.onPrimaryContainer
+                        else -> MaterialTheme.colorScheme.onTertiaryContainer
+                    }
+                )
+            }
+        },
+        selected = true,
+        colors = FilterChipDefaults.filterChipColors(selectedContainerColor = if (dynamic == "UP") MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.tertiaryContainer),
+        leadingIcon = {
+            if (showArrow) {
+                if (dynamic == "UP") {
+                    Icon(
+                        imageVector = Icons.Rounded.ArrowDropUp,
+                        contentDescription = dynamic,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Rounded.ArrowDropDown,
+                        contentDescription = dynamic,
+                        tint = MaterialTheme.colorScheme.tertiary
+                    )
+                }
+            }
+        },
+        modifier = Modifier.padding(start = 16.dp)
+    )
+}
+
+@Composable
+fun FinalChip(fixedValue: String) {
+    FilterChip(
+        selected = true,
+        onClick = {},
+        label = {
+            AnimatedContent(fixedValue, label = "fixed_anim") { newValue ->
+                Text(newValue)
+            }
+        },
+        leadingIcon = {
+            Icon(
+                imageVector = Icons.Rounded.Done,
+                contentDescription = stringResource(id = R.string.final_mark),
+                modifier = Modifier.size(FilterChipDefaults.IconSize)
+            )
+        },
+        modifier = Modifier.padding(start = 16.dp)
+    )
 }

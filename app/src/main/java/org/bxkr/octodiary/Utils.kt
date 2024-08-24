@@ -586,3 +586,5 @@ fun Int.pxToDp() = with(LocalDensity.current) { this@pxToDp.toDp() }
 
 inline fun <reified T> String.fromJson(): T? =
     Gson().fromJson(this, object : TypeToken<T>() {}.type)
+
+operator fun <T> Iterable<T>.times(count: Int): List<T> = List(count) { this }.flatten()

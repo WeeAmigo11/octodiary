@@ -18,6 +18,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -167,7 +168,7 @@ class MainActivity : FragmentActivity() {
         }
     }
 
-    @OptIn(ExperimentalMaterial3Api::class)
+    @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
     @Composable
     private fun MyApp(
         modifier: Modifier = Modifier,
@@ -180,7 +181,7 @@ class MainActivity : FragmentActivity() {
         val currentScreen = screenLive.observeAsState()
         val showBottomSheet by modalBottomSheetStateLive.observeAsState()
         val bottomSheetContent by modalBottomSheetContentLive.observeAsState()
-        val sheetState = rememberModalBottomSheetState()
+        val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
         val snackbarHostState = snackbarHostStateLive.value!!
         if (navControllerLive.value == null) {
             navControllerLive.value = rememberNavController()

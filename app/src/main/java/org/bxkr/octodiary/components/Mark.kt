@@ -46,7 +46,6 @@ import com.patrykandpatrick.vico.compose.common.ProvideVicoTheme
 import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
 import com.patrykandpatrick.vico.compose.m3.common.rememberM3VicoTheme
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
-import com.patrykandpatrick.vico.core.cartesian.data.CartesianValueFormatter
 import com.patrykandpatrick.vico.core.cartesian.data.ColumnCartesianLayerModel
 import com.patrykandpatrick.vico.core.cartesian.data.columnSeries
 import com.patrykandpatrick.vico.core.cartesian.layer.ColumnCartesianLayer
@@ -87,9 +86,10 @@ fun MarkComp(
     enabled: Boolean = true,
     subjectId: Long,
     markConfig: MarkConfig,
+    showPlus: Boolean = false,
     onClick: (Mark, Long) -> Unit = ::defaultMarkClick,
 ) {
-    var color = MaterialTheme.colorScheme.run {
+    val color = MaterialTheme.colorScheme.run {
         if (markConfig.markHighlighting) {
             when (mark.value) {
                 "3" -> tertiaryContainer
@@ -115,9 +115,9 @@ fun MarkComp(
                 Modifier.align(Alignment.Center),
                 style = MaterialTheme.typography.labelLarge
             )
-            if (!markConfig.hideDefaultWeight || mark.weight != 1) {
+            if ((!markConfig.hideDefaultWeight || mark.weight != 1) || showPlus) {
                 Text(
-                    mark.weight.toString(),
+                    if (showPlus) "+" else mark.weight.toString(),
                     Modifier.align(Alignment.BottomEnd),
                     style = MaterialTheme.typography.labelMedium
                 )
@@ -223,13 +223,13 @@ fun MarkDescription(subject: MarkListSubjectItem?, markInfo: MarkInfo) {
         if (commentExists) Text(comment!!)
         Text(
             stringResource(
-                org.bxkr.octodiary.R.string.mark_created,
+                R.string.mark_created,
                 parseSimpleLongAndFormatToLong(
                     updatedAt,
-                    stringResource(id = org.bxkr.octodiary.R.string.at_time)
+                    stringResource(id = R.string.at_time)
                 )
             ),
-            androidx.compose.ui.Modifier.padding(vertical = 16.dp)
+            Modifier.padding(vertical = 16.dp)
         )
     }
 }
@@ -276,7 +276,7 @@ fun ClassResults(markInfo: MarkInfo) {
             titleComponent = rememberTextComponent(color = MaterialTheme.colorScheme.onSurface)
         ),
         bottomAxis = rememberBottomAxis(
-            valueFormatter = CartesianValueFormatter { x, chartValues, _ ->
+            valueFormatter = { x, chartValues, _ ->
                 chartValues.model.extraStore[labelListKey][x.toInt()]
             },
             title = stringResource(R.string.mark),

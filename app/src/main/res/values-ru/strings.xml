@@ -281,4 +281,11 @@
     <string name="student_id">ID ученика</string>
     <string name="delete">Удалить</string>
     <string name="mark_calculator">Калькулятор оценок</string>
+    <string name="add_mark">Новые оценки</string>
+    <string name="help">Помощь</string>
+    <string name="add_mark_help_keyboard">Вводите новые оценки через пробел, для указания веса используйте символ ^, например \"5^2 4 3\"</string>
+    <string name="remove_non_numeric_marks">Удалите нечисловые оценки</string>
+    <string name="buttons">Кнопки</string>
+    <string name="keyboard">Клавиатура</string>
+    <string name="add_mark_help_buttons">Нажимайте на соответствующие оценки с плюсами, и с их учётом будет рассчитан новый средний балл</string>
 </resources>
