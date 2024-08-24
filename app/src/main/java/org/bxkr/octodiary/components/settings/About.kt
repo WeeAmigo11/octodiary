@@ -47,12 +47,15 @@ import androidx.compose.ui.unit.dp
 import org.bxkr.octodiary.BuildConfig
 import org.bxkr.octodiary.R
 import org.bxkr.octodiary.components.ChangelogDialog
+import org.bxkr.octodiary.get
+import org.bxkr.octodiary.mainPrefs
 import org.bxkr.octodiary.network.Developer
 import org.bxkr.octodiary.network.NetworkService
 import org.bxkr.octodiary.network.NetworkService.ExternalIntegrationConfig.CONTRIBUTORS_GITHUB_URL
 import org.bxkr.octodiary.network.NetworkService.ExternalIntegrationConfig.PYTHON_LIB_URL
 import org.bxkr.octodiary.network.NetworkService.ExternalIntegrationConfig.TELEGRAM_BOT_URL
 import org.bxkr.octodiary.openUri
+import org.bxkr.octodiary.save
 import org.bxkr.octodiary.ui.theme.OctoDiaryTheme
 
 @Composable
@@ -67,6 +70,7 @@ fun About() {
 @Composable
 private fun Card() {
     var isChangelogDialogShown by remember { mutableStateOf(false) }
+    val context = LocalContext.current
     Card(
         colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceContainer),
         shape = MaterialTheme.shapes.extraLarge,
@@ -81,6 +85,11 @@ private fun Card() {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
+            var isDebug by remember {
+                mutableStateOf(
+                    context.mainPrefs.get<Boolean>("force_debug") ?: false
+                )
+            }
             Row {
                 Box {
                     Box(
@@ -88,13 +97,17 @@ private fun Card() {
                             .size(56.dp)
                             .align(Alignment.Center)
                             .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.secondary)
+                            .clickable {
+                                isDebug = !isDebug
+                                context.mainPrefs.save("force_debug" to isDebug)
+                            }
+                            .background(MaterialTheme.colorScheme.run { if (isDebug) onSecondary else secondary })
                     )
                     Icon(
                         painterResource(R.drawable.ic_launcher_foreground),
                         stringResource(R.string.app_name),
                         Modifier.size(64.dp),
-                        MaterialTheme.colorScheme.onSecondary
+                        MaterialTheme.colorScheme.run { if (isDebug) secondary else onSecondary }
                     )
                 }
                 Column(Modifier.padding(8.dp), verticalArrangement = Arrangement.Center) {

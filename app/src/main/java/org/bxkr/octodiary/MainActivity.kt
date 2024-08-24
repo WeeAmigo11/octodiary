@@ -255,7 +255,7 @@ class MainActivity : FragmentActivity() {
                             }
                         }
                     }, actions = {
-                        if (BuildConfig.DEBUG) {
+                        if (BuildConfig.DEBUG || mainPrefs.get<Boolean>("force_debug") == true) {
                             DebugMenu(this@MainActivity)
                         }
                         if (localLoadedState && currentScreen.value == Screen.MainNav) {
