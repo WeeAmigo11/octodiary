@@ -4,6 +4,7 @@ import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
 import android.net.Uri
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
@@ -13,6 +14,7 @@ import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -58,12 +60,15 @@ import com.bumptech.glide.integration.compose.RequestState
 import com.bumptech.glide.integration.compose.placeholder
 import kotlinx.coroutines.delay
 import org.bxkr.octodiary.R
+import org.bxkr.octodiary.components.MarkComp
 import org.bxkr.octodiary.components.MarkConfig
 import org.bxkr.octodiary.getDemoProperty
+import org.bxkr.octodiary.models.events.Mark
 import org.bxkr.octodiary.models.marklistsubject.MarkListSubjectItem
 import org.bxkr.octodiary.pxToDp
 import org.bxkr.octodiary.screens.navsections.marks.FinalsScreen
 import org.bxkr.octodiary.screens.navsections.marks.SubjectCard
+import org.bxkr.octodiary.simpleMark
 import org.bxkr.octodiary.ui.theme.OctoDiaryTheme
 import org.bxkr.octodiary.ui.theme.blue.DarkColorScheme
 import org.bxkr.octodiary.ui.theme.blue.LightColorScheme
@@ -98,6 +103,11 @@ class Changelog26 : Changelog() {
             @Composable { MarkCalculator() },
             R.string.c26_calc_title,
             R.string.c26_calc_subtitle
+        ),
+        ChangelogItem(
+            @Composable { MarkHighlighting() },
+            R.string.c26_highlighting_title,
+            R.string.c26_highlighting_subtitle
         )
     )
 
@@ -327,6 +337,55 @@ class Changelog26 : Changelog() {
                     }
                 }
             }
+        }
+    }
+
+    @Composable
+    fun MarkHighlighting() {
+        val getNewMap = {
+            List(3) {
+                List(4) {
+                    (2..5).random() to (1..3).random()
+                }
+            }
+        }
+        var map by remember { mutableStateOf(getNewMap()) }
+        LaunchedEffect(Unit) {
+            while (true) {
+                delay(2000)
+                map = getNewMap()
+            }
+        }
+        Box(
+            Modifier
+                .fillMaxSize(), contentAlignment = Alignment.Center
+        ) {
+            AnimatedContent(map, label = "mark_highlighting_anim") { map ->
+                Column {
+                    repeat(3) { i1 ->
+                        Row {
+                            repeat(4) { i2 ->
+                                MarkComp(
+                                    Mark.fromMarkListSubject(
+                                        simpleMark(
+                                            map[i1][i2].first,
+                                            map[i1][i2].second
+                                        )
+                                    ),
+                                    subjectId = -1L,
+                                    markConfig = MarkConfig(
+                                        hideDefaultWeight = true,
+                                        markHighlighting = true
+                                    ),
+                                    enabled = false,
+                                    onClick = { _, _ -> }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
         }
     }
 

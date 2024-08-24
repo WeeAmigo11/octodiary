@@ -346,4 +346,6 @@
     <string name="add_to_home_screen">Add to home screen</string>
     <string name="c26_calc_title">Mark calculator</string>
     <string name="c26_calc_subtitle">Count your future average and final grades</string>
+    <string name="c26_highlighting_title">Mark highlighting</string>
+    <string name="c26_highlighting_subtitle">Bad marks became more noticable (you can disalbe this in settings)</string>
 </resources>

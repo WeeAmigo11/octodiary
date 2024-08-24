@@ -48,6 +48,7 @@ import org.bxkr.octodiary.models.events.Mark.MarkCompanion.fromMarkListSubject
 import org.bxkr.octodiary.models.marklistsubject.Mark
 import org.bxkr.octodiary.models.marklistsubject.Period
 import org.bxkr.octodiary.save
+import org.bxkr.octodiary.simpleMark
 import org.bxkr.octodiary.times
 import kotlin.math.round
 import kotlin.math.roundToInt
@@ -214,21 +215,3 @@ private fun markFactory(string: String): List<Mark> {
     }
     return mutableList.toList()
 }
-
-private fun simpleMark(value: Int, weight: Int = 1) = Mark(
-    comment = null,
-    commentExists = false,
-    controlFormName = "CALC",
-    createdAt = null,
-    criteria = null,
-    date = "01-01-1970",
-    id = (-100000..0).random().toLong(),
-    isExam = false,
-    isPoint = false,
-    originalGradeSystemType = "5",
-    pointDate = null,
-    updatedAt = null,
-    value = value.toString(),
-    values = null,
-    weight = weight
-)

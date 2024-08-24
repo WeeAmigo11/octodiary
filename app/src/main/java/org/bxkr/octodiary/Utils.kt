@@ -52,6 +52,7 @@ import com.patrykandpatrick.vico.core.common.shape.Corner
 import okhttp3.ResponseBody
 import org.bxkr.octodiary.components.MarkConfig
 import org.bxkr.octodiary.components.settings.CommonPrefs
+import org.bxkr.octodiary.models.marklistsubject.Mark
 import org.bxkr.octodiary.models.rankingforsubject.ErrorBody
 import retrofit2.Call
 import retrofit2.Callback
@@ -588,3 +589,21 @@ inline fun <reified T> String.fromJson(): T? =
     Gson().fromJson(this, object : TypeToken<T>() {}.type)
 
 operator fun <T> Iterable<T>.times(count: Int): List<T> = List(count) { this }.flatten()
+
+fun simpleMark(value: Int, weight: Int = 1) = Mark(
+    comment = null,
+    commentExists = false,
+    controlFormName = "CALC",
+    createdAt = null,
+    criteria = null,
+    date = "01-01-1970",
+    id = (-100000..0).random().toLong(),
+    isExam = false,
+    isPoint = false,
+    originalGradeSystemType = "5",
+    pointDate = null,
+    updatedAt = null,
+    value = value.toString(),
+    values = null,
+    weight = weight
+)

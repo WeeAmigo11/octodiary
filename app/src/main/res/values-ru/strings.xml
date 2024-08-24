@@ -291,4 +291,6 @@
     <string name="add_to_home_screen">Добавить на главный экран</string>
     <string name="c26_calc_title">Калькулятор оценок</string>
     <string name="c26_calc_subtitle">Рассчитывайте предполагаемые средние и финальные баллы</string>
+    <string name="c26_highlighting_title">Подсветка оценок</string>
+    <string name="c26_highlighting_subtitle">Плохие оценки стали заметнее (можно отключить в настройках)</string>
 </resources>
