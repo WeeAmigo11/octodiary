@@ -8,7 +8,9 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.animateScrollBy
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,10 +25,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.AddToHomeScreen
 import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -55,9 +58,12 @@ import com.bumptech.glide.integration.compose.RequestState
 import com.bumptech.glide.integration.compose.placeholder
 import kotlinx.coroutines.delay
 import org.bxkr.octodiary.R
+import org.bxkr.octodiary.components.MarkConfig
 import org.bxkr.octodiary.getDemoProperty
+import org.bxkr.octodiary.models.marklistsubject.MarkListSubjectItem
 import org.bxkr.octodiary.pxToDp
 import org.bxkr.octodiary.screens.navsections.marks.FinalsScreen
+import org.bxkr.octodiary.screens.navsections.marks.SubjectCard
 import org.bxkr.octodiary.ui.theme.OctoDiaryTheme
 import org.bxkr.octodiary.ui.theme.blue.DarkColorScheme
 import org.bxkr.octodiary.ui.theme.blue.LightColorScheme
@@ -87,6 +93,11 @@ class Changelog26 : Changelog() {
             @Composable { Widget() },
             R.string.c26_widget_title,
             R.string.c26_widget_subtitle
+        ),
+        ChangelogItem(
+            @Composable { MarkCalculator() },
+            R.string.c26_calc_title,
+            R.string.c26_calc_subtitle
         )
     )
 
@@ -247,22 +258,20 @@ class Changelog26 : Changelog() {
                 }
             }
             val context = LocalContext.current
-            ExtendedFloatingActionButton(
-                { Text(stringResource(R.string.add_to_home_screen)) },
-                {
-                    Icon(
-                        Icons.AutoMirrored.Rounded.AddToHomeScreen,
-                        stringResource(R.string.add_to_home_screen)
-                    )
-                },
+            FloatingActionButton(
                 {
                     pinWidget(context, StatusWidgetReceiver::class.java)
                 },
                 Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(8.dp),
+                    .padding(16.dp),
                 elevation = FloatingActionButtonDefaults.loweredElevation()
-            )
+            ) {
+                Icon(
+                    Icons.AutoMirrored.Rounded.AddToHomeScreen,
+                    stringResource(R.string.add_to_home_screen)
+                )
+            }
         }
     }
 
@@ -277,7 +286,51 @@ class Changelog26 : Changelog() {
         AppWidgetManager.getInstance(context).requestPinAppWidget(myProvider, null, null)
     }
 
-    object ImageLinks {
+    @Composable
+    private fun MarkCalculator() {
+        val context = LocalContext.current
+        val demoMarks: List<MarkListSubjectItem> = context.getDemoProperty(R.raw.demo_marks_subject)
+
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            OctoDiaryTheme(
+                darkTheme = true,
+                dynamicColor = false,
+                lightScheme = org.bxkr.octodiary.ui.theme.pink.LightColorScheme,
+                darkScheme = org.bxkr.octodiary.ui.theme.pink.DarkColorScheme,
+                portable = true
+            ) {
+                Surface(
+                    Modifier.padding(horizontal = 16.dp), MaterialTheme.shapes.extraLarge
+                ) {
+                    val subject = demoMarks.first { it.subjectName == "Алгебра" }
+                    val markConfig = MarkConfig(hideDefaultWeight = true, markHighlighting = true)
+                    Box(
+                        Modifier
+                            .padding(16.dp)
+                            .padding(vertical = 32.dp)
+                    ) {
+                        SubjectCard(
+                            subject.periods?.get(0)!!,
+                            subject.subjectId,
+                            subject.subjectName,
+                            false,
+                            markConfig,
+                            true
+                        )
+                        Box(
+                            Modifier
+                                .matchParentSize()
+                                .clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null
+                                ) {})
+                    }
+                }
+            }
+        }
+    }
+
+    private object ImageLinks {
         const val NEW_DAYBOOK_IMAGE =
             "https://raw.githubusercontent.com/OctoDiary/.github/master/assets/c26_newdaybook_image.png"
         const val FINALS_FRAME =

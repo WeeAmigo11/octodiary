@@ -8,6 +8,7 @@ import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.gestures.DraggableAnchors
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.anchoredDraggable
+import androidx.compose.foundation.gestures.animateTo
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,6 +34,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,6 +51,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
 import org.bxkr.octodiary.CloverShape
 import org.bxkr.octodiary.DataService
 import org.bxkr.octodiary.R
@@ -74,6 +77,7 @@ fun SubjectCard(
     subjectName: String,
     showRating: Boolean,
     markConfig: MarkConfig,
+    showHint: Boolean = false,
 ) {
     val density = LocalDensity.current
     val draggableAnchors = with(density) {
@@ -88,9 +92,9 @@ fun SubjectCard(
         anchors = draggableAnchors,
         positionalThreshold = { distance -> distance * .5f },
         velocityThreshold = { with(density) { 56.dp.toPx() } },
-        animationSpec = tween(500),
+        animationSpec = tween(if (showHint) 800 else 500),
         confirmValueChange = {
-            if (it == DragValue.Start || it == DragValue.End) {
+            if ((it == DragValue.Start || it == DragValue.End) && !showHint) {
                 modalBottomSheetContentLive.value =
                     { MarkCalculator(period, subjectId, subjectName, markConfig) }
                 modalBottomSheetStateLive.postValue(true)
@@ -98,6 +102,16 @@ fun SubjectCard(
             false
         }
     )
+    if (showHint) {
+        LaunchedEffect(Unit) {
+            while (true) {
+                delay(800)
+                anchoredDraggableState.animateTo(DragValue.End)
+                delay(1600)
+                anchoredDraggableState.animateTo(DragValue.Center)
+            }
+        }
+    }
     val isGlow = subjectId == scrollToSubjectIdLive.value
     var size by remember { mutableStateOf(IntSize(0, 0)) }
     AnimatedContent(targetState = isGlow) { isGlowA ->

@@ -289,4 +289,6 @@
     <string name="keyboard">Клавиатура</string>
     <string name="add_mark_help_buttons">Нажимайте на соответствующие оценки с плюсами, и с их учётом будет рассчитан новый средний балл</string>
     <string name="add_to_home_screen">Добавить на главный экран</string>
+    <string name="c26_calc_title">Калькулятор оценок</string>
+    <string name="c26_calc_subtitle">Рассчитывайте предполагаемые средние и финальные баллы</string>
 </resources>

@@ -344,4 +344,6 @@
     <string name="keyboard">Keyboard</string>
     <string name="add_mark_help_buttons">Click on the corresponding marks with pluses and a new average grade will be calculated taking them into account</string>
     <string name="add_to_home_screen">Add to home screen</string>
+    <string name="c26_calc_title">Mark calculator</string>
+    <string name="c26_calc_subtitle">Count your future average and final grades</string>
 </resources>
