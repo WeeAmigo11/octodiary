@@ -10,6 +10,7 @@ import org.bxkr.octodiary.models.marklistdate.MarkListDate
 import org.bxkr.octodiary.models.marklistsubject.MarkListSubject
 import org.bxkr.octodiary.models.marklistsubject.MarkListSubjectItem
 import org.bxkr.octodiary.models.mealsmenucomplexes.MealsMenuComplexes
+import org.bxkr.octodiary.models.marklistsubjectshort.MarkListSubjectItem
 import org.bxkr.octodiary.models.profile.ProfileResponse
 import org.bxkr.octodiary.models.schoolinfo.SchoolInfo
 import org.bxkr.octodiary.models.visits.VisitsResponse
@@ -158,12 +159,27 @@ interface MainSchoolAPI {
      * @param mesSubsystem MES subsystem (["familymp"][MESAPIConfig.FAMILYMP] by default).
      * @return List of [MarkListSubjectItem]s.
      */
-    @GET("family/mobile/v1/subject_marks/short")
+    @GET("family/mobile/v1/subject_marks")
     fun subjectMarks(
         @Header("auth-token") accessToken: String,
         @Query("student_id") studentId: Long,
-        @Header("X-Mes-Subsystem") mesSubsystem: String = MESAPIConfig.FAMILYMP
-    ): Call<MarkListSubject>
+        @Header("X-Mes-Subsystem") mesSubsystem: String = MESAPIConfig.FAMILYMP,
+    ): Call<org.bxkr.octodiary.models.marklistsubject.MarkListSubject>
+
+    /**
+     * Gets marks by subject in short form only for current period.
+     *
+     * @param accessToken Access token.
+     * @param studentId Student ID.
+     * @param mesSubsystem MES subsystem (["familymp"][MESAPIConfig.FAMILYMP] by default).
+     * @return List of [MarkListSubjectItem]s.
+     */
+    @GET("family/mobile/v1/subject_marks/short")
+    fun subjectMarksShort(
+        @Header("auth-token") accessToken: String,
+        @Query("student_id") studentId: Long,
+        @Header("X-Mes-Subsystem") mesSubsystem: String = MESAPIConfig.FAMILYMP,
+    ): Call<org.bxkr.octodiary.models.marklistsubjectshort.MarkListSubject>
 
     /**
      * Sets homework as done.
@@ -212,13 +228,22 @@ interface MainSchoolAPI {
         @Header("X-Mes-Subsystem") mesSubsystem: String = MESAPIConfig.FAMILYMP
     ): Call<LessonSchedule>
 
+    // bullshit
+//    @GET("usersettings/v1")
+//    fun <Model> pullUserSettings(
+//        @Header("auth-token") accessToken: String,
+//        @Query("name") path: String,
+//        @Header("X-Mes-Subsystem") mesSubsystem: String = MESAPIConfig.FAMILYMP,
+//        @Query("subsystem_id") subsystemId: Int = 1,
+//    ): Call<Model>
+
     @GET("usersettings/v1")
-    fun <Model> pullUserSettings(
+    fun pullUserSettingsRaw(
         @Header("auth-token") accessToken: String,
         @Query("name") path: String,
         @Header("X-Mes-Subsystem") mesSubsystem: String = MESAPIConfig.FAMILYMP,
         @Query("subsystem_id") subsystemId: Int = 1,
-    ): Call<Model>
+    ): Call<String>
 
     @PUT("usersettings/v1")
     fun pushUserSettings(

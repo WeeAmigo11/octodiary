@@ -1,4 +1,4 @@
-package org.bxkr.octodiary.screens.navsections
+package org.bxkr.octodiary.screens.navsections.profile
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -130,7 +130,7 @@ fun RowScope.SectionGridItem(title: String, icon: ImageVector, onClick: () -> Un
     }
 }
 
-fun openBottomSheet(content: @Composable () -> Unit) {
+private fun openBottomSheet(content: @Composable () -> Unit) {
     modalBottomSheetStateLive.postValue(true)
     modalBottomSheetContentLive.postValue(content)
 }

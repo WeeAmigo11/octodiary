@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material3.Card
@@ -24,6 +25,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.bxkr.octodiary.DataService
 import org.bxkr.octodiary.R
+import org.bxkr.octodiary.areBreaksShown
+import org.bxkr.octodiary.components.settings.CommonPrefs
 import org.bxkr.octodiary.formatToDay
 import org.bxkr.octodiary.formatToHumanDay
 import org.bxkr.octodiary.get
@@ -37,7 +40,10 @@ import java.util.Date
 
 @Composable
 fun DashboardScreen() {
-    val showNumbers = LocalContext.current.mainPrefs.get("show_lesson_numbers") ?: true
+    val context = LocalContext.current
+    val showNumbers =
+        context.mainPrefs.get(CommonPrefs.showLessonNumbers.prefKey) ?: true
+    val showBreaks = areBreaksShown()
     LazyColumn(
         verticalArrangement = Arrangement.Bottom,
         modifier = Modifier
@@ -45,111 +51,122 @@ fun DashboardScreen() {
             .fillMaxHeight()
     ) {
         item {
-            val currentDay = remember { Date().formatToDay() }
-            Column(
-                verticalArrangement = Arrangement.Bottom
-            ) {
-                val todayCalendar = DataService.eventCalendar.filter {
-                    it.startAt.parseLongDate().formatToDay() == currentDay
-                }
-                val nearestEvent =
-                    DataService.eventCalendar.filter { it.startAt.parseLongDate().time > Date().time }
-                        .minByOrNull {
-                            it.startAt.parseLongDate().time - Date().time
-                        }
-                if (todayCalendar.isNotEmpty()) {
-                    Text(
-                        stringResource(id = R.string.schedule_today),
-                        modifier = Modifier.padding(top = 8.dp),
-                        style = MaterialTheme.typography.labelLarge
-                    )
-                } else if (nearestEvent != null) {
-                    Text(
-                        stringResource(
-                            id = R.string.schedule_for,
-                            nearestEvent.startAt.parseLongDate().formatToHumanDay()
-                        ),
-                        modifier = Modifier.padding(top = 8.dp),
-                        style = MaterialTheme.typography.labelLarge
-                    )
-                }
-            }
+            ChangelogCard(context)
         }
-        DayItem(
-            day = DataService.eventCalendar.filter { it.startAt.parseLongDate().time > Date().time }
-                .minByOrNull {
-                    it.startAt.parseLongDate().time - Date().time
-                }?.startAt?.parseLongDate()?.formatToDay()?.let { day ->
-                DataService.eventCalendar.filter {
-                    it.startAt.parseLongDate().formatToDay() == day
-                }
-                } ?: listOf(), showNumbers)
-        item {
-            if (LocalContext.current.mainPrefs.get("main_rating") ?: true) {
+        dashboardSchedule(showNumbers, showBreaks)
+        dashboardRatingVisits()
+    }
+}
+
+fun LazyListScope.dashboardSchedule(showNumbers: Boolean, showBreaks: Boolean) {
+    item {
+        val currentDay = remember { Date().formatToDay() }
+        Column(
+            verticalArrangement = Arrangement.Bottom
+        ) {
+            val todayCalendar = DataService.eventCalendar.filter {
+                it.startAt.parseLongDate().formatToDay() == currentDay
+            }
+            val nearestEvent =
+                DataService.eventCalendar.filter { it.startAt.parseLongDate().time > Date().time }
+                    .minByOrNull {
+                        it.startAt.parseLongDate().time - Date().time
+                    }
+            if (todayCalendar.isNotEmpty() && Date() < todayCalendar.maxBy { it.finishAt.parseLongDate() }.finishAt.parseLongDate()) {
                 Text(
-                    stringResource(id = R.string.rating),
+                    stringResource(id = R.string.schedule_today),
                     modifier = Modifier.padding(top = 8.dp),
                     style = MaterialTheme.typography.labelLarge
                 )
-                Card(
-                    Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            modalBottomSheetContentLive.value = { RankingList() }
-                            modalBottomSheetStateLive.postValue(true)
-                        }
-                ) {
-                    Column(
-                        Modifier
-                            .padding(16.dp)
-                    ) {
-                        Text(
-                            stringResource(
-                                id = R.string.rating_place,
-                                DataService
-                                    .run { ranking.firstOrNull { it.personId == profile.children[currentProfile].contingentGuid } }
-                                    ?.rank?.rankPlace ?: "?"
-                            )
-                        )
-                    }
-                }
-            }
-            if (DataService.hasVisits && DataService.visits.payload.isNotEmpty()) {
-                val lastVisit = DataService.visits.payload.maxBy {
-                    it.date.parseFromDay().toInstant().toEpochMilli()
-                }
+            } else if (nearestEvent != null) {
                 Text(
-                    text = stringResource(
-                        R.string.visits_t,
-                        lastVisit.date.parseFromDay().formatToHumanDay()
+                    stringResource(
+                        id = R.string.schedule_for,
+                        nearestEvent.startAt.parseLongDate().formatToHumanDay()
                     ),
                     modifier = Modifier.padding(top = 8.dp),
                     style = MaterialTheme.typography.labelLarge
                 )
-                Card(
-                    Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            modalBottomSheetContentLive.value = { VisitsList() }
-                            modalBottomSheetStateLive.postValue(true)
-                        }
-                ) {
-                    Row(
-                        Modifier
-                            .padding(16.dp)
-                            .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(lastVisit.visits[0].inX)
-                        Icon(
-                            Icons.AutoMirrored.Rounded.ArrowForward,
-                            stringResource(id = R.string.to)
-                        )
-                        Text(lastVisit.visits[0].out)
+            }
+        }
+    }
+    DayItem(
+        day = DataService.eventCalendar.filter { it.startAt.parseLongDate().time > Date().time }
+            .minByOrNull {
+                it.startAt.parseLongDate().time - Date().time
+            }?.startAt?.parseLongDate()?.formatToDay()?.let { day ->
+                DataService.eventCalendar.filter {
+                    it.startAt.parseLongDate().formatToDay() == day
+                }
+            } ?: listOf(), showNumbers, showBreaks)
+}
+
+fun LazyListScope.dashboardRatingVisits() {
+    item {
+        if (LocalContext.current.mainPrefs.get<Boolean>(CommonPrefs.mainRating.prefKey) != false) {
+            Text(
+                stringResource(id = R.string.rating),
+                modifier = Modifier.padding(top = 8.dp),
+                style = MaterialTheme.typography.labelLarge
+            )
+            Card(
+                Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        modalBottomSheetContentLive.value = { RankingList() }
+                        modalBottomSheetStateLive.postValue(true)
                     }
+            ) {
+                Column(
+                    Modifier
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        stringResource(
+                            id = R.string.rating_place,
+                            DataService
+                                .run { ranking.firstOrNull { it.personId == profile.children[currentProfile].contingentGuid } }
+                                ?.rank?.rankPlace ?: "?"
+                        )
+                    )
                 }
             }
-            Spacer(Modifier.height(16.dp))
         }
+        if (DataService.hasVisits && DataService.visits.payload.isNotEmpty()) {
+            val lastVisit = DataService.visits.payload.maxBy {
+                it.date.parseFromDay().toInstant().toEpochMilli()
+            }
+            Text(
+                text = stringResource(
+                    R.string.visits_t,
+                    lastVisit.date.parseFromDay().formatToHumanDay()
+                ),
+                modifier = Modifier.padding(top = 8.dp),
+                style = MaterialTheme.typography.labelLarge
+            )
+            Card(
+                Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        modalBottomSheetContentLive.value = { VisitsList() }
+                        modalBottomSheetStateLive.postValue(true)
+                    }
+            ) {
+                Row(
+                    Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(lastVisit.visits[0].inX)
+                    Icon(
+                        Icons.AutoMirrored.Rounded.ArrowForward,
+                        stringResource(id = R.string.to)
+                    )
+                    Text(lastVisit.visits[0].out)
+                }
+            }
+        }
+        Spacer(Modifier.height(16.dp))
     }
 }

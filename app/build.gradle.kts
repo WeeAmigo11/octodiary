@@ -1,7 +1,18 @@
-@Suppress("DSL_SCOPE_VIOLATION") // TODO: Remove once KTIJ-19369 is fixed
+import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.util.archivesName
+import java.io.ByteArrayOutputStream
+
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.kotlinAndroid)
+}
+
+val gitLatestCommit: String = ByteArrayOutputStream().use { outputStream ->
+    project.exec {
+        executable("git")
+        args("log", "--oneline", "-1", "--format=format:%h", ".")
+        standardOutput = outputStream
+    }
+    outputStream.toString()
 }
 
 android {
@@ -12,8 +23,9 @@ android {
         applicationId = "org.bxkr.octodiary"
         minSdk = 26
         targetSdk = 34
-        versionCode = 24
+        versionCode = 26
         versionName = "2.1.0"
+        archivesName = gitLatestCommit
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -28,6 +40,10 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+        }
+
+        debug {
+            applicationIdSuffix = ".debug"
         }
     }
     compileOptions {
@@ -75,6 +91,10 @@ dependencies {
     implementation(libs.androidx.glance.appwidget)
     implementation(libs.androidx.glance.material3)
     implementation(libs.androidx.biometric.ktx)
+    implementation(libs.vico.compose.m3)
+    implementation(libs.vico.compose)
+    implementation(libs.zoomable)
+    implementation(libs.dotsindicator)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.espresso.core)

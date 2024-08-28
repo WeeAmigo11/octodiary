@@ -14,6 +14,7 @@ import org.bxkr.octodiary.Diary
 import org.bxkr.octodiary.authPrefs
 import org.bxkr.octodiary.baseEnqueue
 import org.bxkr.octodiary.encodeToBase64
+import org.bxkr.octodiary.fromJson
 import org.bxkr.octodiary.get
 import org.bxkr.octodiary.getRandomString
 import org.bxkr.octodiary.hash
@@ -140,25 +141,27 @@ object MESLoginService {
             if (isTokenValid == true) {
                 val checkRemoteCall =
                     NetworkService.mainSchoolApi(MainSchoolAPI.getBaseUrl(Diary.MES))
-                        .pullUserSettings<AuthSettings>(
+                        .pullUserSettingsRaw(
                             accessToken!!,
                             "od_auth"
                         )
-                checkRemoteCall.baseEnqueue {
-                    if (clientId != it.clientId || clientSecret != it.clientSecret) {
-                        println("Remote clientId or/and clientSecret differs from the local ones")
-                        clientId = it.clientId
-                        clientSecret = it.clientSecret
-                        edit(commit = true) {
-                            putString("client_id", clientId)
-                            putString("client_secret", clientSecret)
+                checkRemoteCall.baseEnqueue { unparsed ->
+                    unparsed.fromJson<AuthSettings>()?.let {
+                        if (clientId != it.clientId || clientSecret != it.clientSecret) {
+                            println("Remote clientId or/and clientSecret differs from the local ones")
+                            clientId = it.clientId
+                            clientSecret = it.clientSecret
+                            edit(commit = true) {
+                                putString("client_id", clientId)
+                                putString("client_secret", clientSecret)
+                            }
                         }
-                    }
-                    if (refreshToken != it.refreshToken || accessToken != it.accessToken) {
-                        println("Remote refresh or/and access tokens differ from the local ones")
-                        refreshToken = it.refreshToken
-                        if (it.accessToken.isJwtExpired() == false) {
-                            accessToken = it.accessToken
+                        if (refreshToken != it.refreshToken || accessToken != it.accessToken) {
+                            println("Remote refresh or/and access tokens differ from the local ones")
+                            refreshToken = it.refreshToken
+                            if (it.accessToken.isJwtExpired() == false) {
+                                accessToken = it.accessToken
+                            }
                         }
                     }
                 }

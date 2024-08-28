@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.bxkr.octodiary.components.MarkComp
 import org.bxkr.octodiary.components.defaultMarkClick
+import org.bxkr.octodiary.getMarkConfig
 import org.bxkr.octodiary.models.marklistdate.Mark
 
 @Composable
@@ -28,7 +29,7 @@ fun ExtendedMark(mark: Mark) {
                 Text(mark.subjectName, style = MaterialTheme.typography.titleMedium)
                 Text(mark.controlFormName)
             }
-            MarkComp(eventMark, subjectId = mark.subjectId)
+            MarkComp(eventMark, subjectId = mark.subjectId, markConfig = getMarkConfig())
         }
     }
 }

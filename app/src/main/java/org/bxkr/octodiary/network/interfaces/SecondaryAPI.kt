@@ -5,6 +5,7 @@ import org.bxkr.octodiary.Diary
 import org.bxkr.octodiary.models.auth.EsiaExchange
 import org.bxkr.octodiary.models.classranking.RankingMember
 import org.bxkr.octodiary.models.events.EventsResponse
+import org.bxkr.octodiary.models.govexams.GovExamsResponse
 import org.bxkr.octodiary.models.rankingforsubject.RankingForSubject
 import org.bxkr.octodiary.models.subjectranking.SubjectRanking
 import org.bxkr.octodiary.network.NetworkService
@@ -14,6 +15,7 @@ import org.bxkr.octodiary.network.RegionalOnly
 import retrofit2.Call
 import retrofit2.http.GET
 import retrofit2.http.Header
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 /**
@@ -146,4 +148,19 @@ interface SecondaryAPI {
         @Query("subjectId") subjectId: Long,
         @Header("X-Mes-Subsystem") mesSubsystem: String = MESAPIConfig.FAMILYMP
     ): Call<List<RankingForSubject>>
+
+    /**
+     * Gets list of government exams (ГИА - ОГЭ, ЕГЭ, пробные).
+     *
+     * @param authHeader Bearer-like string ("Bearer $accessToken").
+     * @param personId Person ID (guid-like).
+     * @param cookieHeader Cookie header, stores `aupd_current_role=4:1` by default.
+     * @return [GovExamsResponse].
+     */
+    @GET("portfolio/app/persons/{person_id}/govexams/list/")
+    fun govExams(
+        @Header("Authorization") authHeader: String,
+        @Path("person_id") personId: String,
+        @Header("Cookie") cookieHeader: String = "aupd_current_role=4:1",
+    ): Call<GovExamsResponse>
 }

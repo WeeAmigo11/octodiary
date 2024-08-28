@@ -1,6 +1,5 @@
 package org.bxkr.octodiary.components
 
-import android.content.Intent
 import android.net.Uri
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -12,7 +11,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -46,7 +44,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -61,20 +58,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import androidx.core.content.ContextCompat.startActivity
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
-import org.bxkr.octodiary.BuildConfig
 import org.bxkr.octodiary.DataService
 import org.bxkr.octodiary.LocalActivity
 import org.bxkr.octodiary.R
@@ -87,7 +79,6 @@ import org.bxkr.octodiary.launchUrlLive
 import org.bxkr.octodiary.logOut
 import org.bxkr.octodiary.network.NetworkService
 import org.bxkr.octodiary.network.NetworkService.ExternalIntegrationConfig.TELEGRAM_REPORT_URL
-import org.bxkr.octodiary.ui.theme.OctoDiaryTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -127,11 +118,30 @@ fun SettingsDialog(onDismissRequest: () -> Unit) {
                         }
                     },
                     actions = {
-                        IconButton(onClick = { uriHandler.openUri(TELEGRAM_REPORT_URL) }) {
-                            Icon(
-                                Icons.Rounded.BugReport,
-                                stringResource(R.string.report_issue)
-                            )
+                        Row(
+                            Modifier
+                                .padding(16.dp)
+                                .clip(CircleShape)
+                                .clickable { uriHandler.openUri(TELEGRAM_REPORT_URL) }
+                        ) {
+                            Row(
+                                Modifier
+                                    .background(MaterialTheme.colorScheme.errorContainer)
+                                    .padding(4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    stringResource(R.string.report_issue),
+                                    Modifier.padding(horizontal = 4.dp),
+                                    color = MaterialTheme.colorScheme.onErrorContainer,
+                                    style = MaterialTheme.typography.labelMedium
+                                )
+                                Icon(
+                                    Icons.Rounded.BugReport,
+                                    stringResource(R.string.report_issue),
+                                    tint = MaterialTheme.colorScheme.onErrorContainer
+                                )
+                            }
                         }
                     }
                 )
@@ -379,76 +389,6 @@ fun ThemeCard(
                     .padding(2.dp),
                 MaterialTheme.colorScheme.onTertiary
             )
-        }
-    }
-}
-
-@Composable
-fun AboutCard() {
-    Card(
-        colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surfaceContainer),
-        shape = MaterialTheme.shapes.extraLarge,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
-    ) {
-        Row(
-            Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Row {
-                Box {
-                    Box(
-                        Modifier
-                            .size(56.dp)
-                            .align(Alignment.Center)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.secondary)
-                    )
-                    Icon(
-                        painterResource(R.drawable.ic_launcher_foreground),
-                        stringResource(R.string.app_name),
-                        Modifier.size(64.dp),
-                        MaterialTheme.colorScheme.onSecondary
-                    )
-                }
-                Column(Modifier.padding(8.dp), verticalArrangement = Arrangement.Center) {
-                    Text(
-                        stringResource(id = R.string.app_name),
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    Text(
-                        BuildConfig.VERSION_NAME,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-            }
-            val context = LocalContext.current
-            OutlinedIconButton(onClick = {
-                val browserIntent = Intent(
-                    Intent.ACTION_VIEW,
-                    Uri.parse(NetworkService.ExternalIntegrationConfig.TELEGRAM_CHANNEL_URL)
-                )
-                startActivity(context, browserIntent, null)
-            }) {
-                Icon(
-                    painterResource(R.drawable.telegram_24),
-                    "Telegram"
-                )
-            }
-        }
-    }
-}
-
-@Preview(widthDp = 400)
-@Composable
-private fun AboutCardPreview() {
-    OctoDiaryTheme {
-        Surface {
-            AboutCard()
         }
     }
 }

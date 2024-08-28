@@ -16,7 +16,7 @@ data class Value(
     val nmax: Double?
 ) {
     companion object {
-        fun fromMarkListSubject(value: org.bxkr.octodiary.models.marklistsubject.Value): Value {
+        fun fromMarkListSubject(value: org.bxkr.octodiary.models.marklistsubjectshort.Value): Value {
             return value.run {
                 Value(
                     grade,

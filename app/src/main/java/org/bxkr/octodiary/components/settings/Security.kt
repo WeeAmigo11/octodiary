@@ -16,6 +16,11 @@ import org.bxkr.octodiary.mainPrefs
 import org.bxkr.octodiary.save
 import org.bxkr.octodiary.screens.SetPinDialog
 
+object SecurityPrefs {
+    val biometric =
+        SwitchPreferenceSpec(R.string.fingerprint, prefKey = "biometric", defaultValue = true)
+}
+
 @Composable
 fun Security() {
     val activity = LocalActivity.current
@@ -36,6 +41,8 @@ fun Security() {
             pinEnabled.value = false
         }
     }
+
+    SecurityPrefs.biometric.BasicSwitchPreference()
 
     AnimatedVisibility(setPin) {
         val pinFinished = remember { mutableStateOf(false) }

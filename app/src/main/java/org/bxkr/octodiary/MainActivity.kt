@@ -18,17 +18,24 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.FilterAlt
 import androidx.compose.material.icons.rounded.Groups
+import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -66,6 +73,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.MutableLiveData
@@ -76,15 +84,19 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import org.bxkr.octodiary.components.DebugMenu
+import org.bxkr.octodiary.components.MigrationDialog
 import org.bxkr.octodiary.components.ProfileChooser
 import org.bxkr.octodiary.components.SettingsDialog
+import org.bxkr.octodiary.components.TokenLogin
+import org.bxkr.octodiary.components.settings.About
 import org.bxkr.octodiary.screens.CallbackScreen
 import org.bxkr.octodiary.screens.CallbackType
 import org.bxkr.octodiary.screens.LoginScreen
 import org.bxkr.octodiary.screens.NavScreen
+import org.bxkr.octodiary.screens.navsections.daybook.DayChooser
 import org.bxkr.octodiary.ui.theme.CustomColorScheme
 import org.bxkr.octodiary.ui.theme.OctoDiaryTheme
-import java.util.UUID
 
 val modalBottomSheetStateLive = MutableLiveData(false)
 val modalBottomSheetContentLive = MutableLiveData<@Composable () -> Unit> {}
@@ -96,6 +108,7 @@ val contentDependentActionIconLive = MutableLiveData(Icons.Rounded.FilterAlt)
 val screenLive = MutableLiveData<Screen>()
 val modalDialogStateLive = MutableLiveData(false)
 val modalDialogContentLive = MutableLiveData<@Composable () -> Unit> {}
+val modalDialogCloseListenerLive = MutableLiveData<() -> Unit> {}
 val reloadEverythingLive = MutableLiveData {}
 val darkThemeLive = MutableLiveData<Boolean>(null)
 val colorSchemeLive = MutableLiveData(-1)
@@ -118,9 +131,6 @@ class MainActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         createNotificationChannel()
-        if (mainPrefs.get<String>("deviceId") == null) {
-            mainPrefs.save("deviceId" to UUID.randomUUID().toString())
-        }
         if (ActivityCompat.checkSelfPermission(
                 this,
                 Manifest.permission.POST_NOTIFICATIONS
@@ -158,10 +168,10 @@ class MainActivity : FragmentActivity() {
         }
     }
 
-    @OptIn(ExperimentalMaterial3Api::class)
+    @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
     @Composable
     private fun MyApp(
-        modifier: Modifier = Modifier
+        modifier: Modifier = Modifier,
     ) {
         var title by rememberSaveable { mutableIntStateOf(R.string.app_name) }
         screenLive.value = if (authPrefs.get<Boolean>("auth") == true) {
@@ -171,7 +181,7 @@ class MainActivity : FragmentActivity() {
         val currentScreen = screenLive.observeAsState()
         val showBottomSheet by modalBottomSheetStateLive.observeAsState()
         val bottomSheetContent by modalBottomSheetContentLive.observeAsState()
-        val sheetState = rememberModalBottomSheetState()
+        val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
         val snackbarHostState = snackbarHostStateLive.value!!
         if (navControllerLive.value == null) {
             navControllerLive.value = rememberNavController()
@@ -185,7 +195,22 @@ class MainActivity : FragmentActivity() {
         val dialogContent = modalDialogContentLive.observeAsState()
         val showFilter = showFilterLive.observeAsState(false)
         val launchUrl = launchUrlLive.observeAsState()
-
+        if (authPrefs.get<String>("access_token") != null) {
+            if ((mainPrefs.get<Int>("version") ?: 25) <= 25) {
+                modalDialogCloseListenerLive.value = {
+                    mainPrefs.save("version" to BuildConfig.VERSION_CODE)
+                    logOut("Migration from version 25")
+                }
+                modalDialogContentLive.value = {
+                    MigrationDialog { modalDialogCloseListenerLive.value?.invoke() }
+                }
+                modalDialogStateLive.value = true
+            } else if (mainPrefs.get<Int>("version") != BuildConfig.VERSION_CODE) {
+                mainPrefs.save("version" to BuildConfig.VERSION_CODE)
+            }
+        } else if (mainPrefs.get<Int>("version") != BuildConfig.VERSION_CODE) {
+            mainPrefs.save("version" to BuildConfig.VERSION_CODE)
+        }
 
         if (launchUrl.value != null) {
             val tabIntent = CustomTabsIntent.Builder().build()
@@ -230,6 +255,9 @@ class MainActivity : FragmentActivity() {
                             }
                         }
                     }, actions = {
+                        if (BuildConfig.DEBUG || mainPrefs.get<Boolean>("force_debug") == true) {
+                            DebugMenu(this@MainActivity)
+                        }
                         if (localLoadedState && currentScreen.value == Screen.MainNav) {
                             val currentRoute =
                                 navController.value!!.currentBackStackEntryAsState().value?.destination?.route
@@ -248,6 +276,19 @@ class MainActivity : FragmentActivity() {
                                         Icon(
                                             Icons.Rounded.Settings,
                                             stringResource(id = R.string.settings)
+                                        )
+                                    }
+                                }
+                            }
+                            AnimatedVisibility(currentRoute == NavSection.Daybook.route) {
+                                Row {
+                                    IconButton(onClick = {
+                                        modalDialogContentLive.value = { DayChooser() }
+                                        modalDialogStateLive.postValue(true)
+                                    }) {
+                                        Icon(
+                                            Icons.Rounded.CalendarMonth,
+                                            stringResource(id = R.string.by_date)
                                         )
                                     }
                                 }
@@ -271,6 +312,50 @@ class MainActivity : FragmentActivity() {
                                         contentDependentAction.value?.invoke()
                                     }
 
+                                }
+                            }
+                        } else if (currentScreen.value == Screen.Login) {
+                            var expanded by remember { mutableStateOf(false) }
+                            var showAboutDialog by remember { mutableStateOf(false) }
+                            IconButton(onClick = { expanded = !expanded }) {
+                                Icon(
+                                    Icons.Rounded.MoreVert,
+                                    stringResource(R.string.menu)
+                                )
+                            }
+                            DropdownMenu(expanded, { expanded = false }) {
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.log_in_by_token)) },
+                                    onClick = {
+                                        modalDialogContentLive.value = { TokenLogin() }
+                                        modalDialogStateLive.postValue(true)
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.about)) },
+                                    onClick = { showAboutDialog = true })
+                            }
+                            AnimatedVisibility(showAboutDialog) {
+                                Dialog(
+                                    onDismissRequest = { showAboutDialog = false },
+                                    properties = DialogProperties(
+                                        usePlatformDefaultWidth = false
+                                    )
+                                ) {
+                                    Surface(Modifier.fillMaxSize()) {
+                                        Column(Modifier.verticalScroll(rememberScrollState())) {
+                                            IconButton(
+                                                onClick = { showAboutDialog = false },
+                                                Modifier.padding(8.dp)
+                                            ) {
+                                                Icon(
+                                                    Icons.AutoMirrored.Rounded.ArrowBack,
+                                                    stringResource(R.string.back)
+                                                )
+                                            }
+                                            About()
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -351,11 +436,15 @@ class MainActivity : FragmentActivity() {
                     }
                 }
                 if (showDialog.value == true) {
-                    Dialog(onDismissRequest = { modalDialogStateLive.postValue(false) }) {
+                    Dialog(onDismissRequest = {
+                        modalDialogStateLive.postValue(false)
+                        modalDialogCloseListenerLive.value?.invoke()
+                        modalDialogCloseListenerLive.value = {}
+                    }) {
                         Card(
                             Modifier.fillMaxWidth(),
-                            shape = MaterialTheme.shapes.large,
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                            shape = MaterialTheme.shapes.extraLarge,
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)
                         ) {
                             dialogContent.value?.invoke()
                         }

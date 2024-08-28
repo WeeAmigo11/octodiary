@@ -1,4 +1,4 @@
-package org.bxkr.octodiary.components.profile
+package org.bxkr.octodiary.screens.navsections.profile
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState

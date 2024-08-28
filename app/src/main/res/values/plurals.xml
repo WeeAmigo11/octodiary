@@ -8,4 +8,7 @@
         <item quantity="two">%1$d students</item>
         <item quantity="other">%1$d students</item>
     </plurals>
+    <plurals name="minute_break">
+        <item quantity="other">%1$d minute break</item>
+    </plurals>
 </resources>
