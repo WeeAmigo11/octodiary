@@ -1,7 +1,5 @@
-package org.bxkr.octodiary.components.profile
+package org.bxkr.octodiary.screens.navsections.profile
 
-import android.content.Intent
-import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -17,11 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.AlternateEmail
 import androidx.compose.material.icons.rounded.ArrowDropDown
-import androidx.compose.material.icons.rounded.Language
-import androidx.compose.material.icons.rounded.LocationCity
-import androidx.compose.material.icons.rounded.Phone
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
@@ -39,79 +33,51 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import org.bxkr.octodiary.DataService
 import org.bxkr.octodiary.R
+import org.bxkr.octodiary.formatToHumanDate
+import org.bxkr.octodiary.parseFromDay
 
 @Composable
-fun School() {
+fun PersonalData() {
     Column(
         Modifier
             .padding(16.dp)
             .fillMaxWidth()
     ) {
-        val context = LocalContext.current
-        with(DataService.schoolInfo) {
-            Text(name, style = MaterialTheme.typography.titleMedium)
-            if (null !in listOf(address.county, address.district, address.address)) {
-                val address = address.run { "${county ?: ""} ${district ?: ""} ${address ?: ""}" }
-                TextWithIcon(icon = Icons.Rounded.LocationCity) {
-                    Text(
-                        address,
-                        Modifier.clickable {
-                            Intent(
-                                Intent.ACTION_VIEW,
-                                Uri.parse("geo:55.76,37.62?q=$address")
-                            ).let {
-                                context.startActivity(it)
-                            }
+        val clipboardManager = LocalClipboardManager.current
+        with(DataService.profile.children[DataService.currentProfile]) {
+            Text("$lastName $firstName $middleName", style = MaterialTheme.typography.titleMedium)
+            Text(
+                stringResource(R.string.birth_date_t, birthDate.parseFromDay().formatToHumanDate())
+            )
+            Row {
+                Text(stringResource(R.string.snils_t))
+                var snilsShown by remember { mutableStateOf(false) }
+                var snilsCopied by remember { mutableStateOf(false) }
+                AnimatedVisibility(!snilsShown) {
+                    Text(stringResource(R.string.show), Modifier.clickable {
+                        if (!snilsCopied) {
+                            clipboardManager.setText(AnnotatedString(snils))
+                            snilsCopied = true
                         }
-                    )
+                        snilsShown = true
+                    }, color = MaterialTheme.colorScheme.secondary)
+                }
+                AnimatedVisibility(snilsShown) {
+                    Text(snils, Modifier.clickable {
+                        snilsShown = false
+                    })
                 }
             }
-            if (phone != null) {
-                TextWithIcon(icon = Icons.Rounded.Phone) {
-                    Text(
-                        "+7 $phone",
-                        Modifier.clickable {
-                            Intent(Intent.ACTION_DIAL, Uri.parse("tel:+7$phone")).let {
-                                context.startActivity(it)
-                            }
-                        }
-                    )
-                }
-            }
-            if (email != null) {
-                TextWithIcon(icon = Icons.Rounded.AlternateEmail) {
-                    Text(
-                        email,
-                        Modifier.clickable {
-                            Intent(Intent.ACTION_VIEW, Uri.parse("mailto:$email")).let {
-                                context.startActivity(it)
-                            }
-                        }
-                    )
-                }
-            }
-            if (websiteLink != null) {
-                TextWithIcon(icon = Icons.Rounded.Language) {
-                    Text(
-                        websiteLink,
-                        Modifier.clickable {
-                            Intent(Intent.ACTION_VIEW, Uri.parse("https://$websiteLink")).let {
-                                context.startActivity(it)
-                            }
-                        },
-                        textDecoration = TextDecoration.Underline,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
-                }
-            }
-            var teachersExpanded by remember { mutableStateOf(false) }
+
+
+            var representativesExpanded by remember { mutableStateOf(false) }
             var rotation by remember { mutableFloatStateOf(0f) }
             val enterTransition = remember {
                 expandVertically(
@@ -125,7 +91,7 @@ fun School() {
             }
             ElevatedCard(Modifier.padding(top = 16.dp)) {
                 Column(Modifier.clickable {
-                    teachersExpanded = !teachersExpanded
+                    representativesExpanded = !representativesExpanded
                     rotation += 180f
                 }) {
                     Row(
@@ -135,7 +101,7 @@ fun School() {
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            stringResource(R.string.teachers),
+                            stringResource(R.string.representatives),
                             style = MaterialTheme.typography.titleMedium
                         )
                         Icon(
@@ -155,10 +121,10 @@ fun School() {
                         )
                     }
                     AnimatedVisibility(
-                        teachersExpanded, enter = enterTransition, exit = exitTransition
+                        representativesExpanded, enter = enterTransition, exit = exitTransition
                     ) {
                         LazyColumn(Modifier.padding(horizontal = 16.dp)) {
-                            items(teachers) {
+                            items(representatives) {
                                 Card(
                                     Modifier
                                         .fillMaxWidth()
@@ -169,19 +135,23 @@ fun School() {
                                         )
                                     )
                                 ) {
+                                    val context = LocalContext.current
                                     Column(Modifier.padding(16.dp)) {
                                         Text(
                                             "${it.lastName} ${it.firstName} ${it.middleName}",
                                             style = MaterialTheme.typography.titleMedium
                                         )
-                                        Column {
-                                            it.subjectNames.forEach {
-                                                Text(
-                                                    it,
-                                                    style = MaterialTheme.typography.labelMedium
+                                        Text(
+                                            stringResource(R.string.phone_t, it.phone),
+                                            Modifier.clickable {
+                                                clipboardManager.setText(
+                                                    AnnotatedString(
+                                                        context.getString(
+                                                            R.string.phone_minimized_t, it.phone
+                                                        )
+                                                    )
                                                 )
-                                            }
-                                        }
+                                            })
                                     }
                                 }
                             }
@@ -190,13 +160,5 @@ fun School() {
                 }
             }
         }
-    }
-}
-
-@Composable
-fun TextWithIcon(icon: ImageVector, text: @Composable () -> Unit) {
-    Row(Modifier.padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-        Icon(imageVector = icon, contentDescription = "", modifier = Modifier.padding(end = 8.dp))
-        text.invoke()
     }
 }

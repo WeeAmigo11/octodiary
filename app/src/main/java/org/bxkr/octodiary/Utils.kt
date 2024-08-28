@@ -13,16 +13,23 @@ import android.net.Uri
 import android.text.Layout
 import android.util.Log
 import androidx.annotation.RawRes
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.asAndroidPath
 import androidx.compose.ui.graphics.asComposePath
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -607,3 +614,16 @@ fun simpleMark(value: Int, weight: Int = 1) = Mark(
     values = null,
     weight = weight
 )
+
+@Composable
+fun TextWithIcon(icon: ImageVector, text: @Composable () -> Unit) {
+    Row(Modifier, verticalAlignment = Alignment.CenterVertically) {
+        Icon(imageVector = icon, contentDescription = "", modifier = Modifier.padding(end = 8.dp))
+        text.invoke()
+    }
+}
+
+@Composable
+fun TextWithIcon(icon: ImageVector, text: String) {
+    TextWithIcon(icon) { Text(text) }
+}

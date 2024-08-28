@@ -1,4 +1,4 @@
-package org.bxkr.octodiary.screens.navsections
+package org.bxkr.octodiary.screens.navsections.profile
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -34,9 +34,6 @@ import kotlinx.coroutines.launch
 import org.bxkr.octodiary.DataService
 import org.bxkr.octodiary.Diary
 import org.bxkr.octodiary.R
-import org.bxkr.octodiary.components.profile.ClassInfo
-import org.bxkr.octodiary.components.profile.PersonalData
-import org.bxkr.octodiary.components.profile.School
 import org.bxkr.octodiary.modalBottomSheetContentLive
 import org.bxkr.octodiary.modalBottomSheetStateLive
 import org.bxkr.octodiary.snackbarHostStateLive
@@ -134,7 +131,7 @@ fun RowScope.SectionGridItem(title: String, icon: ImageVector, onClick: () -> Un
     }
 }
 
-fun openBottomSheet(content: @Composable () -> Unit) {
+private fun openBottomSheet(content: @Composable () -> Unit) {
     modalBottomSheetStateLive.postValue(true)
     modalBottomSheetContentLive.postValue(content)
 }

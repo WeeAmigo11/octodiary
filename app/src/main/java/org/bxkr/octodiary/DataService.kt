@@ -8,6 +8,7 @@ import org.bxkr.octodiary.models.classmembers.ClassMember
 import org.bxkr.octodiary.models.classmembers.OctoClassMembers
 import org.bxkr.octodiary.models.classranking.RankingMember
 import org.bxkr.octodiary.models.events.Event
+import org.bxkr.octodiary.models.govexams.GovExamsResponse
 import org.bxkr.octodiary.models.homeworks.Homework
 import org.bxkr.octodiary.models.lessonschedule.LessonSchedule
 import org.bxkr.octodiary.models.mark.MarkInfo
@@ -37,23 +38,6 @@ object DataService {
     lateinit var schoolSessionApi: SchoolSessionAPI
 
     lateinit var token: String
-
-    val mapOfDemoResourceIds = mapOf(
-        ::userId to R.raw.demo_user_id,
-        ::sessionUser to R.raw.demo_session_user,
-        ::eventCalendar to R.raw.demo_event_calendar,
-        ::eventsRange to R.raw.demo_events_range,
-        ::ranking to R.raw.demo_ranking,
-        ::classMembers to R.raw.demo_class_members,
-        ::profile to R.raw.demo_profile,
-        ::visits to R.raw.demo_visits,
-        ::marksDate to R.raw.demo_marks_date,
-        ::marksSubject to R.raw.demo_marks_subject,
-        ::homeworks to R.raw.demo_homeworks,
-        ::mealBalance to R.raw.demo_meal_balance,
-        ::schoolInfo to R.raw.demo_school_info,
-        ::subjectRanking to R.raw.demo_subject_ranking
-    ).mapKeys { it.key.name }
 
     lateinit var userId: ProfilesId
     var hasUserId = false
@@ -96,6 +80,9 @@ object DataService {
     lateinit var schoolInfo: SchoolInfo
     var hasSchoolInfo = false
 
+    lateinit var govExams: GovExamsResponse
+    var hasGovExams = false
+
     // ADD_NEW_FIELD_HERE
     // Don't forget to add demo cache data in res/raw folder, preferably with MES flavor
 
@@ -115,7 +102,8 @@ object DataService {
                 ::hasHomeworks,
                 ::hasMealBalance.takeIf { subsystem == Diary.MES },
                 ::hasSchoolInfo,
-                ::hasSubjectRanking
+                ::hasSubjectRanking,
+                ::hasGovExams
             )
 
     val fields
@@ -134,8 +122,27 @@ object DataService {
                 ::homeworks,
                 ::mealBalance.takeIf { subsystem == Diary.MES },
                 ::schoolInfo,
-                ::subjectRanking
+                ::subjectRanking,
+                ::govExams
             )
+
+    val mapOfDemoResourceIds = mapOf(
+        ::userId to R.raw.demo_user_id,
+        ::sessionUser to R.raw.demo_session_user,
+        ::eventCalendar to R.raw.demo_event_calendar,
+        ::eventsRange to R.raw.demo_events_range,
+        ::ranking to R.raw.demo_ranking,
+        ::classMembers to R.raw.demo_class_members,
+        ::profile to R.raw.demo_profile,
+        ::visits to R.raw.demo_visits,
+        ::marksDate to R.raw.demo_marks_date,
+        ::marksSubject to R.raw.demo_marks_subject,
+        ::homeworks to R.raw.demo_homeworks,
+        ::mealBalance to R.raw.demo_meal_balance,
+        ::schoolInfo to R.raw.demo_school_info,
+        ::subjectRanking to R.raw.demo_subject_ranking,
+        ::govExams to R.raw.demo_gov_exams
+    ).mapKeys { it.key.name }
 
     val loadedEverything = mutableStateOf(false)
 
@@ -427,6 +434,26 @@ object DataService {
         }
     }
 
+    fun updateGovExams(onUpdated: () -> Unit) {
+        require(this::token.isInitialized)
+        require(this::profile.isInitialized)
+
+        val onError = {
+            govExams = GovExamsResponse(listOf(), "OK")
+            hasGovExams = true
+            onUpdated()
+        }
+
+        secondaryApi.govExams(
+            "Bearer $token",
+            profile.children[currentProfile].contingentGuid
+        ).baseEnqueue({ _, _, _ -> onError() }, { _, _ -> onError() }) {
+            govExams = it
+            hasGovExams = true
+            onUpdated()
+        }
+    }
+
     fun getRankingForSubject(
         subjectId: Long,
         errorListener: (String) -> Unit,
@@ -560,6 +587,7 @@ object DataService {
                         onSingleItemLoad(::classMembers.name)
                         onSingleItemLoad(::ranking.name)
                     }
+                    updateGovExams { onSingleItemLoad(::govExams.name) }
                     updateSubjectRanking { onSingleItemLoad(::subjectRanking.name) }
                     if (subsystem == Diary.MES) updateVisits { onSingleItemLoad(::visits.name) }
                     if (subsystem == Diary.MES) updateMealBalance { onSingleItemLoad(::mealBalance.name) }

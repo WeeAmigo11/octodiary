@@ -158,7 +158,7 @@
     <string name="show">показать</string>
     <string name="visits_t">Посещение %1$s</string>
     <string name="hello_t">Привет, %1$s!</string>
-    <string name="class_t">%1$s класс</string>
+    <string name="class_t">Класс %1$s</string>
     <string name="balance_t">%1$s ₽</string>
     <string name="personal_data">Личные данные</string>
     <string name="class_label">Класс</string>
@@ -294,4 +294,8 @@
     <string name="c26_highlighting_title">Подсветка оценок</string>
     <string name="c26_highlighting_subtitle">Плохие оценки стали заметнее (можно отключить в настройках)</string>
     <string name="no_periods_yet">пока нет периодов</string>
+    <string name="school_and_teachers">Школа и учителя</string>
+    <string name="exam_results">Экзамены</string>
+    <string name="other">Другое</string>
+    <string name="gia_title">Государственная итоговая аттестация</string>
 </resources>

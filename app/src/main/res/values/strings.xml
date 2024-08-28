@@ -347,6 +347,12 @@
     <string name="c26_calc_title">Mark calculator</string>
     <string name="c26_calc_subtitle">Count your future average and final grades</string>
     <string name="c26_highlighting_title">Mark highlighting</string>
-    <string name="c26_highlighting_subtitle">Bad marks became more noticable (you can disalbe this in settings)</string>
+    <string name="c26_highlighting_subtitle">Bad marks became more noticeable (you can disable this in settings)</string>
     <string name="no_periods_yet">no periods yet</string>
+    <string name="school_and_teachers">School and teachers</string>
+    <string name="exam_results">Exam results</string>
+    <string name="ege" translatable="false">ЕГЭ</string>
+    <string name="oge" translatable="false">ОГЭ</string>
+    <string name="other">Other</string>
+    <string name="gia_title">State final certification</string>
 </resources>
