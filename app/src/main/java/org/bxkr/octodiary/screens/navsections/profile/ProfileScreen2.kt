@@ -66,7 +66,7 @@ private fun Cards() {
     Column(
         Modifier
             .padding(16.dp)
-            .clip(MaterialTheme.shapes.medium),
+            .clip(MaterialTheme.shapes.large),
         verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
         ProfileCard(R.string.personal_data, Icons.Rounded.Person) { PersonalData() }

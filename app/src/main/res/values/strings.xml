@@ -355,4 +355,14 @@
     <string name="oge" translatable="false">ОГЭ</string>
     <string name="other">Other</string>
     <string name="gia_title">State final certification</string>
+    <string name="approbation">Approbation</string>
+    <string name="approbation_suffix">(approbation)</string>
+    <string name="variant">Variant</string>
+    <string name="results">Results</string>
+    <string name="t_points_of_t">%s/%s points</string>
+    <string name="t_points">%s points</string>
+    <string name="part_a">Part A</string>
+    <string name="part_b">Part B</string>
+    <string name="part_c">Part C</string>
+    <string name="part_d">Part D</string>
 </resources>

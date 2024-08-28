@@ -33,7 +33,7 @@ data class Exam(
     @SerializedName("subjectID")
     val subjectID: Int,
     @SerializedName("timeStamp")
-    val timeStamp: Int,
+    val timeStamp: Long,
 ) {
     enum class ExamCategories {
         UnifiedStateExam, // "ЕГЭ", "YeGE".

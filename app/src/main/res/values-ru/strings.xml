@@ -298,4 +298,14 @@
     <string name="exam_results">Экзамены</string>
     <string name="other">Другое</string>
     <string name="gia_title">Государственная итоговая аттестация</string>
+    <string name="approbation">Пробники</string>
+    <string name="approbation_suffix">(пробный)</string>
+    <string name="variant">Вариант</string>
+    <string name="results">Результаты</string>
+    <string name="t_points_of_t">%s/%s баллов</string>
+    <string name="t_points">%s баллов</string>
+    <string name="part_a">Часть A</string>
+    <string name="part_b">Часть B</string>
+    <string name="part_c">Часть C</string>
+    <string name="part_d">Часть D</string>
 </resources>
