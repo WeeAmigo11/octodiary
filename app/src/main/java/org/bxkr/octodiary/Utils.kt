@@ -316,13 +316,27 @@ fun Date.formatToTime(): String = SimpleDateFormat("HH:mm", Locale.ROOT).format(
 @ReadOnlyComposable
 @Composable
 fun Date.formatToLongHumanDate(): String =
-    SimpleDateFormat("d LLL yyyy H:mm", LocalConfiguration.current.locales[0]).format(this)
+    SimpleDateFormat("d MMMM yyyy H:mm", LocalConfiguration.current.locales[0]).format(this)
+
+/** Formats [Date] to human date [String] without time **/
+@ReadOnlyComposable
+@Composable
+fun Date.formatToLongHumanDateNoTime(): String =
+    SimpleDateFormat("d MMMM yyyy", LocalConfiguration.current.locales[0]).format(this)
+
+/** Formats [Date] to human date [String] with joiner **/
+@ReadOnlyComposable
+@Composable
+fun Date.formatToLongHumanDate(joiner: String): String =
+    SimpleDateFormat("d MMMM yyyy '$joiner' H:mm", LocalConfiguration.current.locales[0]).format(
+        this
+    )
 
 /** Parses [String] of long date without TZ and then formats it to human date [String] **/
 @ReadOnlyComposable
 @Composable
 fun parseSimpleLongAndFormatToLong(toFormat: String, joiner: String): String =
-    SimpleDateFormat("d LLL yyyy '$joiner' H:mm", LocalConfiguration.current.locales[0]).format(
+    SimpleDateFormat("d MMMM yyyy '$joiner' H:mm", LocalConfiguration.current.locales[0]).format(
         toFormat.parseSimpleLongDate()
     )
 
