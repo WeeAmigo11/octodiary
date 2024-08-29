@@ -1,41 +1,35 @@
 package org.bxkr.octodiary.screens.navsections.profile
 
+import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.HelpOutline
-import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.ContentPaste
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Text
@@ -44,7 +38,6 @@ import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.livedata.observeAsState
@@ -59,12 +52,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.MutableLiveData
 import com.google.gson.Gson
 import kotlinx.coroutines.launch
 import org.bxkr.octodiary.CachePrefs
+import org.bxkr.octodiary.CloverShape
 import org.bxkr.octodiary.DataService
 import org.bxkr.octodiary.R
 import org.bxkr.octodiary.cachePrefs
@@ -74,15 +69,14 @@ import org.bxkr.octodiary.mainPrefs
 import org.bxkr.octodiary.modalDialogCloseListenerLive
 import org.bxkr.octodiary.modalDialogContentLive
 import org.bxkr.octodiary.modalDialogStateLive
+import org.bxkr.octodiary.models.classmembers.Assignment
 import org.bxkr.octodiary.models.classmembers.ClassMember
 import org.bxkr.octodiary.models.classmembers.OctoClassMembers
-import org.bxkr.octodiary.models.classmembers.User
 import org.bxkr.octodiary.save
 import org.bxkr.octodiary.screens.navsections.dashboard.RankingList
 
 private val infoRecomposeTrigger = MutableLiveData(false)
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ClassInfo() {
     val trigger by infoRecomposeTrigger.observeAsState()
@@ -143,21 +137,6 @@ fun ClassInfo() {
                                     )
                                 )
                             }
-                            if (!LocalContext.current.isDemo) OutlinedButton({
-                                modalDialogContentLive.value = {
-                                    AddStudentDialog()
-                                }
-                                modalDialogCloseListenerLive.value = { }
-                                modalDialogStateLive.value = true
-                            }, contentPadding = ButtonDefaults.ButtonWithIconContentPadding) {
-                                Icon(
-                                    Icons.Rounded.Add,
-                                    stringResource(id = R.string.image),
-                                    Modifier.size(ButtonDefaults.IconSize)
-                                )
-                                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                                Text(stringResource(R.string.add_student))
-                            }
                         }
                         Row(
                             Modifier
@@ -182,7 +161,7 @@ fun ClassInfo() {
                             Modifier.clip(MaterialTheme.shapes.large),
                             verticalArrangement = Arrangement.spacedBy(2.dp)
                         ) {
-                            items(classMembers) {
+                            items(classMembers.sortedBy { it.fio }) {
                                 var showDropdown by remember { mutableStateOf(false) }
                                 Box {
                                     Card(
@@ -193,9 +172,7 @@ fun ClassInfo() {
                                         Row(
                                             Modifier
                                                 .fillMaxWidth()
-                                                .combinedClickable(onLongClick = {
-                                                    showDropdown = true
-                                                }) { showDropdown = false }
+                                                .clickable { showDropdown = true }
                                                 .padding(16.dp),
                                             horizontalArrangement = Arrangement.SpaceBetween,
                                             verticalAlignment = Alignment.CenterVertically
@@ -208,14 +185,15 @@ fun ClassInfo() {
                                                 Text(it.user.run { "$firstName ${middleName ?: ""}" })
                                             }
                                             if (LocalContext.current.mainPrefs.get<Boolean>("main_rating") != false) {
-                                                FilledTonalIconButton(
-                                                    onClick = { showRanking = true },
-                                                    shape = MaterialTheme.shapes.small
+                                                FilledIconButton(
+                                                    { showRanking = true },
+                                                    shape = CloverShape
                                                 ) {
                                                     Text(
                                                         ranking.firstOrNull { rankingMember -> it.personId == rankingMember.personId }?.rank?.rankPlace?.toString()
                                                             ?: "?",
-                                                        style = MaterialTheme.typography.labelLarge
+                                                        style = MaterialTheme.typography.titleMedium,
+                                                        fontWeight = FontWeight.Bold
                                                     )
                                                 }
                                             }
@@ -224,18 +202,19 @@ fun ClassInfo() {
 
                                     val context = LocalContext.current
                                     DropdownMenu(
-                                        showDropdown && it.isCustom,
+                                        showDropdown && LocalContext.current.mainPrefs.get<Boolean>(
+                                            "main_rating"
+                                        ) != false && !context.isDemo,
                                         { showDropdown = false }
                                     ) {
                                         DropdownMenuItem(
-                                            { Text(stringResource(R.string.delete)) },
+                                            { Text(stringResource(R.string.assign_id)) },
                                             {
-                                                it.personId?.let { it1 ->
-                                                    deleteStudent(
-                                                        it1,
-                                                        context.cachePrefs
-                                                    )
+                                                modalDialogContentLive.value = {
+                                                    AssignIdDialog(it)
                                                 }
+                                                modalDialogCloseListenerLive.value = { }
+                                                modalDialogStateLive.value = true
                                             })
                                     }
                                 }
@@ -250,94 +229,99 @@ fun ClassInfo() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AddStudentDialog() {
-    var lastName by remember { mutableStateOf("") }
-    var firstName by remember { mutableStateOf("") }
-    var middleName by remember { mutableStateOf("") }
+private fun AssignIdDialog(member: ClassMember) {
     var personId by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
     val context = LocalContext.current
-    AlertDialog({
-        modalDialogStateLive.value = false
-        modalDialogContentLive.value = {}
-    }, confirmButton = {
-        TextButton({
-            if (false !in listOf(
-                    lastName,
-                    firstName,
-                    middleName,
-                    personId
-                ).map { it.isNotBlank() }
-            ) {
-                isLoading = true
-                addNewStudent(
-                    User(firstName, lastName, middleName),
-                    personId, context.cachePrefs
+    val clipboardManager = LocalClipboardManager.current
+    val getCopiedString = { clipboardManager.getText()?.toString() ?: "" }
+
+    AlertDialog(
+        {
+            modalDialogStateLive.value = false
+            modalDialogContentLive.value = {}
+        },
+        confirmButton = {
+            TextButton({
+                if (personId.isNotBlank() && member.studentId != null) {
+                    isLoading = true
+                    assignPersonId(
+                        member.studentId,
+                        personId,
+                        context.cachePrefs
+                    ) {
+                        isLoading = false
+                        modalDialogStateLive.value = false
+                        modalDialogContentLive.value = {}
+                    }
+                }
+            }, enabled = !isLoading) {
+                Text(stringResource(R.string.assign))
+            }
+        },
+        title = { Text(stringResource(R.string.assign_id)) },
+        icon = {
+            AnimatedVisibility(!isLoading) {
+                val tooltipState = rememberTooltipState(isPersistent = true)
+                val coroutineScope = rememberCoroutineScope()
+                TooltipBox(
+                    TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                    {
+                        PlainTooltip {
+                            Text(
+                                stringResource(
+                                    R.string.assign_id_help_description,
+                                    stringResource(DataService.subsystem.title)
+                                )
+                            )
+                        }
+                    },
+                    tooltipState
                 ) {
-                    isLoading = false
-                    modalDialogStateLive.value = false
-                    modalDialogContentLive.value = {}
+                    IconButton({
+                        coroutineScope.launch {
+                            tooltipState.show()
+                        }
+                    }) {
+                        Icon(
+                            Icons.AutoMirrored.Rounded.HelpOutline,
+                            stringResource(R.string.what_is_it),
+                            tint = MaterialTheme.colorScheme.secondary
+                        )
+                    }
                 }
             }
-        }, enabled = !isLoading) {
-            Text(stringResource(R.string.add))
-        }
-    }, title = {
-        Text(
-            stringResource(R.string.new_student)
-        )
-    }, text = {
-        CompositionLocalProvider(LocalTextStyle provides MaterialTheme.typography.bodyLarge) {
+            AnimatedVisibility(isLoading) {
+                CircularProgressIndicator()
+            }
+        },
+        text = {
             Column {
-                val clipboardManager = LocalClipboardManager.current
-                val getCopiedString = { clipboardManager.getText()?.toString() ?: "" }
-                textField(lastName, { lastName = it }, stringResource(R.string.last_name))
-                textField(firstName, { firstName = it }, stringResource(R.string.first_name))
-                textField(middleName, { middleName = it }, stringResource(R.string.middle_name))
-                textField(
-                    personId,
-                    { personId = it },
-                    stringResource(R.string.student_id),
+                Text(member.fio)
+                textField(personId, { personId = it }, R.string.student_id,
                     helpCopy = true,
                     onHelpCopyClick = { personId = getCopiedString() })
             }
         }
-    }, icon = {
-        AnimatedVisibility(!isLoading) {
-            val tooltipState = rememberTooltipState(isPersistent = true)
-            val coroutineScope = rememberCoroutineScope()
-            TooltipBox(
-                TooltipDefaults.rememberPlainTooltipPositionProvider(),
-                {
-                    PlainTooltip {
-                        Text(
-                            stringResource(
-                                R.string.add_students_help_description,
-                                stringResource(DataService.subsystem.title)
-                            )
-                        )
-                    }
-                },
-                tooltipState
-            ) {
-                IconButton({
-                    coroutineScope.launch {
-                        tooltipState.show()
-                    }
-                }) {
-                    Icon(
-                        Icons.AutoMirrored.Rounded.HelpOutline,
-                        stringResource(R.string.what_is_it),
-                        tint = MaterialTheme.colorScheme.secondary
-                    )
-                }
-            }
-        }
-        AnimatedVisibility(isLoading) {
-            CircularProgressIndicator()
-        }
-    })
+    )
 }
+
+@Composable
+private fun textField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    @StringRes hint: Int,
+    helpCopy: Boolean = false,
+    onHelpCopyClick: () -> Unit = {},
+    imeAction: ImeAction = ImeAction.Next,
+) = textField(
+    value,
+    onValueChange,
+    stringResource(hint),
+    helpCopy,
+    onHelpCopyClick,
+    imeAction
+)
 
 @Composable
 private fun textField(
@@ -365,32 +349,54 @@ private fun textField(
     )
 }
 
-private fun addNewStudent(
-    names: User,
+private fun assignPersonId(
+    studentId: Long,
     personId: String,
     cachePrefs: CachePrefs,
     onUpdated: () -> Unit,
 ) {
-    val newMember = ClassMember(
-        personId, names, true
-    )
-    val newClassMembers = DataService.classMembers + listOf(newMember)
+    val classMember =
+        DataService.classMembers.first { it.studentId == studentId }.copy(personId = personId)
+    val newClassMembers =
+        DataService.classMembers.filter { it.studentId != studentId } + listOf(classMember)
+    val assignments = newClassMembers
+        .filter { it.personId != null && it.studentId != null }
+        .map { Assignment(studentId, personId) }
+
     DataService.classMembers = newClassMembers
     cachePrefs.save("classMembers" to newClassMembers.let { Gson().toJson(it) })
-    DataService.pushUserSettings("od_class_members", OctoClassMembers(DataService.classMembers)) {
+    DataService.pushUserSettings("od_class_members_assignments", OctoClassMembers(assignments)) {
         infoRecomposeTrigger.postValue(infoRecomposeTrigger.value?.not())
         onUpdated()
     }
 }
 
-private fun deleteStudent(
-    personId: String,
-    cachePrefs: CachePrefs,
-) {
-    val newClassMembers = DataService.classMembers.filter { it.personId != personId }
-    DataService.classMembers = newClassMembers
-    cachePrefs.save("classMembers" to newClassMembers.let { Gson().toJson(it) })
-    DataService.pushUserSettings("od_class_members", OctoClassMembers(DataService.classMembers)) {
-        infoRecomposeTrigger.postValue(infoRecomposeTrigger.value?.not())
-    }
-}
+//private fun addNewStudent(
+//    names: User,
+//    personId: String,
+//    cachePrefs: CachePrefs,
+//    onUpdated: () -> Unit,
+//) {
+//    val newMember = ClassMember(
+//        personId, names, true
+//    )
+//    val newClassMembers = DataService.classMembers + listOf(newMember)
+//    DataService.classMembers = newClassMembers
+//    cachePrefs.save("classMembers" to newClassMembers.let { Gson().toJson(it) })
+//    DataService.pushUserSettings("od_class_members", OctoClassMembers(DataService.classMembers)) {
+//        infoRecomposeTrigger.postValue(infoRecomposeTrigger.value?.not())
+//        onUpdated()
+//    }
+//}
+//
+//private fun deleteStudent(
+//    personId: String,
+//    cachePrefs: CachePrefs,
+//) {
+//    val newClassMembers = DataService.classMembers.filter { it.personId != personId }
+//    DataService.classMembers = newClassMembers
+//    cachePrefs.save("classMembers" to newClassMembers.let { Gson().toJson(it) })
+//    DataService.pushUserSettings("od_class_members", OctoClassMembers(DataService.classMembers)) {
+//        infoRecomposeTrigger.postValue(infoRecomposeTrigger.value?.not())
+//    }
+//}

@@ -365,4 +365,9 @@
     <string name="part_b">Part B</string>
     <string name="part_c">Part C</string>
     <string name="part_d">Part D</string>
+    <string name="assign_id">Assign ID</string>
+    <string name="assign">Assign</string>
+    <string name="assign_id_help_description">If your rating became anonymous, you can assign ID to students from rating, and their names will appear in ratings. This data will be saved in your %s account, so you won\'t be required to fill this information again when re-logging.</string>
+    <string name="avatar">Avatar</string>
+    <string name="choose_from_gallery">Choose from gallery</string>
 </resources>

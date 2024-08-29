@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.compose.runtime.mutableStateOf
 import com.google.gson.Gson
 import okhttp3.ResponseBody
+import org.bxkr.octodiary.models.avatar.Avatar
 import org.bxkr.octodiary.models.classmembers.ClassMember
 import org.bxkr.octodiary.models.classmembers.OctoClassMembers
 import org.bxkr.octodiary.models.classranking.RankingMember
@@ -83,6 +84,9 @@ object DataService {
     lateinit var govExams: GovExamsResponse
     var hasGovExams = false
 
+    lateinit var avatars: List<Avatar>
+    var hasAvatars = false
+
     // ADD_NEW_FIELD_HERE
     // Don't forget to add demo cache data in res/raw folder, preferably with MES flavor
 
@@ -103,7 +107,8 @@ object DataService {
                 ::hasMealBalance.takeIf { subsystem == Diary.MES },
                 ::hasSchoolInfo,
                 ::hasSubjectRanking,
-                ::hasGovExams
+                ::hasGovExams,
+                ::hasAvatars
             )
 
     val fields
@@ -123,7 +128,8 @@ object DataService {
                 ::mealBalance.takeIf { subsystem == Diary.MES },
                 ::schoolInfo,
                 ::subjectRanking,
-                ::govExams
+                ::govExams,
+                ::avatars
             )
 
     val mapOfDemoResourceIds = mapOf(
@@ -141,7 +147,8 @@ object DataService {
         ::mealBalance to R.raw.demo_meal_balance,
         ::schoolInfo to R.raw.demo_school_info,
         ::subjectRanking to R.raw.demo_subject_ranking,
-        ::govExams to R.raw.demo_gov_exams
+        ::govExams to R.raw.demo_gov_exams,
+        ::avatars to R.raw.demo_avatars
     ).mapKeys { it.key.name }
 
     val loadedEverything = mutableStateOf(false)
@@ -270,25 +277,42 @@ object DataService {
         }
 
         // Class members request for matching names:
-        mainSchoolApi.pullUserSettingsRaw(token, "od_class_members")
-            .baseEnqueue({ errorBody, httpCode, className ->
-                classMembers = listOf()
-                hasClassMembers = true
-                classMembersFinished = true
-                if (rankingFinished) onUpdated()
-            }, ::baseInternalExceptionFunction) { unparsed ->
+        dSchoolApi.classMembers(
+            token,
+            profile.children[currentProfile].studentId,
+            profile.children[currentProfile].classUnitId
+        ).baseEnqueue({ _, _, _ ->
+            classMembers = emptyList()
+            hasClassMembers = true
+            classMembersFinished = true
+            if (rankingFinished) onUpdated()
+        }, ::baseInternalExceptionFunction) {
+            classMembers = it
+            hasClassMembers = true
+            classMembersFinished = true
+            if (rankingFinished) onUpdated()
+        }
+    }
+
+    fun updateCustomClassMembers(onUpdated: () -> Unit) {
+        require(this::token.isInitialized)
+
+        mainSchoolApi.pullUserSettingsRaw(token, "od_class_members_assignments")
+            .baseEnqueue({ _, _, _ -> onUpdated() }, ::baseInternalExceptionFunction) { unparsed ->
                 val parsed = unparsed.fromJson<OctoClassMembers>()
-                if (parsed != null) parsed.let {
-                    classMembers = it.classMembers ?: listOf()
-                    hasClassMembers = true
-                    classMembersFinished = true
-                    if (rankingFinished) onUpdated()
-                } else {
-                    classMembers = listOf()
-                    hasClassMembers = true
-                    classMembersFinished = true
-                    if (rankingFinished) onUpdated()
-                }
+                if (parsed != null) parsed.assignments.let { assignments ->
+                    if (assignments != null) {
+                        val assignmentsStudentIds =
+                            assignments.map { assignment -> assignment.studentId }
+                        val newClassMembers = classMembers.mapNotNull {
+                            if (it.studentId in assignmentsStudentIds) {
+                                it.copy(personId = assignments.first { assignment -> assignment.studentId == it.studentId }.personId)
+                            } else null
+                        }
+                        classMembers = newClassMembers
+                    }
+                    onUpdated()
+                } else onUpdated()
             }
     }
 
@@ -454,6 +478,24 @@ object DataService {
         }
     }
 
+    fun updateAvatars(onUpdated: () -> Unit) {
+        require(this::token.isInitialized)
+        require(this::profile.isInitialized)
+
+        secondaryApi.avatars(
+            "Bearer $token",
+            profile.children[currentProfile].contingentGuid
+        ).baseEnqueue({ _, _, _ ->
+            avatars = emptyList()
+            hasAvatars = true
+            onUpdated()
+        }) {
+            avatars = it
+            hasAvatars = true
+            onUpdated()
+        }
+    }
+
     fun getRankingForSubject(
         subjectId: Long,
         errorListener: (String) -> Unit,
@@ -584,7 +626,9 @@ object DataService {
                     updateMarksSubject { onSingleItemLoad(::marksSubject.name) }
                     updateHomeworks { onSingleItemLoad(::homeworks.name) }
                     updateRanking {
-                        onSingleItemLoad(::classMembers.name)
+                        updateCustomClassMembers {
+                            onSingleItemLoad(::classMembers.name)
+                        }
                         onSingleItemLoad(::ranking.name)
                     }
                     updateGovExams { onSingleItemLoad(::govExams.name) }
@@ -592,6 +636,7 @@ object DataService {
                     if (subsystem == Diary.MES) updateVisits { onSingleItemLoad(::visits.name) }
                     if (subsystem == Diary.MES) updateMealBalance { onSingleItemLoad(::mealBalance.name) }
                     updateSchoolInfo { onSingleItemLoad(::schoolInfo.name) }
+                    updateAvatars { onSingleItemLoad(::avatars.name) }
                 }
             }
         }

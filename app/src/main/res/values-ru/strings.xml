@@ -308,4 +308,9 @@
     <string name="part_b">Часть B</string>
     <string name="part_c">Часть C</string>
     <string name="part_d">Часть D</string>
+    <string name="assign_id">Присвоить ID ученика</string>
+    <string name="assign">Присвоить</string>
+    <string name="assign_id_help_description">Если рейтинги стали анонимными, вы можете присваивать ученикам ID из рейтингов, и их имена там отобразятся. Эта информация сохраняется в вашем аккаунте %s, поэтому вам не надо будет заполнять эту информацию заново при перезаходе.</string>
+    <string name="avatar">Аватар</string>
+    <string name="choose_from_gallery">Выбрать из галереи</string>
 </resources>

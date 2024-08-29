@@ -1,8 +1,10 @@
 package org.bxkr.octodiary.network.interfaces
 
 import android.net.Uri
+import okhttp3.MultipartBody
 import org.bxkr.octodiary.Diary
 import org.bxkr.octodiary.models.auth.EsiaExchange
+import org.bxkr.octodiary.models.avatar.Avatar
 import org.bxkr.octodiary.models.classranking.RankingMember
 import org.bxkr.octodiary.models.events.EventsResponse
 import org.bxkr.octodiary.models.govexams.GovExamsResponse
@@ -13,8 +15,12 @@ import org.bxkr.octodiary.network.NetworkService.BaseUrl
 import org.bxkr.octodiary.network.NetworkService.MESAPIConfig
 import org.bxkr.octodiary.network.RegionalOnly
 import retrofit2.Call
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
+import retrofit2.http.Multipart
+import retrofit2.http.POST
+import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -163,4 +169,28 @@ interface SecondaryAPI {
         @Path("person_id") personId: String,
         @Header("Cookie") cookieHeader: String = "aupd_current_role=4:1",
     ): Call<GovExamsResponse>
+
+    @GET("api/avatarmanagement/v1/{person_id}")
+    fun avatars(
+        @Header("Authorization") authHeader: String,
+        @Path("person_id") personId: String,
+        @Header("X-Mes-Subsystem") mesSubsystem: String = MESAPIConfig.FAMILYMP,
+    ): Call<List<Avatar>>
+
+    @Multipart
+    @POST("api/avatarmanagement/v1/{person_id}")
+    fun uploadAvatar(
+        @Header("Authorization") authHeader: String,
+        @Path("person_id") personId: String,
+        @Part file: MultipartBody.Part,
+        @Header("X-Mes-Subsystem") mesSubsystem: String = MESAPIConfig.FAMILYMP,
+    ): Call<Long>
+
+    @DELETE("api/avatarmanagement/v1/{person_id}/{image_id}")
+    fun deleteAvatar(
+        @Header("Authorization") authHeader: String,
+        @Path("person_id") personId: String,
+        @Path("image_id") imageId: String,
+        @Header("X-Mes-Subsystem") mesSubsystem: String = MESAPIConfig.FAMILYMP,
+    ): Call<Unit>
 }

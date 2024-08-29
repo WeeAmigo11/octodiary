@@ -6,11 +6,16 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.MediaStore
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.animation.AnimatedContent
@@ -75,6 +80,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.app.ActivityCompat
+import androidx.core.graphics.scale
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.MutableLiveData
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -84,6 +90,9 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import okhttp3.MediaType
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import org.bxkr.octodiary.components.DebugMenu
 import org.bxkr.octodiary.components.MigrationDialog
 import org.bxkr.octodiary.components.ProfileChooser
@@ -95,8 +104,11 @@ import org.bxkr.octodiary.screens.CallbackType
 import org.bxkr.octodiary.screens.LoginScreen
 import org.bxkr.octodiary.screens.NavScreen
 import org.bxkr.octodiary.screens.navsections.daybook.DayChooser
+import org.bxkr.octodiary.screens.navsections.profile.avatarTriggerLive
 import org.bxkr.octodiary.ui.theme.CustomColorScheme
 import org.bxkr.octodiary.ui.theme.OctoDiaryTheme
+import java.io.ByteArrayOutputStream
+import java.io.File
 
 val modalBottomSheetStateLive = MutableLiveData(false)
 val modalBottomSheetContentLive = MutableLiveData<@Composable () -> Unit> {}
@@ -113,6 +125,7 @@ val reloadEverythingLive = MutableLiveData {}
 val darkThemeLive = MutableLiveData<Boolean>(null)
 val colorSchemeLive = MutableLiveData(-1)
 val launchUrlLive = MutableLiveData<Uri?>(null)
+val launchPickerLive = MutableLiveData<() -> Unit>({})
 val LocalActivity = staticCompositionLocalOf<FragmentActivity> {
     error("No LocalActivity provided!")
 }
@@ -140,6 +153,63 @@ class MainActivity : FragmentActivity() {
                 arrayOf(Manifest.permission.POST_NOTIFICATIONS),
                 1
             )
+        }
+        val picker = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+            uri ?: return@registerForActivityResult
+            val cursor = contentResolver.query(uri, null, null, null)
+            val result: String =
+                if (cursor == null) { // Source is Dropbox or other similar local file path
+                    uri.path!!
+                } else {
+                    cursor.moveToFirst()
+                    val idx = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA)
+                    val string = cursor.getString(idx)
+                    cursor.close()
+                    string
+                }
+            val file = File(result)
+            val bitmap = BitmapFactory.decodeFile(file.path)
+            val byteOutputStream = ByteArrayOutputStream()
+            bitmap.run {
+                if (height > width) {
+                    scale(200, height / (width / 200))
+                } else if (width > height) {
+                    scale(width / (height / 200), 200)
+                } else scale(200, 200)
+            }.compress(Bitmap.CompressFormat.PNG, 100, byteOutputStream)
+            val requestFile = RequestBody.create(
+                MediaType.parse("multipart/form-data"),
+                byteOutputStream.toByteArray()
+            )
+            val part = MultipartBody.Part.createFormData("file", file.name, requestFile)
+
+            val upload = {
+                DataService.secondaryApi.uploadAvatar(
+                    "Bearer ${DataService.token}",
+                    DataService.profile.children[DataService.currentProfile].contingentGuid,
+                    part
+                ).baseEnqueueOrNull {
+                    DataService.updateAvatars {
+                        modalDialogStateLive.postValue(false)
+                        avatarTriggerLive.postValue(avatarTriggerLive.value?.not() ?: true)
+                    }
+                }
+            }
+
+            DataService.run {
+                if (avatars.isNotEmpty()) {
+                    secondaryApi.deleteAvatar(
+                        "Bearer $token",
+                        profile.children[currentProfile].contingentGuid,
+                        avatars.first().id.toString()
+                    ).baseEnqueueOrNull {
+                        upload()
+                    }
+                } else upload()
+            }
+        }
+        launchPickerLive.postValue {
+            picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
         }
         enableEdgeToEdge()
         setContent {

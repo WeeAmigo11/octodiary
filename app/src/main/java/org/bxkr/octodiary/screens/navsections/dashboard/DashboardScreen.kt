@@ -133,40 +133,44 @@ fun LazyListScope.dashboardRatingVisits() {
             }
         }
         if (DataService.hasVisits && DataService.visits.payload.isNotEmpty()) {
-            val lastVisit = DataService.visits.payload.maxBy {
-                it.date.parseFromDay().toInstant().toEpochMilli()
-            }
-            Text(
-                text = stringResource(
-                    R.string.visits_t,
-                    lastVisit.date.parseFromDay().formatToHumanDay()
-                ),
-                modifier = Modifier.padding(top = 8.dp),
-                style = MaterialTheme.typography.labelLarge
-            )
-            Card(
-                Modifier
-                    .fillMaxWidth()
-                    .clickable {
-                        modalBottomSheetContentLive.value = { VisitsList() }
-                        modalBottomSheetStateLive.postValue(true)
+            val lastVisit =
+                DataService.visits.payload.filter { day -> !day.visits.any { it.inX == "-" && it.out == "-" } }
+                    .maxByOrNull {
+                        it.date.parseFromDay().toInstant().toEpochMilli()
                     }
-            ) {
-                Row(
+            if (lastVisit != null) {
+                Text(
+                    text = stringResource(
+                        R.string.visits_t,
+                        lastVisit.date.parseFromDay().formatToHumanDay()
+                    ),
+                    modifier = Modifier.padding(top = 8.dp),
+                    style = MaterialTheme.typography.labelLarge
+                )
+                Card(
                     Modifier
-                        .padding(16.dp)
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                        .fillMaxWidth()
+                        .clickable {
+                            modalBottomSheetContentLive.value = { VisitsList() }
+                            modalBottomSheetStateLive.postValue(true)
+                        }
                 ) {
-                    Text(lastVisit.visits[0].inX)
-                    Icon(
-                        Icons.AutoMirrored.Rounded.ArrowForward,
-                        stringResource(id = R.string.to)
-                    )
-                    Text(lastVisit.visits[0].out)
+                    Row(
+                        Modifier
+                            .padding(16.dp)
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(lastVisit.visits[0].inX)
+                        Icon(
+                            Icons.AutoMirrored.Rounded.ArrowForward,
+                            stringResource(id = R.string.to)
+                        )
+                        Text(lastVisit.visits[0].out)
+                    }
                 }
             }
+            Spacer(Modifier.height(16.dp))
         }
-        Spacer(Modifier.height(16.dp))
     }
 }

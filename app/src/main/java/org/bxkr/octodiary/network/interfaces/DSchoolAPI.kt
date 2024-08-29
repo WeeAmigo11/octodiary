@@ -53,9 +53,11 @@ interface DSchoolAPI {
     @GET("core/api/profiles")
     fun classMembers(
         @Header("auth-token") accessToken: String,
+        @Header("profile-id") studentId: Long,
         @Query("class_unit_id") classUnitId: Long,
-        @Query("per_page") perPage: Int = Int.MAX_VALUE,
-        @Query("types") types: String = "student"
+        @Query("per_page") perPage: Int = 1000,
+        @Query("types") types: String = "student",
+        @Header("profile-type") profileType: String = "student",
     ): Call<List<ClassMember>>
 
     /**

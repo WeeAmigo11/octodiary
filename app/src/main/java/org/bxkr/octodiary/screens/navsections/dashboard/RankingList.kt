@@ -21,9 +21,17 @@ fun RankingList() {
     ) {
         items(DataService.ranking) { rankingMember ->
             val memberName = remember {
-                DataService.classMembers.firstOrNull { classMember ->
-                    rankingMember.personId == classMember.personId
-                }?.user?.run { listOf(lastName, firstName, middleName ?: "").fastJoinToString(" ") }
+                if (rankingMember.personId != DataService.profile.children[DataService.currentProfile].contingentGuid) {
+                    DataService.classMembers.firstOrNull { classMember ->
+                        rankingMember.personId == classMember.personId
+                    }?.fio
+                } else DataService.profile.children[DataService.currentProfile].run {
+                    listOf(
+                        lastName,
+                        firstName,
+                        middleName
+                    ).fastJoinToString(" ")
+                }
             }
             RankingMemberCard(
                 rankPlace = rankingMember.rank.rankPlace,
