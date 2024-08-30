@@ -134,7 +134,7 @@ object MESLoginService {
         getSharedPreferences("auth", Context.MODE_PRIVATE).apply {
             var clientId = getString("client_id", "")
             var clientSecret = getString("client_secret", "")
-            var refreshToken = getString("mos_refresh_token", "")!!
+            var refreshToken = getString("mos_refresh_token", "")
             var accessToken = getString("access_token", "")
             val isTokenValid = accessToken?.isJwtExpired()?.not()
 
@@ -148,18 +148,20 @@ object MESLoginService {
                 checkRemoteCall.baseEnqueue { unparsed ->
                     unparsed.fromJson<AuthSettings>()?.let {
                         if (clientId != it.clientId || clientSecret != it.clientSecret) {
-                            println("Remote clientId or/and clientSecret differs from the local ones")
-                            clientId = it.clientId
-                            clientSecret = it.clientSecret
-                            edit(commit = true) {
-                                putString("client_id", clientId)
-                                putString("client_secret", clientSecret)
+                            if (!it.clientId.isNullOrEmpty() && !it.clientSecret.isNullOrEmpty()) {
+                                println("Remote clientId or/and clientSecret differs from the local ones")
+                                clientId = it.clientId
+                                clientSecret = it.clientSecret
+                                edit(commit = true) {
+                                    putString("client_id", clientId)
+                                    putString("client_secret", clientSecret)
+                                }
                             }
                         }
                         if (refreshToken != it.refreshToken || accessToken != it.accessToken) {
                             println("Remote refresh or/and access tokens differ from the local ones")
                             refreshToken = it.refreshToken
-                            if (it.accessToken.isJwtExpired() == false) {
+                            if (it.accessToken?.isJwtExpired() == false) {
                                 accessToken = it.accessToken
                             }
                         }
@@ -169,29 +171,31 @@ object MESLoginService {
 
             val authorization = encodeToBase64("$clientId:$clientSecret".toByteArray())
             val authHeader = "Basic $authorization"
-            val exchangeCall = NetworkService.mosAuthApi().tokenExchange(
-                grantType = MESAPIConfig.GRANT_TYPE_REFRESH,
-                refreshToken = refreshToken,
-                authHeader = authHeader
-            )
-            exchangeCall.baseEnqueue { body ->
-                authPrefs.save("mos_refresh_token" to body.refreshToken)
-                mosToMesToken(this@refreshToken, body.accessToken, onSet = {
-                    DataService.token = authPrefs.get<String>("access_token")!!
-                    DataService.updateUserId { // For token to start working
-                        DataService.pushUserSettings(
-                            "od_auth",
-                            AuthSettings(
-                                clientId = getString("client_id", "")!!,
-                                clientSecret = getString("client_secret", "")!!,
-                                refreshToken = body.refreshToken,
-                                accessToken = DataService.token
-                            )
-                        ) {
-                            onUpdated()
+            if (refreshToken != null) {
+                val exchangeCall = NetworkService.mosAuthApi().tokenExchange(
+                    grantType = MESAPIConfig.GRANT_TYPE_REFRESH,
+                    refreshToken = refreshToken!!,
+                    authHeader = authHeader
+                )
+                exchangeCall.baseEnqueue { body ->
+                    authPrefs.save("mos_refresh_token" to body.refreshToken)
+                    mosToMesToken(this@refreshToken, body.accessToken, onSet = {
+                        DataService.token = authPrefs.get<String>("access_token")!!
+                        DataService.updateUserId { // For token to start working
+                            DataService.pushUserSettings(
+                                "od_auth",
+                                AuthSettings(
+                                    clientId = getString("client_id", "")!!,
+                                    clientSecret = getString("client_secret", "")!!,
+                                    refreshToken = body.refreshToken,
+                                    accessToken = DataService.token
+                                )
+                            ) {
+                                onUpdated()
+                            }
                         }
-                    }
-                })
+                    })
+                }
             }
         }
     }

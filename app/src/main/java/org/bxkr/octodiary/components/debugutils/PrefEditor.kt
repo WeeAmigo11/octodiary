@@ -209,7 +209,7 @@ private fun EditPref(pref: Any?, setFn: (Any?) -> Unit, clear: () -> Unit) {
             )
             if (pref != null) {
                 var inputValue by remember { mutableStateOf(prefState.toString()) }
-                if (inputValue.length < 1000) {
+                if (inputValue.length < 10000) {
                     TextField(
                         value = inputValue,
                         isError = isIllegal,
