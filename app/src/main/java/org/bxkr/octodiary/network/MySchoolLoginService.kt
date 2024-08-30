@@ -59,7 +59,12 @@ object MySchoolLoginService {
         }
     }
 
-    fun Context.logInWithPassword(login: String, password: String, coroutineScope: CoroutineScope) {
+    fun Context.logInWithPassword(
+        login: String,
+        password: String,
+        coroutineScope: CoroutineScope,
+        onError: () -> Unit,
+    ) {
         if (login == "demousername" && password == "demopassword") {
             authPrefs.save(
                 "auth" to true, "subsystem" to Diary.MES.ordinal, "access_token" to "gitgud"
@@ -79,6 +84,7 @@ object MySchoolLoginService {
                 coroutineScope.launch {
                     snackbarHostStateLive.value!!.showSnackbar(getString(R.string.wrong))
                 }
+                onError()
             }
         }) { session ->
             api.exchangeToken(session.authenticationToken).extendedEnqueue {

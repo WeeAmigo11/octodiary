@@ -216,7 +216,7 @@ fun NavScreen(modifier: Modifier, pinFinished: MutableState<Boolean>) {
                                     }
                                 }
 
-                                else -> {
+                                else -> LaunchedEffect(Unit) {
                                     defaultRefresh = true
                                     DataService.loadedEverything.value = false
                                     DataService.loadingStarted = false

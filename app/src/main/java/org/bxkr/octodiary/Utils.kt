@@ -273,11 +273,11 @@ fun Date.formatToDay(): String = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT).for
 /** Parses yyyy-MM-dd format [String] to [Date] **/
 fun String.parseFromDay(): Date = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT).parse(this)!!
 
-/** Formats [Date] to d LLL format [String] **/
+/** Formats [Date] to d MMMM format [String] **/
 @ReadOnlyComposable
 @Composable
 fun Date.formatToHumanDay(): String =
-    SimpleDateFormat("d LLL", LocalConfiguration.current.locales[0]).format(this)
+    SimpleDateFormat("d MMMM", LocalConfiguration.current.locales[0]).format(this)
 
 /** Formats [Date] to dd MMMM format [String] **/
 @ReadOnlyComposable

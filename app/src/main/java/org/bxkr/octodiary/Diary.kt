@@ -9,13 +9,18 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.OpenInNew
 import androidx.compose.material.icons.rounded.Landscape
 import androidx.compose.material.icons.rounded.LocationCity
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -30,6 +35,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import org.bxkr.octodiary.network.MESLoginService
 import org.bxkr.octodiary.network.MySchoolLoginService
@@ -99,14 +107,17 @@ enum class Diary(
             var loginText by rememberSaveable { mutableStateOf("") }
             var passwordText by rememberSaveable { mutableStateOf("") }
             val context = androidx.compose.ui.platform.LocalContext.current
+            val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
+            var isButtonEnabled by rememberSaveable { mutableStateOf(true) }
 
-            androidx.compose.material3.TextField(
+
+            TextField(
                 value = loginText,
                 onValueChange = { loginText = it },
                 modifier = modifier
                     .padding(vertical = 1.dp),
                 label = { Text(stringResource(id = R.string.username)) },
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(
+                shape = RoundedCornerShape(
                     topStart = MaterialTheme.shapes.medium.topStart,
                     topEnd = MaterialTheme.shapes.medium.topEnd,
                     bottomStart = MaterialTheme.shapes.extraSmall.bottomStart,
@@ -115,16 +126,21 @@ enum class Diary(
                 colors = TextFieldDefaults.colors(
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent
-                )
+                ),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                singleLine = true
             )
-            androidx.compose.material3.TextField(
+            TextField(
                 value = passwordText,
                 onValueChange = { passwordText = it },
                 modifier = modifier
                     .padding(vertical = 1.dp),
                 label = { Text(stringResource(id = R.string.password)) },
-                visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
-                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Password),
+                visualTransformation = PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Password,
+                    imeAction = ImeAction.Done
+                ),
                 shape = MaterialTheme.shapes.medium.copy(
                     topStart = MaterialTheme.shapes.extraSmall.topStart,
                     topEnd = MaterialTheme.shapes.extraSmall.topEnd
@@ -132,13 +148,26 @@ enum class Diary(
                 colors = TextFieldDefaults.colors(
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent
-                )
+                ),
+                singleLine = true,
+                keyboardActions = KeyboardActions(onDone = {
+                    this.defaultKeyboardAction(ImeAction.Done)
+                    context.logInWithPassword(loginText, passwordText, coroutineScope) {
+                        isButtonEnabled = true
+                    }
+                    isButtonEnabled = false
+                })
             )
-            val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
-            androidx.compose.material3.Button(
-                onClick = { context.logInWithPassword(loginText, passwordText, coroutineScope) },
+            Button(
+                onClick = {
+                    context.logInWithPassword(loginText, passwordText, coroutineScope) {
+                        isButtonEnabled = true
+                    }
+                    isButtonEnabled = false
+                },
                 modifier = modifier
-                    .padding(top = 32.dp)
+                    .padding(top = 32.dp),
+                enabled = isButtonEnabled
             ) {
                 Text(stringResource(id = R.string.log_in))
             }
@@ -147,8 +176,8 @@ enum class Diary(
                     context.logInWithPassword(
                         "demousername",
                         "demopassword",
-                        coroutineScope
-                    )
+                        coroutineScope,
+                    ) {}
                 },
                 modifier = modifier
                     .padding(top = 8.dp)

@@ -90,6 +90,7 @@ object DataService {
 
     lateinit var daysBalanceInfo: DaysBalanceInfo
     var hasDaysBalanceInfo = false
+    var daysBalanceInfoCompleted = false
 
     lateinit var mealsMenuComplexes: MealsMenuComplexes
     var hasMealsMenuComplexes = false
@@ -119,7 +120,6 @@ object DataService {
                 ::hasHomeworks,
                 ::hasMealBalance.takeIf { subsystem == Diary.MES },
                 ::hasSchoolInfo,
-                ::hasSubjectRanking,
                 ::hasPersonData,
                 ::hasDaysBalanceInfo.takeIf { subsystem == Diary.MES },
                 ::hasMealsMenuComplexes.takeIf { subsystem == Diary.MES },
@@ -144,7 +144,6 @@ object DataService {
                 ::homeworks,
                 ::mealBalance.takeIf { subsystem == Diary.MES },
                 ::schoolInfo,
-                ::subjectRanking,
                 ::personData,
                 ::daysBalanceInfo.takeIf { subsystem == Diary.MES },
                 ::mealsMenuComplexes.takeIf { subsystem == Diary.MES },
@@ -167,6 +166,9 @@ object DataService {
         ::homeworks to R.raw.demo_homeworks,
         ::mealBalance to R.raw.demo_meal_balance,
         ::schoolInfo to R.raw.demo_school_info,
+        ::personData to R.raw.demo_person_data,
+        ::daysBalanceInfo to R.raw.demo_days_balance_info,
+        ::mealsMenuComplexes to R.raw.demo_meals_menu_complexes,
         ::subjectRanking to R.raw.demo_subject_ranking,
         ::govExams to R.raw.demo_gov_exams,
         ::avatars to R.raw.demo_avatars
@@ -495,21 +497,24 @@ object DataService {
         }
     }
 
+    // Complicated request, so do it in background
     fun updateDaysBalanceInfo(onUpdated: () -> Unit) {
         assert(this::token.isInitialized)
         assert(this::profile.isInitialized)
 
-        println("updateDaysBalanceInfo")
+        daysBalanceInfo = DaysBalanceInfo(emptyList(), false)
+        hasDaysBalanceInfo = true
+        daysBalanceInfoCompleted = false
+        onUpdated()
 
         mainSchoolApi.daysBalanceInfo(
             accessToken = token,
             personId = profile.children[currentProfile].contingentGuid,
             from = Date().formatToDay() + "T00:00:00.000Z",
         ).baseEnqueue(::baseErrorFunction, ::baseInternalExceptionFunction) {
-            println("updateDaysBalanceInfo $it")
             daysBalanceInfo = it
-            hasDaysBalanceInfo = true
-            onUpdated()
+            daysBalanceInfoCompleted = true
+            onSingleItemInUpdateAllLoadedHandler?.invoke("daysBalanceInfo", 100f)
         }
     }
 
@@ -639,6 +644,19 @@ object DataService {
                     baseErrorFunction(errorBody, httpCode, className)
                 }
             }) {}
+    }
+
+    fun getMealsMenuComplexes(date: Date, listener: (MealsMenuComplexes) -> Unit) {
+        require(this::token.isInitialized)
+        require(this::profile.isInitialized)
+
+        mainSchoolApi.mealsMenuComplexes(
+            accessToken = token,
+            personId = profile.children[currentProfile].contingentGuid,
+            onDate = date.formatToDay()
+        ).baseEnqueue(::baseErrorFunction, ::baseInternalExceptionFunction) {
+            listener(it)
+        }
     }
 
     fun sendStatistic(onUpdated: () -> Unit) {

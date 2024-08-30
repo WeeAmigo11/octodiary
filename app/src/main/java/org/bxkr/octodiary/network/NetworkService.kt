@@ -40,6 +40,7 @@ object NetworkService {
         const val ESIA_AUTH_URL_TEMPLATE =
             "%sv3/auth/esia/login?redirect_url=%s&state=%s"
         const val REDIRECT_URI = "dnevnik-mes://authRegionRedirect"
+        const val FOOD_URI = "https://food.myschool.mosreg.ru/user/login/?oauth=mesh"
     }
 
     /**

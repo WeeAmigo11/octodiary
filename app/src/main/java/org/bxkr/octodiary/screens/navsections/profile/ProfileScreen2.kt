@@ -5,8 +5,10 @@ import android.net.Uri
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -51,15 +53,18 @@ import androidx.lifecycle.MutableLiveData
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import org.bxkr.octodiary.DataService
+import org.bxkr.octodiary.Diary
 import org.bxkr.octodiary.R
 import org.bxkr.octodiary.baseEnqueueOrNull
 import org.bxkr.octodiary.launchPickerLive
+import org.bxkr.octodiary.launchUrlLive
 import org.bxkr.octodiary.modalBottomSheetContentLive
 import org.bxkr.octodiary.modalBottomSheetStateLive
 import org.bxkr.octodiary.modalDialogContentLive
 import org.bxkr.octodiary.modalDialogStateLive
 import org.bxkr.octodiary.models.profile.Children
-import org.bxkr.octodiary.screens.navsections.profile.meal.Meal
+import org.bxkr.octodiary.network.NetworkService
+import org.bxkr.octodiary.screens.navsections.profile.meal.MealDialog
 
 val avatarTriggerLive = MutableLiveData(false)
 
@@ -223,8 +228,17 @@ private fun Cards() {
             R.string.exam_results,
             Icons.Rounded.Grade
         ) { ExamResults() }
-        ProfileCard(R.string.meal, Icons.Rounded.Restaurant) { Meal() }
+        ProfileCard(R.string.meal, Icons.Rounded.Restaurant, onClick = ::mealOnClick)
         ProfileCard(R.string.documents, Icons.Rounded.Description) { Documents() }
+    }
+}
+
+private fun mealOnClick() {
+    if (DataService.subsystem == Diary.MES) {
+        modalDialogContentLive.value = { MealDialog() }
+        modalDialogStateLive.postValue(true)
+    } else {
+        launchUrlLive.postValue(Uri.parse(NetworkService.MySchoolAPIConfig.FOOD_URI))
     }
 }
 
@@ -235,6 +249,16 @@ private fun ProfileCard(
     bottomSheetContent: @Composable () -> Unit,
 ) {
     ProfileCard(stringResource(textRes), icon, bottomSheetContent)
+}
+
+@Composable
+private fun ProfileCard(
+    @StringRes textRes: Int,
+    icon: ImageVector,
+    onLongClick: () -> Unit = {},
+    onClick: () -> Unit,
+) {
+    ProfileCard(stringResource(textRes), icon, onLongClick, onClick)
 }
 
 @Composable
@@ -252,6 +276,31 @@ private fun ProfileCard(
             )
             .clip(MaterialTheme.shapes.extraSmall)
             .clickable { openBottomSheet { bottomSheetContent() } }
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(icon, null, Modifier.padding(end = 8.dp), MaterialTheme.colorScheme.onSurface)
+        Text(text)
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun ProfileCard(
+    text: String,
+    icon: ImageVector,
+    onLongClick: () -> Unit = {},
+    onClick: () -> Unit,
+) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .background(
+                MaterialTheme.colorScheme.surfaceContainerHigh,
+                shape = MaterialTheme.shapes.extraSmall
+            )
+            .clip(MaterialTheme.shapes.extraSmall)
+            .combinedClickable(onLongClick = onLongClick) { onClick() }
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

@@ -375,7 +375,7 @@
     <string name="issuer">Issuer</string>
     <string name="issued">Issued</string>
     <string name="subdivision_code">Subdivision code</string>
-    <string name="food_history">History</string>
+    <string name="food_history">Dining history</string>
     <string name="dining">Dining</string>
     <string name="buffet">Buffet</string>
     <string name="meal_dining_menu">Current menu</string>
@@ -387,4 +387,7 @@
     <string name="proteins">Proteins</string>
     <string name="energy_value">%1$s kcal</string>
     <string name="weight_grams">%1$s grams</string>
+    <string name="dining_history_is_not_loaded_yet">dining history is not loaded yet</string>
+    <string name="menu_for_t">Menu for %1$s</string>
+    <string name="select_date">Select a date</string>
 </resources>

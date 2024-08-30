@@ -260,7 +260,7 @@ interface MainSchoolAPI {
      * @param authHeader Authorization header.
      * @param mesSubsystem MES subsystem (["familymp"][MESAPIConfig.FAMILYMP] by default).
      * @param clientType Client type. (["diary_mobile"][MESAPIConfig.DIARY_MOBILE] by default.)
-     * @param person_id Person ID.
+     * @param personId Person ID.
      * @param limit Limit. ([Int.MAX_VALUE] by default.)
      * @param from Start date.
      * @return [DaysBalanceInfo]
