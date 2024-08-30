@@ -7,10 +7,8 @@ import org.bxkr.octodiary.models.homeworks.HomeworksResponse
 import org.bxkr.octodiary.models.lessonschedule.LessonSchedule
 import org.bxkr.octodiary.models.mark.MarkInfo
 import org.bxkr.octodiary.models.marklistdate.MarkListDate
-import org.bxkr.octodiary.models.marklistsubject.MarkListSubject
-import org.bxkr.octodiary.models.marklistsubject.MarkListSubjectItem
-import org.bxkr.octodiary.models.mealsmenucomplexes.MealsMenuComplexes
 import org.bxkr.octodiary.models.marklistsubjectshort.MarkListSubjectItem
+import org.bxkr.octodiary.models.mealsmenucomplexes.MealsMenuComplexes
 import org.bxkr.octodiary.models.profile.ProfileResponse
 import org.bxkr.octodiary.models.schoolinfo.SchoolInfo
 import org.bxkr.octodiary.models.visits.VisitsResponse

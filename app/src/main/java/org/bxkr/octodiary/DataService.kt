@@ -14,6 +14,7 @@ import org.bxkr.octodiary.models.homeworks.Homework
 import org.bxkr.octodiary.models.lessonschedule.LessonSchedule
 import org.bxkr.octodiary.models.mark.MarkInfo
 import org.bxkr.octodiary.models.marklistdate.MarkListDate
+import org.bxkr.octodiary.models.marklistsubject.MarkListSubjectItem
 import org.bxkr.octodiary.models.mealbalance.MealBalance
 import org.bxkr.octodiary.models.mealsmenucomplexes.MealsMenuComplexes
 import org.bxkr.octodiary.models.persondata.PersonData
@@ -71,7 +72,7 @@ object DataService {
     lateinit var marksDate: MarkListDate
     var hasMarksDate = false
 
-    lateinit var marksSubject: List<org.bxkr.octodiary.models.marklistsubject.MarkListSubjectItem>
+    lateinit var marksSubject: List<MarkListSubjectItem>
     var hasMarksSubject = false
 
     lateinit var homeworks: List<Homework>
@@ -117,7 +118,7 @@ object DataService {
                 ::hasSubjectRanking,
                 ::hasPersonData,
                 ::hasDaysBalanceInfo.takeIf { subsystem == Diary.MES },
-                ::hasMealsMenuComplexes.takeIf { subsystem == Diary.MES }
+                ::hasMealsMenuComplexes.takeIf { subsystem == Diary.MES },
                 ::hasSubjectRanking,
                 ::hasGovExams
             )
@@ -141,7 +142,7 @@ object DataService {
                 ::subjectRanking,
                 ::personData,
                 ::daysBalanceInfo.takeIf { subsystem == Diary.MES },
-                ::mealsMenuComplexes.takeIf { subsystem == Diary.MES }
+                ::mealsMenuComplexes.takeIf { subsystem == Diary.MES },
                 ::subjectRanking,
                 ::govExams
             )

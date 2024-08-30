@@ -22,22 +22,15 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import org.bxkr.octodiary.DataService
 import org.bxkr.octodiary.Diary
 import org.bxkr.octodiary.R
-import org.bxkr.octodiary.components.profile.ClassInfo
-import org.bxkr.octodiary.components.profile.Documents
-import org.bxkr.octodiary.components.profile.PersonalData
-import org.bxkr.octodiary.components.profile.School
-import org.bxkr.octodiary.components.profile.meal.Meal
 import org.bxkr.octodiary.modalBottomSheetContentLive
 import org.bxkr.octodiary.modalBottomSheetStateLive
 
@@ -77,8 +70,6 @@ fun ProfileScreen() {
             Modifier.clip(MaterialTheme.shapes.extraLarge),
             verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
-            val coroutineScope = rememberCoroutineScope()
-            val context = LocalContext.current
             Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                 SectionGridItem(stringResource(R.string.personal_data), Icons.Rounded.Person) {
                     openBottomSheet { PersonalData() }
