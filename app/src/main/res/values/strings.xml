@@ -375,11 +375,10 @@
     <string name="issuer">Issuer</string>
     <string name="issued">Issued</string>
     <string name="subdivision_code">Subdivision code</string>
-    <string name="unknown" translatable="false">Unknown</string>
-    <string name="food_history">Food history</string>
+    <string name="food_history">History</string>
     <string name="dining">Dining</string>
     <string name="buffet">Buffet</string>
-    <string name="meal_dining_menu">Menu in dining</string>
+    <string name="meal_dining_menu">Current menu</string>
     <string name="price">Price</string>
     <string name="ingredients">Ingredients</string>
     <string name="calories">Calories</string>

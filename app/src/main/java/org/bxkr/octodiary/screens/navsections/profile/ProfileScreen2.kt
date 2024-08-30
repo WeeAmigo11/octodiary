@@ -59,6 +59,7 @@ import org.bxkr.octodiary.modalBottomSheetStateLive
 import org.bxkr.octodiary.modalDialogContentLive
 import org.bxkr.octodiary.modalDialogStateLive
 import org.bxkr.octodiary.models.profile.Children
+import org.bxkr.octodiary.screens.navsections.profile.meal.Meal
 
 val avatarTriggerLive = MutableLiveData(false)
 

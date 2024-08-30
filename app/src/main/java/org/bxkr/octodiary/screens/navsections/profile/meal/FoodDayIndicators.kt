@@ -1,4 +1,4 @@
-package org.bxkr.octodiary.components.profile
+package org.bxkr.octodiary.screens.navsections.profile.meal
 
 import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons

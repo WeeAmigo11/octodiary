@@ -33,6 +33,7 @@ import org.bxkr.octodiary.Diary
 import org.bxkr.octodiary.R
 import org.bxkr.octodiary.modalBottomSheetContentLive
 import org.bxkr.octodiary.modalBottomSheetStateLive
+import org.bxkr.octodiary.screens.navsections.profile.meal.Meal
 
 @Composable
 fun ProfileScreen() {
