@@ -1,6 +1,7 @@
 package org.bxkr.octodiary.screens.navsections.profile
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
@@ -12,7 +13,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -73,7 +73,7 @@ fun ExamResults() {
     var showDetails by remember { mutableStateOf(false) }
     var detailsExam by remember { mutableStateOf<Exam?>(null) }
 
-    Box {
+    Box(Modifier.animateContentSize()) {
         AnimatedVisibility(!showDetails, enter = enterTransition2, exit = exitTransition2) {
             ExamList {
                 detailsExam = it
@@ -213,7 +213,7 @@ fun ExamDetails(exam: Exam, onDismiss: () -> Unit) {
     Column(
         Modifier
             .fillMaxWidth()
-            .heightIn(min = 400.dp)
+            .padding(bottom = 92.dp)
     ) {
         IconButton(onClick = onDismiss) {
             Icon(Icons.AutoMirrored.Rounded.ArrowBack, stringResource(id = R.string.back))

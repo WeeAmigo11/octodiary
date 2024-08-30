@@ -2,6 +2,7 @@ package org.bxkr.octodiary.screens.navsections.profile
 
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
@@ -101,7 +102,7 @@ fun ClassInfo() {
             tween(200)
         ) { -it }
     }
-    Box {
+    Box(Modifier.animateContentSize()) {
         AnimatedVisibility(
             visible = showRanking, enter = enterTransition1, exit = exitTransition1
         ) {
