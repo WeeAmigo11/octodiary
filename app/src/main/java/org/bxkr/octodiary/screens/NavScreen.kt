@@ -57,8 +57,8 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -78,8 +78,6 @@ import androidx.fragment.app.FragmentActivity
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.google.gson.Gson
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.bxkr.octodiary.DataService
 import org.bxkr.octodiary.Diary
@@ -101,11 +99,8 @@ import org.bxkr.octodiary.network.interfaces.MainSchoolAPI
 import org.bxkr.octodiary.network.interfaces.SchoolSessionAPI
 import org.bxkr.octodiary.network.interfaces.SecondaryAPI
 import org.bxkr.octodiary.notificationPrefs
-import org.bxkr.octodiary.reloadEverythingLive
 import org.bxkr.octodiary.save
 import org.bxkr.octodiary.screenLive
-import org.bxkr.octodiary.screens.navsections.daybook.customScheduleRefreshListenerLive
-import org.bxkr.octodiary.screens.navsections.daybook.updatedScheduleLive
 import org.bxkr.octodiary.sumLists
 import org.bxkr.octodiary.ui.theme.OctoDiaryTheme
 import java.util.Calendar
@@ -150,83 +145,27 @@ fun NavScreen(modifier: Modifier, pinFinished: MutableState<Boolean>) {
                 DataService.secondaryApi =
                     NetworkService.secondaryApi(SecondaryAPI.getBaseUrl(diary))
 
-                var localLoadedState by remember { mutableStateOf(false) }
-                val context = LocalContext.current
-                if (localLoadedState) {
-                    LaunchedEffect(Unit) {
-                        if (notificationPrefs.get<Long>("student_id") == null) {
-                            notificationPrefs.save(
-                                "student_id" to DataService.profile.children[DataService.currentProfile].studentId,
-                                "mark_ids" to Gson().toJson(sumLists(
-                                    DataService.marksSubject.map { it.currentPeriod?.marks?.map { it.id } }
-                                )),
-                                "total_count" to 0
-                            )
-                        }
-                        val pendingIntent = PendingIntent.getBroadcast(
-                            context,
-                            0,
-                            Intent(context, UpdateReceiver::class.java),
-                            PendingIntent.FLAG_IMMUTABLE
-                        )
-                        val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
-                        if (!context.isDemo) {
-                            alarmManager.setRepeating(
-                                AlarmManager.RTC_WAKEUP,
-                                Calendar.getInstance().timeInMillis,
-                                60 * 1000,
-                                pendingIntent
-                            )
-                        }
-                    }
-                }
-                LaunchedEffect(rememberCoroutineScope()) {
-                    snapshotFlow { DataService.loadedEverything.value }.onEach {
-                        localLoadedState = it
-                    }.launchIn(this)
-                }
-                LaunchedEffect(Unit) {
-                    reloadEverythingLive.postValue {
-                        DataService.run {
-                            loadingStarted = false
-                            loadedEverything.value = false
+                val context = LocalActivity.current
 
-                        }
+                LaunchedEffect(DataService.loadedEverything.value) {
+                    if (DataService.loadedEverything.value) {
+                        context.registerNotifier()
                     }
                 }
-                AnimatedVisibility(localLoadedState) {
+                AnimatedVisibility(DataService.loadedEverything.value) {
                     val refreshState = rememberPullToRefreshState()
-                    var defaultRefresh by remember { mutableStateOf(true) }
-                    if (refreshState.isRefreshing) {
+                    var duringRefresh by rememberSaveable { mutableStateOf(false) }
+                    if (refreshState.isRefreshing && !duringRefresh) {
                         if (!isDemo) {
-                            when (navController.value?.currentDestination?.route) {
-                                NavSection.Daybook.route -> {
-                                    val customScheduleRefreshListener =
-                                        customScheduleRefreshListenerLive.value
-                                    if (customScheduleRefreshListener != null) {
-                                        customScheduleRefreshListener()
-                                    } else {
-                                        defaultRefresh = false
-                                        DataService.updateEventCalendar {
-                                            updatedScheduleLive.postValue(
-                                                updatedScheduleLive.value?.not() ?: false
-                                            )
-                                            refreshState.endRefresh()
-                                        }
-                                    }
-                                }
-
-                                else -> LaunchedEffect(Unit) {
-                                    defaultRefresh = true
-                                    DataService.loadedEverything.value = false
-                                    DataService.loadingStarted = false
-                                    DataService.updateAll(context)
-                                }
-                            }
+                            DataService.loadedEverything.value = false
+                            DataService.loadingStarted = false
+                            DataService.updateAll(context)
+                            duringRefresh = true
                         } else refreshState.endRefresh()
                     }
-                    if (DataService.loadedEverything.value && defaultRefresh) {
+                    if (DataService.loadedEverything.value) {
                         refreshState.endRefresh()
+                        duringRefresh = false
                     }
                     LaunchedEffect(Unit) {
                         DataService.sendStatistic {}
@@ -251,7 +190,7 @@ fun NavScreen(modifier: Modifier, pinFinished: MutableState<Boolean>) {
                         }
                     }
                 }
-                AnimatedVisibility(!localLoadedState) {
+                AnimatedVisibility(!DataService.loadedEverything.value) {
                     var progress by remember { mutableFloatStateOf(0f) }
                     val progressAnimated by animateFloatAsState(
                         progress, tween(200), label = "progress_anim"
@@ -310,6 +249,34 @@ fun NavScreen(modifier: Modifier, pinFinished: MutableState<Boolean>) {
                 )
             }
         }
+    }
+}
+
+private fun FragmentActivity.registerNotifier() {
+    val context = this
+    if (notificationPrefs.get<Long>("student_id") == null) {
+        notificationPrefs.save(
+            "student_id" to DataService.profile.children[DataService.currentProfile].studentId,
+            "mark_ids" to Gson().toJson(sumLists(
+                DataService.marksSubject.map { it.currentPeriod?.marks?.map { it.id } }
+            )),
+            "total_count" to 0
+        )
+    }
+    val pendingIntent = PendingIntent.getBroadcast(
+        context,
+        0,
+        Intent(context, UpdateReceiver::class.java),
+        PendingIntent.FLAG_IMMUTABLE
+    )
+    val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+    if (!context.isDemo) {
+        alarmManager.setRepeating(
+            AlarmManager.RTC_WAKEUP,
+            Calendar.getInstance().timeInMillis,
+            60 * 1000,
+            pendingIntent
+        )
     }
 }
 
