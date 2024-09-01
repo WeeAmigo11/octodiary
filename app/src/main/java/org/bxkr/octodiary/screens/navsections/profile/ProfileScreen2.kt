@@ -27,6 +27,7 @@ import androidx.compose.material.icons.rounded.Group
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Restaurant
 import androidx.compose.material.icons.rounded.School
+import androidx.compose.material.icons.rounded.Wallet
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -215,6 +216,7 @@ private fun ShortProfileInfo(child: Children) {
 
 @Composable
 private fun Cards() {
+    val is77 = remember { DataService.subsystem == Diary.MES }
     Column(
         Modifier
             .padding(16.dp)
@@ -228,6 +230,7 @@ private fun Cards() {
             R.string.exam_results,
             Icons.Rounded.Grade
         ) { ExamResults() }
+        if (is77) ProfileCard(R.string.wallet, Icons.Rounded.Wallet) { Wallet() }
         ProfileCard(R.string.meal, Icons.Rounded.Restaurant, onClick = ::mealOnClick)
         ProfileCard(R.string.documents, Icons.Rounded.Description) { Documents() }
     }

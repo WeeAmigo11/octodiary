@@ -61,10 +61,10 @@ fun DashboardScreen() {
             Spacer(Modifier.height(16.dp))
         }
         dashboardRatingVisits()
-        dashboardSchedule(context, showNumbers)
         item {
             ChangelogCard(context)
         }
+        dashboardSchedule(context, showNumbers)
     }
 }
 
@@ -83,7 +83,7 @@ fun LazyListScope.dashboardSchedule(context: Context, showNumbers: Boolean) {
                 DataService.eventCalendar.filter {
                     it.startAt.parseLongDate().formatToDay() == day
                 }
-            } ?: listOf(), showNumbers, showBreaks = false)
+            } ?: listOf(), showNumbers, showBreaks = false, reversed = true)
     item {
         val currentDay = remember { date.formatToDay() }
         Column(

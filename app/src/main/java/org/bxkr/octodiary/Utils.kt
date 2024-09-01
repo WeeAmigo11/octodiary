@@ -21,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.Saver
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Size
@@ -641,3 +642,8 @@ fun TextWithIcon(icon: ImageVector, text: @Composable () -> Unit) {
 fun TextWithIcon(icon: ImageVector, text: String) {
     TextWithIcon(icon) { Text(text) }
 }
+
+inline fun <reified Original> jsonSaver() = Saver<Original, String>(
+    save = { Gson().toJson(it) },
+    restore = { it.fromJson() }
+)

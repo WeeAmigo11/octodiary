@@ -77,7 +77,7 @@ fun MarkCalculator(
             Text("$subjectName, ${period.title.lowercase()}")
             AnimatedVisibility(marks.isValid() && marks.isNotEmpty()) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                    AverageChip(marks.calculate().toString(), period.dynamic)
+                    AverageChip(marks.calculate().toString(), period.dynamic) {}
                     FinalChip(marks.calculate().roundToInt().toString())
                 }
             }

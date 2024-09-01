@@ -43,6 +43,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -50,6 +51,7 @@ import androidx.lifecycle.MutableLiveData
 import org.bxkr.octodiary.DataService
 import org.bxkr.octodiary.R
 import org.bxkr.octodiary.formatToHumanDay
+import org.bxkr.octodiary.isDemo
 import org.bxkr.octodiary.models.mealsmenucomplexes.Item
 import org.bxkr.octodiary.models.mealsmenucomplexes.MealsMenuComplexes
 import java.util.Date
@@ -65,14 +67,15 @@ fun CurrentMenu(onMenuItemClick: (item: Item) -> Unit) {
     val loaded by loadedLive.observeAsState(false)
     val complexes by complexesLive.observeAsState(DataService.mealsMenuComplexes)
     var chooserShown by remember { mutableStateOf(false) }
+    val isDemo = LocalContext.current.isDemo
     LaunchedEffect(date) {
-        if (date != null) {
+        if (date != null && !isDemo) {
             loadedLive.value = false
             DataService.getMealsMenuComplexes(date ?: Date()) {
                 complexesLive.value = it
                 loadedLive.value = true
             }
-        }
+        } else if (isDemo) loadedLive.value = true
     }
     Box {
         AnimatedVisibility(chooserShown) {

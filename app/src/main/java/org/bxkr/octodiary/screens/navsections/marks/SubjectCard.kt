@@ -203,7 +203,11 @@ private fun CardContent(
                 overflow = TextOverflow.Ellipsis
             )
             Row {
-                AverageChip(period.value, period.dynamic)
+                AverageChip(period.value, period.dynamic) {
+                    modalBottomSheetContentLive.value =
+                        { MarkCalculator(period, subjectId, subjectName, markConfig) }
+                    modalBottomSheetStateLive.postValue(true)
+                }
                 if (period.fixedValue != null) {
                     FinalChip(period.fixedValue)
                 }
@@ -252,9 +256,9 @@ private fun CardContent(
 }
 
 @Composable
-fun AverageChip(value: String, dynamic: String, showArrow: Boolean = true) {
+fun AverageChip(value: String, dynamic: String, showArrow: Boolean = true, onClick: () -> Unit) {
     FilterChip(
-        onClick = {},
+        onClick = onClick,
         label = {
             AnimatedContent(value, label = "average_anim") { newValue ->
                 Text(

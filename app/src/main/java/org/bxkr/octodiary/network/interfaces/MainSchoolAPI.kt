@@ -272,8 +272,9 @@ interface MainSchoolAPI {
         @Header("X-Mes-Subsystem") mesSubsystem: String = MESAPIConfig.FAMILYMP,
         @Header("client-type") clientType: String = MESAPIConfig.DIARY_MOBILE,
         @Query("person_id") personId: String,
-        @Query("limit") limit: Int = Int.MAX_VALUE,
+        @Query("limit") limit: Int = 40,
         @Query("from") from: String,
+        @Query("with_payments") withPayments: Boolean = true,
     ): Call<DaysBalanceInfo>
 
     /**

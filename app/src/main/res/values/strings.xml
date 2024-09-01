@@ -390,4 +390,8 @@
     <string name="dining_history_is_not_loaded_yet">dining history is not loaded yet</string>
     <string name="menu_for_t">Menu for %1$s</string>
     <string name="select_date">Select a date</string>
+    <string name="wallet">Wallet</string>
+    <string name="balance">Balance</string>
+    <string name="top_up">Top up</string>
+    <string name="account_number">Account number</string>
 </resources>

@@ -26,7 +26,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -46,6 +45,7 @@ fun Documents() {
             .padding(16.dp)
             .fillMaxWidth()
     ) {
+        val clipboardManager = LocalClipboardManager.current
         with(DataService.personData) {
             Text(stringResource(R.string.documents), style = MaterialTheme.typography.titleMedium)
             LazyColumn(
@@ -56,7 +56,9 @@ fun Documents() {
                     Row {
                         Text(stringResource(R.string.snils_t))
                         val snils = DataService.profile.children[DataService.currentProfile].snils
-                        Text(snils, Modifier.clickable { copy(snils) })
+                        Text(
+                            snils,
+                            Modifier.clickable { clipboardManager.setText(AnnotatedString(snils)) })
                     }
                 }
                 items(documents) {
@@ -126,23 +128,10 @@ fun DocumentCard(document: Document) {
             ) {
                 document.displayData.forEach {
                     if (it.value != null) {
-                        DocumentValue(stringResource(it.key), it.value!!) { copy(it.value!!) }
+                        NameAndValueText(stringResource(it.key), it.value!!) { copy(it.value!!) }
                     }
                 }
             }
         }
-    }
-}
-
-
-@Composable
-fun DocumentValue(name: String, value: String, onClick: () -> Unit) {
-    Row {
-        Text(
-            name, modifier = Modifier
-                .padding(end = 3.dp)
-                .alpha(0.8f)
-        )
-        Text(value, modifier = Modifier.clickable { onClick() })
     }
 }

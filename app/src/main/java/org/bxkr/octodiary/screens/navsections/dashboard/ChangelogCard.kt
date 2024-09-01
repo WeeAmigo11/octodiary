@@ -54,7 +54,7 @@ fun ChangelogCard(context: Context) {
     var isCardShown by remember { mutableStateOf(context.getInitialIsShown()) }
     var isDialogShown by remember { mutableStateOf(false) }
     val changelog = Changelog.currentChangelog
-    AnimatedVisibility(isCardShown) {
+    AnimatedVisibility(isCardShown, Modifier.padding(vertical = 8.dp)) {
         Row(
             Modifier
                 .background(

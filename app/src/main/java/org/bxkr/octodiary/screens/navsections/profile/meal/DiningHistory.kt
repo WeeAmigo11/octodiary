@@ -175,7 +175,7 @@ private fun DayContent(day: Day) {
                                     .padding(16.dp)
                                     .fillMaxWidth()
                             ) {
-                                transaction.items.forEach { item ->
+                                transaction.items?.forEach { item ->
                                     if (item.dishes.isNotEmpty()) {
                                         item.dishes.forEach { dish ->
                                             Row(

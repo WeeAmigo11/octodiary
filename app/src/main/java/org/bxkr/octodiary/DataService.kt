@@ -510,7 +510,9 @@ object DataService {
         mainSchoolApi.daysBalanceInfo(
             accessToken = token,
             personId = profile.children[currentProfile].contingentGuid,
-            from = Date().formatToDay() + "T00:00:00.000Z",
+            from = "${Date().formatToDay()}T00:00:00.000Z",
+            withPayments = false,
+            limit = Int.MAX_VALUE
         ).baseEnqueue(::baseErrorFunction, ::baseInternalExceptionFunction) {
             daysBalanceInfo = it
             daysBalanceInfoCompleted = true
@@ -654,6 +656,24 @@ object DataService {
             accessToken = token,
             personId = profile.children[currentProfile].contingentGuid,
             onDate = date.formatToDay()
+        ).baseEnqueue(::baseErrorFunction, ::baseInternalExceptionFunction) {
+            listener(it)
+        }
+    }
+
+    fun getBalanceHistory(
+        fromDay: String = Date().formatToDay(),
+        listener: (DaysBalanceInfo) -> Unit,
+    ) {
+        require(this::token.isInitialized)
+        require(this::profile.isInitialized)
+
+        mainSchoolApi.daysBalanceInfo(
+            accessToken = token,
+            personId = profile.children[currentProfile].contingentGuid,
+            from = "${fromDay}T00:00:00.000Z",
+            withPayments = true,
+            limit = Int.MAX_VALUE
         ).baseEnqueue(::baseErrorFunction, ::baseInternalExceptionFunction) {
             listener(it)
         }
