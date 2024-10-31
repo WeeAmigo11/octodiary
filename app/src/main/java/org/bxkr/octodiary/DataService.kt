@@ -327,10 +327,10 @@ object DataService {
                     if (assignments != null) {
                         val assignmentsStudentIds =
                             assignments.map { assignment -> assignment.studentId }
-                        val newClassMembers = classMembers.mapNotNull {
+                        val newClassMembers = classMembers.map {
                             if (it.studentId in assignmentsStudentIds) {
                                 it.copy(personId = assignments.first { assignment -> assignment.studentId == it.studentId }.personId)
-                            } else null
+                            } else it
                         }
                         classMembers = newClassMembers
                     }
