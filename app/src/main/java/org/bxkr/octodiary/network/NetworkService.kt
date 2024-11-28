@@ -48,7 +48,7 @@ object NetworkService {
      **/
     object ExternalIntegrationConfig {
         const val BOT_AUTH_URL =
-            "https://octodiary.dsop.online/redir2bot?token=%s&system=%s&test=%s"
+            "https://octodiary.den4iksop.org/redir2bot?token=%s&system=%s&test=%s"
         const val TELEGRAM_CHANNEL_URL = "https://t.me/OctoDiary"
         const val TELEGRAM_REPORT_URL = "https://t.me/OctoDiaryBot?start=feedback"
         const val TELEGRAM_BOT_URL = "https://t.me/OctoDiaryBot"
@@ -69,7 +69,7 @@ object NetworkService {
         const val MOSREG_SCHOOL_API = "https://api.myschool.mosreg.ru/"
         const val MOSREG_DNEVNIK = "https://myschool.mosreg.ru/"
 
-        const val EXTERNAL_API = "https://octodiary.dsop.online/"
+        const val EXTERNAL_API = "https://octodiary.den4iksop.org/"
     }
 
     private inline fun <reified T> baseApiConstructor(baseUrl: String): T {
