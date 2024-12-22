@@ -187,8 +187,10 @@ fun MarkSheetContent(mark: Mark, subjectId: Long) {
 fun BoxScope.MarkInfo(markInfo: MarkInfo, subject: MarkListSubjectItem?, mark: Mark) {
     Column(Modifier.padding(16.dp)) {
         MarkDescription(subject, markInfo)
-        ProvideVicoTheme(theme = rememberM3VicoTheme()) {
-            ClassResults(markInfo)
+        if (markInfo.classResults != null) {
+            ProvideVicoTheme(theme = rememberM3VicoTheme()) {
+                ClassResults(markInfo)
+            }
         }
     }
     Column(
@@ -236,7 +238,8 @@ fun MarkDescription(subject: MarkListSubjectItem?, markInfo: MarkInfo) {
 
 @Composable
 fun ClassResults(markInfo: MarkInfo) {
-    val results = markInfo.classResults.marksDistributions.sortedByDescending { it.markValue.five }
+    val results = markInfo.classResults?.marksDistributions?.sortedByDescending { it.markValue.five }
+        ?: throw IllegalStateException("Unexpected")
     val labelListKey = ExtraStore.Key<List<String>>()
     val secondaryColor = MaterialTheme.colorScheme.secondary.toArgb()
     val primaryColor = MaterialTheme.colorScheme.primary.toArgb()

@@ -7,7 +7,7 @@ data class MarkInfo(
     @SerializedName("activity")
     val activity: Activity,
     @SerializedName("class_results")
-    val classResults: ClassResults,
+    val classResults: ClassResults?,
     @SerializedName("comment")
     val comment: String?,
     @SerializedName("comment_exists")
