@@ -60,14 +60,14 @@ object NetworkService {
     }
 
     object BaseUrl {
-        const val MOS_AUTH = "https://login.mos.ru/"
-        const val MOS_DNEVNIK = "https://dnevnik.mos.ru/"
-        const val MOS_SCHOOL = "https://school.mos.ru/"
-        const val MOS_SCHOOL_API = "https://school.mos.ru/api/"
+        const val MOS_AUTH = "https://ms-edu.tatar.ru/"
+        const val MOS_DNEVNIK = "https://ms-edu.tatar.ru/"
+        const val MOS_SCHOOL = "https://ms-edu.tatar.ru/"
+        const val MOS_SCHOOL_API = "https://ms-edu.tatar.ru/api/"
 
-        const val MOSREG_SECONDARY = "https://authedu.mosreg.ru/"
-        const val MOSREG_SCHOOL_API = "https://api.myschool.mosreg.ru/"
-        const val MOSREG_DNEVNIK = "https://myschool.mosreg.ru/"
+        const val MOSREG_SECONDARY = "https://ms-edu.tatar.ru/"
+        const val MOSREG_SCHOOL_API = "https://ms-edu.tatar.ru/"
+        const val MOSREG_DNEVNIK = "https://ms-edu.tatar.ru/"
 
         const val EXTERNAL_API = "https://octodiary.den4iksop.org/"
     }
