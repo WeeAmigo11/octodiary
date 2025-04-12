@@ -1,0 +1,40 @@
+name: Build and Release APK
+
+on:
+  push:
+    tags:
+      - 'v*'  # Запускать при создании тегов вида v1.0, v2.0 и т.д.
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug
+
+      - name: Get tag version
+        id: get_version
+        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref }}
+          name: Release v${{ steps.get_version.outputs.RELEASE_VERSION }}
+          files: |
+            app/build/outputs/apk/debug/app-debug.apk
+          draft: false
+          prerelease: false
