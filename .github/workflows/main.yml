@@ -1,42 +1,54 @@
-name: Build and Release APK
+name: Build and Commit APK
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:   # Ручной запуск
   push:
     branches:
-      - main
+      - main          # Или нужная ветка
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Разрешаем запись в репозиторий
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Полная история коммитов
 
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
-          distribution: 'temurin'  # Обязательный параметр
-          java-version: '17'
+          distribution: temurin
+          java-version: 17
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build Debug APK
+      - name: Build APK
         run: ./gradlew assembleDebug
 
-      - name: Generate tag
-        id: tag
+      - name: Create artifacts directory
         run: |
-          DATE=$(date +'%Y-%m-%d')
-          echo "TAG_NAME=nightly-$DATE-$GITHUB_RUN_NUMBER" >> $GITHUB_OUTPUT
+          mkdir -p build_artifacts/debug
+          ls -la app/build/outputs/apk/debug/  # Debug
 
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: ${{ steps.tag.outputs.TAG_NAME }}
-          name: "Nightly Build (${{ steps.tag.outputs.TAG_NAME }})"
-          body: "Automatic build from GitHub Actions"
-          files: app/build/outputs/apk/debug/app-debug.apk
-          draft: false
-          prerelease: true
-          generate_release_notes: true
+      - name: Copy APK to artifacts
+        run: |
+          cp app/build/outputs/apk/debug/*.apk build_artifacts/debug/
+          echo "APK copied to build_artifacts/debug"
+
+      - name: Commit and push
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add build_artifacts/
+          
+          if git diff-index --quiet HEAD --; then
+            echo "No changes to commit"
+          else
+            git commit -m "[CI] Add debug APK (build ${{ github.run_number }})"
+            git push origin HEAD:${{ github.ref }}
+          fi
