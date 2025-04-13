@@ -68,6 +68,6 @@ fun CallbackScreen(code: String, type: CallbackType, subsystem: Int?) {
 
 enum class CallbackType(val host: String) {
     MosRu("oauth2redirect"),
-    Esia("authRegionRedirect"),
+    Esia("oauth2redirect"),
     TgBot("tgbot")
 }
