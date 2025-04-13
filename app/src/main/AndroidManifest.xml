@@ -56,7 +56,7 @@
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
-                <data android:scheme="rt.shcoolboy.app"/>
+                <data android:scheme="rt.schoolboy.app"/>
             </intent-filter>
         </activity>
     </application>
